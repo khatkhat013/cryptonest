@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Simple wallet illustration with people -->
+    <g opacity="0.9">
+        <!-- Background circle -->
+        <circle cx="200" cy="150" r="120" fill="rgba(255,255,255,0.1)"/>
+        
+        <!-- Wallet icon -->
+        <rect x="140" y="110" width="120" height="80" rx="10" fill="white"/>
+        <rect x="140" y="130" width="120" height="10" fill="#e1e1e1"/>
+        
+        <!-- People figures -->
+        <circle cx="120" cy="180" r="20" fill="white"/> <!-- Person 1 head -->
+        <rect x="110" y="200" width="20" height="30" fill="white"/> <!-- Person 1 body -->
+        
+        <circle cx="280" cy="180" r="20" fill="white"/> <!-- Person 2 head -->
+        <rect x="270" y="200" width="20" height="30" fill="white"/> <!-- Person 2 body -->
+    </g>
+</svg>

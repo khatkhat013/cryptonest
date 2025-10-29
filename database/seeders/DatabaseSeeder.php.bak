@@ -1,0 +1,229 @@
+<?php<?php<?php<?php
+
+
+
+namespace Database\Seeders;
+
+
+
+use App\Models\User;namespace Database\Seeders;
+
+use App\Models\Role;
+
+use App\Models\Admin;
+
+use Illuminate\Support\Str;
+
+use Illuminate\Support\Facades\Hash;use App\Models\User;namespace Database\Seeders;namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+use App\Models\Role;
+
+class DatabaseSeeder extends Seeder
+
+{use App\Models\Admin;
+
+    public function run(): void
+
+    {use Illuminate\Support\Str;
+
+        // Call seeders
+
+        $this->call([use Illuminate\Support\Facades\Hash;use App\Models\User;use App\Models\User;
+
+            RoleSeeder::class,
+
+            CurrencySeeder::classuse Illuminate\Database\Seeder;
+
+        ]);
+
+use App\Models\Role;// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+        // Create Super Admin
+
+        $superAdmin = Admin::create([class DatabaseSeeder extends Seeder
+
+            'name' => 'Super Admin',
+
+            'email' => 'super@admin.com',{use App\Models\Admin;use Illuminate\Database\Seeder;
+
+            'phone' => '09123456789',
+
+            'password' => Hash::make('password'),    public function run(): void
+
+            'telegram_username' => '@superadmin',
+
+            'role_id' => Role::where('name', 'super')->first()->id    {use Illuminate\Support\Str;use Illuminate\Support\Facades\Hash;
+
+        ]);
+
+        // Call seeders
+
+        // Create 14 normal admins
+
+        $normalAdmins = Admin::factory(14)->create([        $this->call(RoleSeeder::class);use Illuminate\Support\Facades\Hash;
+
+            'role_id' => Role::where('name', 'normal')->first()->id
+
+        ]);        $this->call(CurrencySeeder::class);
+
+
+
+        // Combine all adminsuse Illuminate\Database\Seeder;class DatabaseSeeder extends Seeder
+
+        $allAdmins = collect([$superAdmin])->concat($normalAdmins);
+
+        // Create Super Admin
+
+        // Create 15 users with varying states
+
+        User::factory(15)->create()->each(function ($user) use ($allAdmins) {        $superAdmin = Admin::create([{
+
+            // Generate unique user ID
+
+            $user->user_id = 'USER' . str_pad($user->id, 5, '0', STR_PAD_LEFT);            'name' => 'Super Admin',
+
+            
+
+            // Random active status (80% chance of being active)            'email' => 'super@admin.com',class DatabaseSeeder extends Seeder    /**
+
+            $user->is_active = fake()->boolean(80);
+
+                        'phone' => '09123456789',
+
+            // Random admin assignment (70% chance)
+
+            if (fake()->boolean(70)) {            'password' => Hash::make('password'),{     * Seed the application's database.
+
+                $user->assigned_admin_id = $allAdmins->random()->id;
+
+                $user->assigned_admin_date = fake()->dateTimeBetween('-6 months');            'telegram_username' => '@superadmin',
+
+            }
+
+                        'role_id' => Role::where('name', 'super')->first()->id    public function run(): void     */
+
+            // Add activity dates for active users
+
+            if ($user->is_active) {        ]);
+
+                $user->last_login_at = fake()->dateTimeBetween('-1 month');
+
+                $user->last_activity_at = fake()->dateTimeBetween($user->last_login_at);    {    public function run(): void
+
+            }
+
+                    // Create 14 normal admins
+
+            $user->save();
+
+        });        $normalAdmins = Admin::factory(14)->create([        // Call seeders    {
+
+    }
+
+}            'role_id' => Role::where('name', 'normal')->first()->id
+
+        ]);        $this->call(RoleSeeder::class);        // Create default roles and currencies first
+
+
+
+        // Combine all admins        $this->call(CurrencySeeder::class);        $this->call([
+
+        $allAdmins = collect([$superAdmin])->concat($normalAdmins);
+
+            RoleSeeder::class,
+
+        // Create 15 users with varying states
+
+        User::factory(15)->create()->each(function ($user) use ($allAdmins) {        // Create Super Admin            CurrencySeeder::class,
+
+            // Generate unique user ID
+
+            $user->user_id = 'USER' . str_pad($user->id, 5, '0', STR_PAD_LEFT);        $superAdmin = Admin::create([        ]);
+
+            
+
+            // Random active status (80% chance of being active)            'name' => 'Super Admin',
+
+            $user->is_active = fake()->boolean(80);
+
+                        'email' => 'super@admin.com',        // Create test users
+
+            // Random admin assignment (70% chance)
+
+            if (fake()->boolean(70)) {            'phone' => '09123456789',        User::factory()->create([
+
+                $user->assigned_admin_id = $allAdmins->random()->id;
+
+                $user->assigned_admin_date = fake()->dateTimeBetween('-6 months');            'password' => Hash::make('password'),            'name' => 'Test User',
+
+            }
+
+                        'telegram_username' => '@superadmin',            'email' => 'test@example.com',
+
+            // Add activity dates for active users
+
+            if ($user->is_active) {            'role_id' => Role::where('name', 'super')->first()->id            'user_id' => '000000'
+
+                $user->last_login_at = fake()->dateTimeBetween('-1 month');
+
+                $user->last_activity_at = fake()->dateTimeBetween($user->last_login_at);        ]);        ]);
+
+            }
+
+            
+
+            $user->save();
+
+        });        // Create 14 normal admins        User::factory()->create([
+
+    }
+
+}        $normalAdmins = Admin::factory(14)->create([            'name' => 'MonMon',
+
+            'role_id' => Role::where('name', 'normal')->first()->id            'email' => 'monmon@example.com',
+
+        ]);            'user_id' => '000001'
+
+        ]);
+
+        // Combine all admins
+
+        $allAdmins = collect([$superAdmin])->concat($normalAdmins);        // Create test admin
+
+        \App\Models\Admin::factory()->create([
+
+        // Create 15 users with varying states            'name' => 'Admin User',
+
+        User::factory(15)->create()->each(function ($user) use ($allAdmins) {            'email' => 'admin@example.com',
+
+            // Generate unique user ID            'phone' => '09123456789',
+
+            $user->user_id = 'USER' . str_pad($user->id, 5, '0', STR_PAD_LEFT);            'password' => Hash::make('password'),
+
+                        'telegram_username' => 'testadmin',
+
+            // Random active status (80% chance of being active)            'role_id' => 2 // Admin role
+
+            $user->is_active = fake()->boolean(80);        ]);
+
+                }
+
+            // Random admin assignment (70% chance)}
+
+            if (fake()->boolean(70)) {
+                $user->assigned_admin_id = $allAdmins->random()->id;
+                $user->assigned_admin_date = fake()->dateTimeBetween('-6 months');
+            }
+            
+            // Add activity dates for active users
+            if ($user->is_active) {
+                $user->last_login_at = fake()->dateTimeBetween('-1 month');
+                $user->last_activity_at = fake()->dateTimeBetween($user->last_login_at);
+            }
+            
+            $user->save();
+        });
+    }
+}

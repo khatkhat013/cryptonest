@@ -1,0 +1,92 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Deposit;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
+class DepositAdminController extends Controller
+{
+    public function index()
+    {
+        $deposits = Deposit::with(['user', 'actionStatus'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('admin.deposits.index', compact('deposits'));
+    }
+
+    public function updateStatus(Request $request, Deposit $deposit)
+    {
+        $request->validate([
+            'action_status_id' => 'required|exists:action_statuses,id'
+        ]);
+
+        try {
+            DB::transaction(function() use ($deposit, $request) {
+                // Lock for update to prevent race conditions
+                $wallet = DB::table('user_wallets')
+                    ->where('user_id', $deposit->user_id)
+                    ->where('coin', strtoupper($deposit->coin))
+                    ->lockForUpdate()
+                    ->first();
+
+                // Update deposit status
+                $oldStatusId = $deposit->action_status_id;
+                $deposit->action_status_id = $request->action_status_id;
+                $deposit->approved_by = Auth::guard('admin')->id();
+                $deposit->approved_at = now();
+                $deposit->save();
+
+                // Only update wallet if status changed TO complete (5)
+                // AND hasn't been credited before
+                if ($request->action_status_id == 5 && $oldStatusId != 5 && !$deposit->credited_at) {
+                    if (!$wallet) {
+                        // Create new wallet
+                        DB::table('user_wallets')->insert([
+                            'user_id' => $deposit->user_id,
+                            'coin' => strtoupper($deposit->coin),
+                            'balance' => $deposit->amount,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    } else {
+                        // Update existing wallet
+                        DB::table('user_wallets')
+                            ->where('id', $wallet->id)
+                            ->update([
+                                'balance' => $wallet->balance + $deposit->amount,
+                                'updated_at' => now()
+                            ]);
+                    }
+
+                    // Mark as credited
+                    $deposit->credited_at = now();
+                    $deposit->save();
+
+                    // Log the credit
+                    \Log::info('Deposit credited', [
+                        'deposit_id' => $deposit->id,
+                        'user_id' => $deposit->user_id,
+                        'amount' => $deposit->amount,
+                        'coin' => $deposit->coin,
+                        'admin_id' => Auth::guard('admin')->id()
+                    ]);
+                }
+            });
+
+            return back()->with('success', 'Deposit status updated successfully');
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to update deposit status', [
+                'deposit_id' => $deposit->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->with('error', 'Failed to update status. Please try again.');
+        }
+    }
+}

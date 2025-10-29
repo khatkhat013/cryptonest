@@ -1,0 +1,70 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+
+// Public routes - accessible without login
+Route::view('/', 'home');
+Route::view('/support', 'support');
+Route::view('/knowledge', 'trade');
+Route::view('/knowledge/faq', 'knowledge.faq');
+Route::view('/knowledge/whitepaper', 'knowledge.whitepaper');
+Route::view('/knowledge/regulatory', 'knowledge.regulatory');
+Route::view('/arbitrage/introduction', 'arbitrage.introduction')->name('introduction');
+
+// Authentication routes
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+
+// Protected routes - require authentication
+Route::middleware(['auth'])->group(function () {
+    // Main pages
+    Route::view('/wallets', 'wallets');
+    Route::view('/trade', 'trade');
+    Route::view('/lending', 'lending');
+    Route::view('/lending-history', 'lending-history');
+    Route::view('/trade/orders', 'trade.orders');
+    Route::view('/financial/record', 'financial.record');
+    
+    // Wallet functionality
+    Route::view('/wallet/wire-transfer', 'wallet.wire-transfer')->name('wallet.wire-transfer');
+    Route::get('/wallet/{type}', function($type) {
+        $validTypes = ['btc', 'eth', 'usdt', 'usdc', 'pyusd', 'doge', 'xrp'];
+        if (!in_array(strtolower($type), $validTypes)) {
+            abort(404);
+        }
+        return view('wallet.detail', ['type' => strtolower($type)]);
+    })->name('wallet.detail');
+
+    // Arbitrage section
+    Route::view('/arbitrage', 'arbitrage');
+    Route::view('/arbitrage/custody-order', 'arbitrage.custody-order')->name('custody.order');
+    Route::view('/arbitrage/ai-robots', 'arbitrage.ai-robots')->name('ai.robots');
+    Route::view('/arbitrage/aplan', 'arbitrage.aplan')->name('arbitrage.aplan');
+
+    // Trading functionality
+    Route::get('/coin/{symbol}', function($symbol) {
+        if (!in_array(strtolower($symbol), ['btc', 'eth', 'bnb', 'trx', 'xrp', 'doge'])) {
+            abort(404);
+        }
+        return view('trade', ['symbol' => strtolower($symbol), 'type' => 'crypto']);
+    });
+
+    Route::get('/forex/{symbol}', function($symbol) {
+        if (!in_array(strtolower($symbol), ['gbp', 'eur', 'chf', 'cad', 'aud', 'jpy'])) {
+            abort(404);
+        }
+        return view('trade', ['symbol' => strtolower($symbol), 'type' => 'forex']);
+    });
+
+    Route::get('/metal/{symbol}', function($symbol) {
+        return view('trade', ['symbol' => $symbol, 'type' => 'metal']);
+    })->where('symbol', 'xau|xag|xpt|xpd');
+
+    // Other protected features
+    Route::view('/transaction', 'trade');
+    Route::view('/mining', 'trade');
+    Route::view('/finance', 'trade');
+});
