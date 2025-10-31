@@ -117,6 +117,7 @@ class PriceService
                             if (isset($j['data']['amount'])) {
                                 $amt = (float)$j['data']['amount'];
                                 if (is_finite($amt) && $amt > 0) {
+<<<<<<< HEAD
                                     // If caller explicitly requested Coinbase as the preferred source,
                                     // return the Coinbase price immediately (Coinbase endpoint doesn't
                                     // provide 24h change). Otherwise, store the price and continue
@@ -136,6 +137,12 @@ class PriceService
                                     }
                                     // don't set change here; continue loop to allow coingecko to
                                     // provide a 24h percentage if available
+=======
+                                    $result['price'] = $amt;
+                                    // Coinbase doesn't provide change percent in this endpoint
+                                    $result['change'] = null;
+                                    return $result;
+>>>>>>> baa16029f54f443d9de5515800fe476fd3a96e8b
                                 }
                             }
                         }
