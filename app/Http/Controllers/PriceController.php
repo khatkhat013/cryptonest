@@ -32,7 +32,8 @@ class PriceController extends Controller
             $out[$s] = [
                 'price' => $data['price'] ?? null,
                 'change' => array_key_exists('change', $data) ? $data['change'] : null,
-                'ts' => $data['price'] ? round(microtime(true) * 1000) : null
+                'ts' => $data['ts'] ?? null,
+                'source' => $data['source'] ?? null,
             ];
         }
 

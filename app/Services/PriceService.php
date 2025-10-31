@@ -21,7 +21,8 @@ class PriceService
         $s = strtoupper(trim($symbol));
         $cacheKey = "prices:data:{$prefer}:{$s}";
 
-        return Cache::remember($cacheKey, 5, function() use ($s, $prefer) {
+    $ttl = intval(env('PRICE_CACHE_SECONDS', 5));
+    return Cache::remember($cacheKey, now()->addSeconds($ttl), function() use ($s, $prefer) {
             $result = ['price' => null, 'change' => null, 'source' => null, 'ts' => (int)round(microtime(true) * 1000)];
 
             // Determine try order
