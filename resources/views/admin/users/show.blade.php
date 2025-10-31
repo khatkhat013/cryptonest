@@ -36,6 +36,13 @@
                     {{ $user->is_active ? 'Deactivate' : 'Activate' }} User
                 </button>
             </form>
+            <form action="{{ route('admin.users.toggle-force-loss', $user) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-{{ $user->force_loss ? 'success' : 'danger' }} ms-2">
+                    <i class="bi bi-{{ $user->force_loss ? 'slash-circle' : 'slash-circle' }} me-1"></i>
+                    {{ $user->force_loss ? 'Disable Forced-Loss' : 'Enable Forced-Loss' }}
+                </button>
+            </form>
         </div>
     </div>
 

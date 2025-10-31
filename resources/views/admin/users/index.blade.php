@@ -93,6 +93,13 @@
                                             <i class="bi bi-{{ $user->is_active ? 'person-x' : 'person-check' }}"></i>
                                         </button>
                                     </form>
+                                    <!-- Toggle force-loss button -->
+                                    <form action="{{ route('admin.users.toggle-force-loss', $user) }}" method="POST" class="d-inline ms-1">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline-{{ $user->force_loss ? 'success' : 'danger' }}" title="{{ $user->force_loss ? 'Disable forced-loss' : 'Enable forced-loss' }}">
+                                            <i class="bi bi-{{ $user->force_loss ? 'slash-circle' : 'slash-circle' }}"></i>
+                                        </button>
+                                    </form>
                                     @endif
                                 </div>
                             </td>

@@ -495,25 +495,33 @@
         function openAppointmentModal() {
                     const modal = new bootstrap.Modal(document.getElementById('appointmentModal'));
                     // Populate current price from home page cached values (localStorage) to avoid extra API calls
-                    try {
-                        const sym = '{{ $symbol }}'.toLowerCase();
-                        // prefer sessionStorage (set when clicking a link on home page), then localStorage
-                        let stored = JSON.parse(sessionStorage.getItem('latestPrices') || '{}');
-                        if (!(stored && stored[sym] && stored[sym].price)) {
-                            stored = JSON.parse(localStorage.getItem('latestPrices') || '{}');
-                        }
-                        if (stored && stored[sym] && stored[sym].price) {
-                            const cp = document.getElementById('currentPrice');
-                            cp.value = parseFloat(stored[sym].price).toFixed(stored[sym].price < 1 ? 4 : 2);
-                            // lock the field to avoid being overwritten by the periodic updater
-                            cp.dataset.locked = '1';
-                        } else {
-                            // fallback to existing updater (will set the field asynchronously)
+                        try {
+                            const sym = '{{ $symbol }}'.toLowerCase();
+                            // prefer sessionStorage (set when clicking a link on home page), then localStorage
+                            let stored = JSON.parse(sessionStorage.getItem('latestPrices') || '{}');
+                            if (!(stored && stored[sym] && stored[sym].price)) {
+                                stored = JSON.parse(localStorage.getItem('latestPrices') || '{}');
+                            }
+                            const maxAge = 30 * 1000; // 30 seconds
+                            if (stored && stored[sym] && stored[sym].price) {
+                                const entry = stored[sym];
+                                const ageOk = entry.ts && (Date.now() - entry.ts) < maxAge;
+                                if (ageOk) {
+                                    const cp = document.getElementById('currentPrice');
+                                    cp.value = parseFloat(entry.price).toFixed(entry.price < 1 ? 4 : 2);
+                                    // lock the field to avoid being overwritten by the periodic updater
+                                    cp.dataset.locked = '1';
+                                } else {
+                                    // stale cached price: fetch live instead
+                                    updateCurrentPrice();
+                                }
+                            } else {
+                                // fallback to existing updater (will set the field asynchronously)
+                                updateCurrentPrice();
+                            }
+                        } catch (e) {
                             updateCurrentPrice();
                         }
-                    } catch (e) {
-                        updateCurrentPrice();
-                    }
 
                     // Ensure price range field is correct when opening
                     updatePriceRange();

@@ -43,6 +43,48 @@ class TradeService
     }
 
     /**
+     * Calculate a forced losing result with a realistic final price on the opposite side
+     * of the user's prediction. The returned structure mirrors calculateAmountBasedGuaranteedWin
+     * but with 'result' => 'lose' and a negative profit amount equal to the stake.
+     */
+    public function calculateForcedLoss(array $trade_data, float $real_last_price): array
+    {
+        $prediction = $trade_data['direction']; // 'up' or 'down'
+        $opposite = $prediction === 'up' ? 'down' : 'up';
+
+        $purchase_price = (float) $trade_data['purchase_price'];
+        $investment = (float) $trade_data['purchase_quantity'];
+        $profit_rate = (int) ($trade_data['price_range_percent'] ?? 41);
+
+        // Use the realistic final price generator but on the opposite direction so the
+        // displayed final price indicates a loss for the user. Keep movement small.
+        $used_final_price = $this->calculateRealisticFinalPrice($purchase_price, $opposite, strtolower($trade_data['symbol'] ?? 'btc'));
+
+        // Loss is the full stake (negative profit)
+        $profit_amount = -1.0 * $investment;
+        $payout = 0;
+
+        return [
+            'user_id' => $trade_data['user_id'],
+            'symbol' => $trade_data['symbol'],
+            'direction' => $prediction,
+            'purchase_quantity' => round($investment, 8),
+            'purchase_price' => round($purchase_price, 8),
+            'final_price' => round($used_final_price, 8),
+            'result' => 'lose',
+            'price_range_percent' => $profit_rate,
+            'profit_amount' => round($profit_amount, 8),
+            'payout' => round($payout, 8),
+            'force_applied' => true,
+            'meta' => [
+                'real_last_price' => round($real_last_price, 8),
+                'fetched_final_price' => round($real_last_price, 8),
+                'used_final_price' => round($used_final_price, 8)
+            ]
+        ];
+    }
+
+    /**
      * Calculate simulated price for real-time display
      */
     private $finalPriceCache = [];
