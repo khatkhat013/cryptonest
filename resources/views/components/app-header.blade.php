@@ -59,7 +59,7 @@
                         </div>
                     </div>
                     <div class="d-grid gap-2">
-                        <a href="#" class="btn btn-outline-primary btn-sm">
+                        <a href="{{ route('profile') }}" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-gear me-1"></i> Account Settings
                         </a>
                     </div>

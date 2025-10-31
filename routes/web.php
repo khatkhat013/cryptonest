@@ -118,6 +118,9 @@ Route::middleware(['auth'])->group(function () {
     // Main pages
     Route::view('/wallets', 'wallets');
     Route::view('/trade', 'trade');
+    // User profile (authenticated users)
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
+    Route::post('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::view('/lending', 'lending');
     Route::post('/lending/submit', [App\Http\Controllers\LendingController::class, 'store'])->name('lending.store');
     Route::get('/lending/list', [App\Http\Controllers\LendingController::class, 'index'])->name('lending.list');
