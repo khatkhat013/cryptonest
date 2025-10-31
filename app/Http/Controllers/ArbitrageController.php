@@ -34,22 +34,25 @@ class ArbitrageController extends Controller
 
                     // update plan record: set profit (earned) and total_profit (principal + profit), mark completed
                     $totalProfit = $quantity + $profit;
+                    // Use Eastern Time (America/New_York) with microsecond precision when writing completion time
+                    $edtNow = Carbon::now('America/New_York')->format('Y-m-d H:i:s.u');
                     DB::table('ai_arbitrage_plans')->where('id', $p->id)->update([
-                        'profit' => round($profit, 4),
-                        'total_profit' => round($totalProfit, 4),
+                        'profit' => round($profit, 8),
+                        'total_profit' => round($totalProfit, 8),
                         'status' => 'completed',
-                        'completed_at' => now(),
-                        'updated_at' => now()
+                        'completed_at' => $edtNow,
+                        'updated_at' => $edtNow
                     ]);
 
                     // Credit user's USDT wallet: return principal (quantity) + profit
                     if (Schema::hasTable('user_wallets')) {
                         $w = DB::table('user_wallets')->where('user_id', $p->user_id)->whereRaw('LOWER(coin) = ?', ['usdt'])->lockForUpdate()->first();
-                        if ($w) {
+                            if ($w) {
                             // total to credit = principal + profit
                             $creditAmount = $quantity + $profit;
                             $newBal = floatval($w->balance) + $creditAmount;
-                            DB::table('user_wallets')->where('id', $w->id)->update(['balance' => $newBal, 'updated_at' => now()]);
+                            // update wallet with EDT microsecond timestamp
+                            DB::table('user_wallets')->where('id', $w->id)->update(['balance' => $newBal, 'updated_at' => $edtNow]);
 
                             // Insert a single combined audit transaction row with principal and profit columns
                             if (Schema::hasTable('user_wallet_transactions')) {
@@ -66,8 +69,8 @@ class ArbitrageController extends Controller
                                     'reference_model' => 'ai_arbitrage_plans',
                                     'reference_id' => $p->id,
                                     'description' => 'Arbitrage plan principal+profit returned on completion',
-                                    'created_at' => now(),
-                                    'updated_at' => now()
+                                    'created_at' => $edtNow,
+                                    'updated_at' => $edtNow
                                 ]);
                             }
                         }
@@ -128,13 +131,16 @@ class ArbitrageController extends Controller
                 $cumulativeProfit = ($dailyProfit * $completedDays) + ($hourlyProfit * $completedHoursIntoDay);
                 
                 // Update completed hours and profit in database
+                // persist completed hours and the incremental profit (rounded to 8 decimals) and timestamp in EDT
+                $edtNow = Carbon::now('America/New_York')->format('Y-m-d H:i:s.u');
                 DB::table('ai_arbitrage_plans')
                     ->where('id', $plan->id)
                     ->update([
                         // store total elapsed hours for clarity
                         'completed_hours' => $hoursPassed,
                         // store cumulative profit so far (including partial day hours)
-                        'profit' => $cumulativeProfit
+                        'profit' => round($cumulativeProfit, 8),
+                        'updated_at' => $edtNow
                     ]);
 
                 // Show cumulative profit based on elapsed hours (includes partial day earnings)

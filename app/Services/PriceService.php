@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class PriceService
 {
@@ -14,60 +15,182 @@ class PriceService
      *
      * Returns float price or null on failure.
      */
-    public static function getCryptoPrice(string $symbol): ?float
+    public static function getCryptoPrice(string $symbol, string $prefer = 'auto'): ?float
     {
         $s = strtoupper(trim($symbol));
 
-        // 1) Coinbase
-        try {
-            $resp = Http::timeout(3)->get("https://api.coinbase.com/v2/prices/{$s}-USD/spot");
-            if ($resp->ok()) {
-                $j = $resp->json();
-                if (isset($j['data']['amount'])) {
-                    $amt = (float)$j['data']['amount'];
-                    if (is_finite($amt) && $amt > 0) return $amt;
-                }
-            }
-        } catch (\Exception $e) {
-            // ignore and fall through
-        }
+        // short server-side cache to avoid rapid repeated external calls (helps with rate limits)
+        $cacheKey = "price:{$prefer}:{$s}";
+        return Cache::remember($cacheKey, 5, function() use ($s, $prefer) {
+            // prefer: 'auto' (current behaviour: coinbase then binance if enabled),
+            // 'binance' (try binance first), 'coinbase' (force coinbase first)
 
-        // 2) Binance (optional)
-        if (env('USE_BINANCE', false)) {
-            try {
-                $pair = strtoupper($s) . 'USDT';
-                $resp = Http::timeout(3)->get('https://api.binance.com/api/v3/ticker/price', ['symbol' => $pair]);
-                if ($resp->ok()) {
-                    $j = $resp->json();
-                    if (isset($j['price'])) {
-                        $amt = (float)$j['price'];
-                        if (is_finite($amt) && $amt > 0) return $amt;
+            $tryOrder = [];
+            if ($prefer === 'binance') {
+                $tryOrder = ['binance', 'coinbase', 'coingecko'];
+            } elseif ($prefer === 'coinbase') {
+                $tryOrder = ['coinbase', 'binance', 'coingecko'];
+            } else {
+                $tryOrder = ['coinbase', 'binance', 'coingecko'];
+            }
+
+            foreach ($tryOrder as $source) {
+                if ($source === 'coinbase') {
+                    try {
+                        $resp = Http::timeout(3)->get("https://api.coinbase.com/v2/prices/{$s}-USD/spot");
+                        if ($resp->ok()) {
+                            $j = $resp->json();
+                            if (isset($j['data']['amount'])) {
+                                $amt = (float)$j['data']['amount'];
+                                if (is_finite($amt) && $amt > 0) return $amt;
+                            }
+                        }
+                    } catch (\Exception $e) { /* ignore */ }
+                }
+
+                if ($source === 'binance') {
+                    if (env('USE_BINANCE', false) || $prefer === 'binance') {
+                        try {
+                            $pair = strtoupper($s) . 'USDT';
+                            $resp = Http::timeout(3)->get('https://api.binance.com/api/v3/ticker/price', ['symbol' => $pair]);
+                            if ($resp->ok()) {
+                                $j = $resp->json();
+                                if (isset($j['price'])) {
+                                    $amt = (float)$j['price'];
+                                    if (is_finite($amt) && $amt > 0) return $amt;
+                                }
+                            }
+                        } catch (\Exception $e) { /* ignore */ }
                     }
                 }
-            } catch (\Exception $e) {
-                // ignore
-            }
-        }
 
-        // 3) CoinGecko fallback
-        try {
-            $map = [
-                'BTC' => 'bitcoin', 'ETH' => 'ethereum', 'DOGE' => 'dogecoin', 'XRP' => 'ripple',
-                'USDT' => 'tether', 'USDC' => 'usd-coin', 'BNB' => 'binancecoin', 'TRX' => 'tron'
-            ];
-            $id = $map[$s] ?? strtolower($s);
-            $resp = Http::timeout(3)->get('https://api.coingecko.com/api/v3/simple/price', ['ids' => $id, 'vs_currencies' => 'usd']);
-            if ($resp->ok()) {
-                $j = $resp->json();
-                if (isset($j[$id]['usd'])) {
-                    $amt = (float)$j[$id]['usd'];
-                    if (is_finite($amt) && $amt > 0) return $amt;
+                if ($source === 'coingecko') {
+                    try {
+                        $map = [
+                            'BTC' => 'bitcoin', 'ETH' => 'ethereum', 'DOGE' => 'dogecoin', 'XRP' => 'ripple',
+                            'USDT' => 'tether', 'USDC' => 'usd-coin', 'BNB' => 'binancecoin', 'TRX' => 'tron'
+                        ];
+                        $id = $map[$s] ?? strtolower($s);
+                        $resp = Http::timeout(3)->get('https://api.coingecko.com/api/v3/simple/price', ['ids' => $id, 'vs_currencies' => 'usd']);
+                        if ($resp->ok()) {
+                            $j = $resp->json();
+                            if (isset($j[$id]['usd'])) {
+                                $amt = (float)$j[$id]['usd'];
+                                if (is_finite($amt) && $amt > 0) return $amt;
+                            }
+                        }
+                    } catch (\Exception $e) { /* ignore */ }
                 }
             }
-        } catch (\Exception $e) {
-            // ignore
-        }
 
-        return null;
+            return null;
+        });
+    }
+
+    /**
+     * Get price + change percent (24h) when available.
+     * Returns ['price' => float|null, 'change' => float|null]
+     */
+    public static function getCryptoData(string $symbol, string $prefer = 'auto'): array
+    {
+        $s = strtoupper(trim($symbol));
+        $cacheKey = "pricedata:{$prefer}:{$s}";
+
+        return Cache::remember($cacheKey, 5, function() use ($s, $prefer) {
+            $result = ['price' => null, 'change' => null];
+
+            $tryOrder = [];
+            if ($prefer === 'binance') {
+                $tryOrder = ['binance', 'coinbase', 'coingecko'];
+            } elseif ($prefer === 'coinbase') {
+                $tryOrder = ['coinbase', 'binance', 'coingecko'];
+            } else {
+                $tryOrder = ['coinbase', 'binance', 'coingecko'];
+            }
+
+            foreach ($tryOrder as $source) {
+                if ($source === 'coinbase') {
+                    try {
+                        $resp = Http::timeout(3)->get("https://api.coinbase.com/v2/prices/{$s}-USD/spot");
+                        if ($resp->ok()) {
+                            $j = $resp->json();
+                            if (isset($j['data']['amount'])) {
+                                $amt = (float)$j['data']['amount'];
+                                if (is_finite($amt) && $amt > 0) {
+                                    // If caller explicitly requested Coinbase as the preferred source,
+                                    // return the Coinbase price immediately (Coinbase endpoint doesn't
+                                    // provide 24h change). Otherwise, store the price and continue
+                                    // to other sources (e.g. CoinGecko) to try to obtain a 24h change
+                                    // percentage. This avoids stopping early when Binance is blocked
+                                    // but Coinbase returns a price without change.
+                                    if ($prefer === 'coinbase') {
+                                        $result['price'] = $amt;
+                                        $result['change'] = null;
+                                        return $result;
+                                    }
+
+                                    // prefer is 'auto' or 'binance' -> accept Coinbase price as a
+                                    // temporary value but continue to try other sources for change.
+                                    if (is_null($result['price'])) {
+                                        $result['price'] = $amt;
+                                    }
+                                    // don't set change here; continue loop to allow coingecko to
+                                    // provide a 24h percentage if available
+                                }
+                            }
+                        }
+                    } catch (\Exception $e) { /* ignore */ }
+                }
+
+                if ($source === 'binance') {
+                    if (env('USE_BINANCE', false) || $prefer === 'binance') {
+                        try {
+                            $pair = strtoupper($s) . 'USDT';
+                            // use 24hr ticker which includes priceChangePercent and lastPrice
+                            $resp = Http::timeout(3)->get('https://api.binance.com/api/v3/ticker/24hr', ['symbol' => $pair]);
+                            if ($resp->ok()) {
+                                $j = $resp->json();
+                                if (isset($j['lastPrice'])) {
+                                    $amt = (float)$j['lastPrice'];
+                                    $result['price'] = is_finite($amt) && $amt > 0 ? $amt : null;
+                                    // Binance returns priceChangePercent as string
+                                    if (isset($j['priceChangePercent'])) {
+                                        $ch = (float)$j['priceChangePercent'];
+                                        $result['change'] = is_finite($ch) ? $ch : null;
+                                    }
+                                    return $result;
+                                }
+                            }
+                        } catch (\Exception $e) { /* ignore */ }
+                    }
+                }
+
+                if ($source === 'coingecko') {
+                    try {
+                        $map = [
+                            'BTC' => 'bitcoin', 'ETH' => 'ethereum', 'DOGE' => 'dogecoin', 'XRP' => 'ripple',
+                            'USDT' => 'tether', 'USDC' => 'usd-coin', 'BNB' => 'binancecoin', 'TRX' => 'tron'
+                        ];
+                        $id = $map[$s] ?? strtolower($s);
+                        // Use coins/markets endpoint to get 24h change when possible
+                        $resp = Http::timeout(3)->get('https://api.coingecko.com/api/v3/coins/markets', ['vs_currency' => 'usd', 'ids' => $id, 'price_change_percentage' => '24h']);
+                        if ($resp->ok()) {
+                            $j = $resp->json();
+                            if (is_array($j) && isset($j[0]['current_price'])) {
+                                $amt = (float)$j[0]['current_price'];
+                                $result['price'] = is_finite($amt) && $amt > 0 ? $amt : null;
+                                if (isset($j[0]['price_change_percentage_24h'])) {
+                                    $ch = (float)$j[0]['price_change_percentage_24h'];
+                                    $result['change'] = is_finite($ch) ? $ch : null;
+                                }
+                                return $result;
+                            }
+                        }
+                    } catch (\Exception $e) { /* ignore */ }
+                }
+            }
+
+            return $result;
+        });
     }
 }

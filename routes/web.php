@@ -9,6 +9,9 @@ use App\Http\Controllers\Admin\DashboardController;
 // Public routes - accessible without login
 Route::view('/', 'home');
 
+// Lightweight public price endpoint used by client UI to avoid exposing direct external API calls
+Route::get('/prices', [App\Http\Controllers\PriceController::class, 'prices'])->name('prices');
+
 // Trade routes
 Route::get('/api/trade/{orderId}/price', [App\Http\Controllers\TradeController::class, 'getTradePrice']);
 
@@ -60,6 +63,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/{user}', 'show')->name('show');
             Route::post('/{user}/toggle-status', 'toggleStatus')->name('toggle-status');
+            Route::post('/{user}/toggle-force-loss', 'toggleForceLoss')->name('toggle-force-loss');
         });
         // Assign user to admin (super admin only) - handled by UsersManagementController
         Route::post('/users/{user}/assign', [App\Http\Controllers\Admin\UsersManagementController::class, 'assign'])->name('users.assign');
@@ -204,9 +208,10 @@ Route::middleware(['auth'])->group(function () {
         $user = Auth::user();
         $totalEarned = 0;
         if ($user && \Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
+            // Only include profit from completed plans (exclude active / in-progress incremental profits)
             $totalEarned = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
                 ->where('user_id', $user->id)
-                // sum the stored 'profit' which represents cumulative earned so far for each plan
+                ->where('status', 'completed')
                 ->whereNotNull('profit')
                 ->sum('profit');
         }
@@ -262,10 +267,11 @@ Route::middleware(['auth'])->group(function () {
         // Enforce per-user concurrent start limit (max_times) for this plan.
         $maxTimes = isset($cfg['max_times']) ? intval($cfg['max_times']) : null;
         if ($maxTimes !== null) {
+            // Count total starts for this plan by the user (do NOT allow more than max_times total starts)
             $activeCount = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
                 ->where('user_id', $user->id)
                 ->where('plan_name', $plan)
-                ->where('status', 'active')
+                // count any status (active, completed, etc.) as a start
                 ->count();
 
             if ($activeCount >= $maxTimes) {

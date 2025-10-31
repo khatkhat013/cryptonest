@@ -31,9 +31,25 @@
         @forelse($activePlans as $plan)
             <div class="card shadow-sm border-0 mb-3 rounded-4">
                 <div class="card-body p-4">
+                    {{-- Plan name badge/header --}}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="text-muted">Plan</div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="fw-medium">{{ strtoupper($plan->plan_name ?? '') }}</div>
+                            @php
+                                $st = isset($plan->status) ? strtolower($plan->status) : 'unknown';
+                                $badge = $st === 'active' ? 'bg-success' : ($st === 'completed' ? 'bg-secondary' : 'bg-warning');
+                            @endphp
+                            <span class="status-badge {{ $badge }} text-white">{{ ucfirst($st) }}</span>
+                        </div>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="text-muted">Purchase Amount</div>
-                        <div class="fw-medium">{{ number_format($plan->quantity, 2) }} USDT</div>
+                        @php
+                            $qty = isset($plan->quantity) ? number_format($plan->quantity, 6, '.', '') : '0';
+                            $qty = rtrim(rtrim($qty, '0'), '.');
+                        @endphp
+                        <div class="fw-medium">{{ $qty }} USDT</div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="text-muted">Position Period</div>
@@ -53,11 +69,19 @@
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="text-muted">Buy Time</div>
-                        <div class="fw-medium">{{ \Carbon\Carbon::parse($plan->created_at)->format('Y-m-d H:i:s') }}</div>
+                        @php
+                            $buy = \Carbon\Carbon::parse($plan->created_at)->timezone('America/New_York');
+                            $buyFmt = $buy->format($buy->format('u') === '000000' ? 'Y-m-d H:i:s' : 'Y-m-d H:i:s.u');
+                        @endphp
+                        <div class="fw-medium">{{ $buyFmt }}</div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="text-muted">End Time</div>
-                        <div class="fw-medium">{{ \Carbon\Carbon::parse($plan->created_at)->addDays($plan->duration_days)->format('Y-m-d H:i:s') }}</div>
+                        @php
+                            $end = \Carbon\Carbon::parse($plan->created_at)->addDays($plan->duration_days)->timezone('America/New_York');
+                            $endFmt = $end->format($end->format('u') === '000000' ? 'Y-m-d H:i:s' : 'Y-m-d H:i:s.u');
+                        @endphp
+                        <div class="fw-medium">{{ $endFmt }}</div>
                     </div>
                 </div>
             </div>
@@ -73,9 +97,25 @@
         @forelse($completedPlans as $plan)
             <div class="card shadow-sm border-0 mb-3 rounded-4">
                 <div class="card-body p-4">
+                    {{-- Plan name badge/header --}}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="text-muted">Plan</div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="fw-medium">{{ strtoupper($plan->plan_name ?? '') }}</div>
+                            @php
+                                $st = isset($plan->status) ? strtolower($plan->status) : 'unknown';
+                                $badge = $st === 'active' ? 'bg-success' : ($st === 'completed' ? 'bg-secondary' : 'bg-warning');
+                            @endphp
+                            <span class="status-badge {{ $badge }} text-white">{{ ucfirst($st) }}</span>
+                        </div>
+                    </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="text-muted">Purchase Amount</div>
-                        <div class="fw-medium">{{ number_format($plan->quantity, 2) }} USDT</div>
+                        @php
+                            $qty = isset($plan->quantity) ? number_format($plan->quantity, 6, '.', '') : '0';
+                            $qty = rtrim(rtrim($qty, '0'), '.');
+                        @endphp
+                        <div class="fw-medium">{{ $qty }} USDT</div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="text-muted">Position Period</div>
@@ -91,15 +131,24 @@
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="text-muted">Acquired earnings</div>
-                        <div class="fw-medium">{{ number_format($plan->total_profit ?? $plan->profit ?? 0, 2) }} USDT</div>
+                        {{-- Show only the plan profit (do NOT show principal + profit) --}}
+                        <div class="fw-medium">{{ number_format($plan->profit ?? 0, 2) }} USDT</div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="text-muted">Buy Time</div>
-                        <div class="fw-medium">{{ \Carbon\Carbon::parse($plan->created_at)->format('Y-m-d H:i:s') }}</div>
+                        @php
+                            $buy = \Carbon\Carbon::parse($plan->created_at)->timezone('America/New_York');
+                            $buyFmt = $buy->format($buy->format('u') === '000000' ? 'Y-m-d H:i:s' : 'Y-m-d H:i:s.u');
+                        @endphp
+                        <div class="fw-medium">{{ $buyFmt }}</div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="text-muted">End Time</div>
-                        <div class="fw-medium">{{ \Carbon\Carbon::parse($plan->created_at)->addDays($plan->duration_days)->format('Y-m-d H:i:s') }}</div>
+                        @php
+                            $end = \Carbon\Carbon::parse($plan->created_at)->addDays($plan->duration_days)->timezone('America/New_York');
+                            $endFmt = $end->format($end->format('u') === '000000' ? 'Y-m-d H:i:s' : 'Y-m-d H:i:s.u');
+                        @endphp
+                        <div class="fw-medium">{{ $endFmt }}</div>
                     </div>
                 </div>
             </div>
@@ -129,6 +178,13 @@
 
 .card {
     border: none;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
 }
 </style>
 @endpush

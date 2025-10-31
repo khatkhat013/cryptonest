@@ -513,34 +513,30 @@
                         'DOGE': 'DOGE'
                     };
 
-                    // Try Coinbase public spot prices per symbol (concurrent). Prefer these when available.
+                    // Request batched latest prices from server. For the Crypto tab we prefer Binance
+                    // so pass prefer=binance; the server will cache very briefly to avoid rate limits.
                     const coinbasePrices = {};
-                    await Promise.all(Object.keys(symbolToId).map(async (sym) => {
-                        try {
-                            const resp = await fetch(`https://api.coinbase.com/v2/prices/${sym}-USD/spot`);
-                            if (!resp.ok) return;
-                            const j = await resp.json();
-                            const amt = j && j.data && parseFloat(j.data.amount);
-                            if (!isNaN(amt)) coinbasePrices[sym] = amt;
-                        } catch (err) {
-                            // ignore individual coin errors
-                        }
-                    }));
-
-                    // Optionally try Binance public API if allowed
                     const binancePrices = {};
-                    if (useBinance) {
-                        await Promise.all(Object.keys(symbolToId).map(async (sym) => {
-                            try {
-                                // Binance uses lowercase symbols and USDT pairs
-                                const pair = sym.toUpperCase() + 'USDT';
-                                const resp = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`);
-                                if (!resp.ok) return;
-                                const j = await resp.json();
-                                const amt = j && parseFloat(j.price);
-                                if (!isNaN(amt)) binancePrices[sym] = amt;
-                            } catch (err) {}
-                        }));
+                    try {
+                        const syms = Object.keys(symbolToId).join(',');
+                        const resp = await fetch('/prices?symbols=' + encodeURIComponent(syms) + '&prefer=binance');
+                        if (resp.ok) {
+                            const j = await resp.json();
+                            if (j && j.data) {
+                                Object.entries(j.data).forEach(([s, info]) => {
+                                    const sym = s.toUpperCase();
+                                    const amt = info && info.price ? parseFloat(info.price) : NaN;
+                                    const ch = info && (info.change !== undefined) ? (info.change === null ? null : parseFloat(info.change)) : null;
+                                    if (!isNaN(amt)) {
+                                        // store structured entries: { price, change }
+                                        binancePrices[sym] = { price: amt, change: ch };
+                                        coinbasePrices[sym] = { price: amt, change: ch };
+                                    }
+                                });
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Price fetch failed', e);
                     }
 
                     Object.entries(markets.crypto).forEach(([symbol, {base, variance}]) => {
@@ -555,9 +551,11 @@
                         let fetchedChange = null;
                         // Prefer Coinbase, then Binance if enabled, then fallback to seeded/random
                         if (coinbasePrices[symbol] !== undefined) {
-                            fetchedPrice = coinbasePrices[symbol];
+                            fetchedPrice = coinbasePrices[symbol].price;
+                            fetchedChange = coinbasePrices[symbol].change;
                         } else if (binancePrices[symbol] !== undefined) {
-                            fetchedPrice = binancePrices[symbol];
+                            fetchedPrice = binancePrices[symbol].price;
+                            fetchedChange = binancePrices[symbol].change;
                         }
 
                         cards.forEach(card => {
@@ -566,12 +564,12 @@
 
                             // Prefer Coinbase price if we have it
                             if (coinbasePrices[symbol] !== undefined) {
-                                const price = coinbasePrices[symbol];
-                                const change = fetchedChange !== null ? fetchedChange : '0.00';
+                                const price = coinbasePrices[symbol].price;
+                                const change = (fetchedChange !== null && fetchedChange !== undefined) ? fetchedChange : 0;
                                 if (priceEl) priceEl.textContent = price.toFixed(price < 1 ? 4 : 2);
                                 if (changeEl) {
-                                    const num = parseFloat(change);
-                                    const signed = (isNaN(num) ? change : (num >= 0 ? `+${num.toFixed(change.includes('.') ? change.split('.')[1].length : 2)}` : `${num.toFixed(change.includes('.') ? change.split('.')[1].length : 2)}`));
+                                    const num = parseFloat(change) || 0;
+                                    const signed = num >= 0 ? `+${num.toFixed(2)}` : `${num.toFixed(2)}`;
                                     changeEl.textContent = signed;
                                     changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
                                     if (priceEl && priceEl.parentElement) {
@@ -592,11 +590,11 @@
                             // Prefer CoinGecko fetched price next
                             if (fetchedPrice !== null) {
                                 const price = fetchedPrice;
-                                const change = fetchedChange !== null ? fetchedChange : '0.00';
+                                const change = (fetchedChange !== null && fetchedChange !== undefined) ? fetchedChange : 0;
                                 if (priceEl) priceEl.textContent = price.toFixed(price < 1 ? 4 : 2);
                                 if (changeEl) {
-                                    const num = parseFloat(change);
-                                    const signed = (isNaN(num) ? change : (num >= 0 ? `+${num.toFixed(change.includes('.') ? change.split('.')[1].length : 2)}` : `${num.toFixed(change.includes('.') ? change.split('.')[1].length : 2)}`));
+                                    const num = parseFloat(change) || 0;
+                                    const signed = num >= 0 ? `+${num.toFixed(2)}` : `${num.toFixed(2)}`;
                                     changeEl.textContent = signed;
                                     changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
                                     if (priceEl && priceEl.parentElement) {
