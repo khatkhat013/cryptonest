@@ -671,7 +671,7 @@
             try {
                 const sym = '{{ $symbol }}'.toUpperCase();
                 const symbolToPair = {
-                    'BTC': 'BTC', 'ETH': 'ETH', 'BNB': 'BNB', 'TRX': 'TRX', 'XRP': 'XRP', 'DOGE': 'DOGE'
+                    'BTC': 'BTC', 'ETH': 'ETH', 'TRX': 'TRX', 'XRP': 'XRP', 'DOGE': 'DOGE'
                 };
                 const pairSym = symbolToPair[sym] || sym;
                 if (!pairSym) return;

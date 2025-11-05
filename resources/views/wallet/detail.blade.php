@@ -594,6 +594,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (e) {}
 
+        // Special-case common stablecoins — treat as USD=1
+        try {
+            const up = String(symbol).toUpperCase();
+            const stableSet = new Set(['USDT','USDC','PYUSD','TETHER','BUSD']);
+            if (stableSet.has(up)) return 1.0;
+        } catch (e) {}
+
         // Query server single-source prices (BitCryptoForest)
         try {
             const resp = await fetch('/prices?symbols=' + encodeURIComponent(symbol) + '&prefer=bitcryptoforest');
@@ -614,6 +621,33 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (e) {
             // ignore network errors
         }
+
+        // If direct lookup failed, try common alias forms (USD{SYM}, {SYM}USD)
+        try {
+            const up = String(symbol).toUpperCase();
+            const altCandidates = [ 'USD' + up, up + 'USD' ];
+            for (let k = 0; k < altCandidates.length; k++) {
+                const alt = altCandidates[k];
+                try {
+                    const resp2 = await fetch('/prices?symbols=' + encodeURIComponent(alt) + '&prefer=bitcryptoforest');
+                    if (!resp2.ok) continue;
+                    const j2 = await resp2.json();
+                    if (j2 && j2.data && (j2.data[alt] && j2.data[alt].price !== undefined && j2.data[alt].price !== null)) {
+                        const amt2 = parseFloat(j2.data[alt].price);
+                        if (!isNaN(amt2)) {
+                            try {
+                                const s = JSON.parse(localStorage.getItem('latestPrices') || '{}');
+                                s[symbol.toLowerCase()] = { price: amt2, change: j2.data[alt].change ?? 0, ts: Date.now() };
+                                localStorage.setItem('latestPrices', JSON.stringify(s));
+                            } catch (e) {}
+                            return amt2;
+                        }
+                    }
+                } catch (e) {
+                    // ignore and try next
+                }
+            }
+        } catch (e) {}
 
         return null;
     }

@@ -31,7 +31,7 @@
             <!-- Crypto Tab -->
             <div class="tab-pane fade show active" id="crypto" role="tabpanel">
                 <div class="row g-3">
-                    @foreach(['BTC' => 'Bitcoin', 'ETH' => 'Ethereum', 'BNB' => 'Binance Coin', 
+                    @foreach(['BTC' => 'Bitcoin', 'ETH' => 'Ethereum',
                              'TRX' => 'TRON', 'XRP' => 'Ripple', 'DOGE' => 'Dogecoin'] as $symbol => $name)
                         <div class="col-md-4">
                             <a href="{{ url('/coin/' . strtolower($symbol)) }}" class="text-decoration-none market-link" data-symbol="{{ strtolower($symbol) }}">
@@ -46,7 +46,7 @@
                                             @if(file_exists($localSvg) || file_exists($localIconSvg))
                                                 <img src="{{ asset('images/icons/' . $symLower . '.svg') }}" alt="{{ $name }}" class="me-2" style="width: 32px; height: 32px;">
                                             @else
-                                                <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/{{ array_search($symbol, ['BTC', 'ETH', 'BNB', 'TRX', 'XRP', 'DOGE']) + 1 }}.png" 
+                                                <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/{{ array_search($symbol, ['BTC', 'ETH', 'TRX', 'XRP', 'DOGE']) + 1 }}.png" 
                                                      alt="{{ $name }}" class="me-2" style="width: 32px; height: 32px;">
                                             @endif
                                             <div>
@@ -155,26 +155,24 @@
                 AI Arbitrage
             </h2>
             <div class="feature-grid">
-                <!-- AI Arbitrage Card -->
+                <!-- AI Arbitrage Card (prominent animation) -->
                 <a href="{{ url('/arbitrage') }}" class="text-decoration-none">
-                    <div class="card market-card feature-card position-relative overflow-hidden">
-                        <div class="position-absolute w-100 h-100 animation-wrapper">
-                            <dotlottie-wc src="https://lottie.host/4c89fb6d-25b1-4505-8149-a669c9c57e3d/EaLJaJluzA.lottie" 
-                                        style="width: 100%; height: 100%; opacity: 0.5;" 
-                                        autoplay loop>
-                            </dotlottie-wc>
+                    <div class="card market-card feature-card position-relative overflow-hidden" style="box-shadow: 0 10px 30px rgba(16,185,129,0.06); border: 1px solid rgba(34,197,94,0.08);">
+                        <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events:none; z-index:1;">
+                            <dotlottie-wc src="https://lottie.host/4c89fb6d-25b1-4505-8149-a669c9c57e3d/EaLJaJluzA.lottie" style="width:80%; height:80%; max-width:420px; max-height:420px; opacity:0.98;" autoplay loop></dotlottie-wc>
                         </div>
-                        <div class="card-body position-relative z-1 p-4">
-                        </div>
+                        <div class="card-body position-relative z-2 p-0" style="min-height:180px;"></div>
                     </div>
                 </a>
-                <!-- Mining Card -->
+                <!-- Mining Card (prominent animation only) -->
                 <a href="{{ url('/mining') }}" class="text-decoration-none">
-                    <div class="card market-card feature-card position-relative overflow-hidden">
-                        <div class="card-body position-relative z-1 p-4 d-flex flex-column justify-content-center align-items-center">
-                            <i class="bi bi-minecart-loaded text-success mb-3" style="font-size: 2.5rem;"></i>
-                            <h3 class="text-success">Mining Pool</h3>
+                    <div class="card market-card feature-card position-relative overflow-hidden" style="box-shadow: 0 10px 30px rgba(16,185,129,0.08); border: 1px solid rgba(34,197,94,0.10);">
+                        <!-- Large centered animation; pointer-events disabled so the link remains clickable -->
+                        <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events:none; z-index:1;">
+                            <dotlottie-wc src="https://lottie.host/3b3a89d1-eaa6-4fb6-9118-1d5804faaf5a/RNsMUkyjxt.lottie" style="width: 80%; height: 80%; max-width: 420px; max-height: 420px; opacity:0.98;" autoplay loop></dotlottie-wc>
                         </div>
+                        <!-- Keep an empty card-body so layout/spacing remains consistent -->
+                        <div class="card-body position-relative z-2 p-0" style="min-height:180px;"></div>
                     </div>
                 </a>
             </div>
@@ -187,24 +185,20 @@
                 Community
             </h2>
             <div class="feature-grid">
-                <!-- Invite Friends Card -->
-                <div class="card market-card feature-card position-relative overflow-hidden" onclick="shareInvite()">
-                    <div class="position-absolute w-100 h-100 animation-wrapper">
-                        <dotlottie-wc src="https://lottie.host/bb1ba882-5cec-4676-add1-d008f39ae2ee/I9uAcddYg9.lottie" 
-                                    style="width: 100%; height: 100%; opacity: 0.5;" 
-                                    autoplay loop>
-                        </dotlottie-wc>
+                <!-- Invite Friends Card (prominent animation) -->
+                <div class="card market-card feature-card position-relative overflow-hidden" onclick="shareInvite()" style="box-shadow: 0 10px 30px rgba(16,185,129,0.06); border: 1px solid rgba(34,197,94,0.08);">
+                    <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events:none; z-index:1;">
+                        <dotlottie-wc src="https://lottie.host/bb1ba882-5cec-4676-add1-d008f39ae2ee/I9uAcddYg9.lottie" style="width:80%; height:80%; max-width:420px; max-height:420px; opacity:0.98;" autoplay loop></dotlottie-wc>
                     </div>
-                    <div class="card-body position-relative z-1 p-4">
-                    </div>
+                    <div class="card-body position-relative z-2 p-0" style="min-height:180px;"></div>
                 </div>
-                <!-- News Card -->
+                <!-- News Card replaced with dotlottie animation -->
                 <a href="{{ url('/news') }}" class="text-decoration-none">
-                    <div class="card market-card feature-card position-relative overflow-hidden">
-                        <div class="card-body position-relative z-1 p-4 d-flex flex-column justify-content-center align-items-center">
-                            <i class="bi bi-newspaper text-success mb-3" style="font-size: 2.5rem;"></i>
-                            <h3 class="text-success">Crypto News</h3>
+                    <div class="card market-card feature-card position-relative overflow-hidden" style="border:1px solid rgba(34,197,94,0.06);">
+                        <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events:none; z-index:1;">
+                            <dotlottie-wc src="https://lottie.host/7169eae3-0464-443d-89bf-fa2ee684a3b8/f05cXmuwHZ.lottie" style="width:300px;height:300px;opacity:0.98;" autoplay loop></dotlottie-wc>
                         </div>
+                        <div class="card-body position-relative z-2 p-0" style="min-height:180px;"></div>
                     </div>
                 </a>
             </div>
@@ -213,7 +207,7 @@
     </div>
 
     @push('scripts')
-    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.1/dist/dotlottie-wc.js" type="module"></script>
+    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.5/dist/dotlottie-wc.js" type="module"></script>
     @endpush
 
     @push('styles')
@@ -296,7 +290,7 @@
 
         .market-tabs .nav-link.active {
             background: var(--success);
-            color: white;
+            color: var(--text);
         }
 
         @keyframes tabActivate {
@@ -341,9 +335,7 @@
             background-color: rgba(0,0,0,0.03);
         }
 
-        body.dark .market-tabs .nav-link:hover:not(.active) {
-            background-color: rgba(255,255,255,0.03);
-        }
+        /* removed dark-mode override for market tabs (light-mode only) */
 
         .market-tabs .nav-link.active-animated {
             animation: tabActivate 0.3s ease-in-out;
@@ -399,13 +391,7 @@
             z-index: 1;
         }
 
-        body.dark .feature-card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        }
-
-        body.dark .feature-card:hover {
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
+        /* removed dark-mode feature-card shadow overrides (light-mode only) */
 
         .feature-grid {
             display: grid;
@@ -438,17 +424,13 @@
             font-size: 1.2rem;
         }
 
-        body.dark .animation-wrapper {
-            background: linear-gradient(45deg, rgba(0,102,255,0.05), rgba(0,102,255,0.15));
-        }
+        /* removed dark-mode animation-wrapper background (light-mode only) */
 
         .text-primary-dark {
             color: var(--primary-dark);
         }
 
-        body.dark .text-primary-dark {
-            color: var(--primary-light);
-        }
+        /* removed dark-mode text-primary-dark override (light-mode only) */
     </style>
     @endpush
 
@@ -480,7 +462,7 @@
                     crypto: {
                         'BTC': {base: 40000, variance: 2000},
                         'ETH': {base: 2200, variance: 100},
-                        'BNB': {base: 220, variance: 10},
+                        
                         'TRX': {base: 0.08, variance: 0.004},
                         'XRP': {base: 0.5, variance: 0.02},
                         'DOGE': {base: 0.07, variance: 0.003}
@@ -504,7 +486,7 @@
                     // Update crypto prices using Coinbase primary, Binance optional, fallback to seeded/random
                 (async () => {
                     // Build symbol lists for crypto, forex and metals
-                    const symbolToId = { 'BTC':'BTC','ETH':'ETH','BNB':'BNB','TRX':'TRX','XRP':'XRP','DOGE':'DOGE' };
+                    const symbolToId = { 'BTC':'BTC','ETH':'ETH','TRX':'TRX','XRP':'XRP','DOGE':'DOGE' };
                     const cryptoSymbols = Object.keys(symbolToId);
                     const forexSymbols = Object.keys(markets.forex);
                     const metalSymbols = Object.keys(markets.metals);
@@ -714,9 +696,7 @@
     @endpush
 @endsection
 
-@push('scripts')
-    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.1/dist/dotlottie-wc.js" type="module"></script>
-@endpush
+<!-- removed duplicate/old dotlottie script import (kept the 0.8.5 import above) -->
 
 @section('content')
 @endsection

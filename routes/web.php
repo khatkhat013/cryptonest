@@ -343,7 +343,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Trading functionality
     Route::get('/coin/{symbol}', function($symbol) {
-        if (!in_array(strtolower($symbol), ['btc', 'eth', 'bnb', 'trx', 'xrp', 'doge'])) {
+        if (!in_array(strtolower($symbol), ['btc', 'eth', 'trx', 'xrp', 'doge'])) {
             abort(404);
         }
         return view('trade', ['symbol' => strtolower($symbol), 'type' => 'crypto']);

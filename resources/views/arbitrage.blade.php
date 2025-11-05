@@ -89,7 +89,7 @@
                     <div class="text-muted mb-2">Currency</div>
                     <div class="d-flex gap-2">
                         @php
-                            $arbSymbols = ['btc','eth','usdt','doge','xrp','bnb'];
+                            $arbSymbols = ['btc','eth','usdt','doge','xrp'];
                         @endphp
                         @foreach($arbSymbols as $s)
                             @php $local = public_path('images/icons/' . $s . '.svg'); @endphp
@@ -162,7 +162,7 @@
                 <div>
                     <div class="text-muted mb-2">Currency</div>
                     <div class="d-flex gap-2">
-                        @php $arbSymbols = ['btc','eth','usdt','doge','xrp','bnb']; @endphp
+                        @php $arbSymbols = ['btc','eth','usdt','doge','xrp']; @endphp
                         @foreach($arbSymbols as $s)
                             @php $local = public_path('images/icons/' . $s . '.svg'); @endphp
                             @if(file_exists($local))
@@ -234,7 +234,7 @@
                 <div>
                     <div class="text-muted mb-2">Currency</div>
                     <div class="d-flex gap-2">
-                        @php $arbSymbols = ['btc','eth','usdt','doge','xrp','bnb']; @endphp
+                        @php $arbSymbols = ['btc','eth','usdt','doge','xrp']; @endphp
                         @foreach($arbSymbols as $s)
                             @php $local = public_path('images/icons/' . $s . '.svg'); @endphp
                             @if(file_exists($local))
@@ -306,7 +306,7 @@
                 <div>
                     <div class="text-muted mb-2">Currency</div>
                     <div class="d-flex gap-2">
-                        @php $arbSymbols = ['btc','eth','usdt','doge','xrp','bnb']; @endphp
+                        @php $arbSymbols = ['btc','eth','usdt','doge','xrp']; @endphp
                         @foreach($arbSymbols as $s)
                             @php $local = public_path('images/icons/' . $s . '.svg'); @endphp
                             @if(file_exists($local))
@@ -375,7 +375,7 @@
                 <div>
                     <div class="text-muted mb-2">Currency</div>
                     <div class="d-flex gap-2">
-                        @php $arbSymbols = ['btc','eth','usdt','doge','xrp','bnb']; @endphp
+                        @php $arbSymbols = ['btc','eth','usdt','doge','xrp']; @endphp
                         @foreach($arbSymbols as $s)
                             @php $local = public_path('images/icons/' . $s . '.svg'); @endphp
                             @if(file_exists($local))
@@ -444,7 +444,7 @@
                 <div>
                     <div class="text-muted mb-2">Currency</div>
                     <div class="d-flex gap-2">
-                        @php $arbSymbols = ['btc','eth','usdt','doge','xrp','bnb']; @endphp
+                        @php $arbSymbols = ['btc','eth','usdt','doge','xrp']; @endphp
                         @foreach($arbSymbols as $s)
                             @php $local = public_path('images/icons/' . $s . '.svg'); @endphp
                             @if(file_exists($local))
@@ -602,17 +602,6 @@
     font-size: 0.9rem !important;
 }
 
-body.dark .arbitrage-card {
-    background: var(--bg-surface);
-    border-color: var(--border);
-}
-
-body.dark .bg-light {
-    background-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-body.dark .arbitrage-card .row.g-4 > div:hover .bg-light {
-    background-color: rgba(255, 255, 255, 0.08) !important;
-}
+/* removed dark-mode styles (site is light-mode only) */
 </style>
 @endpush

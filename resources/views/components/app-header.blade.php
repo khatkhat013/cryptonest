@@ -14,10 +14,6 @@
 
         <!-- Right actions -->
         <div class="d-flex align-items-center gap-2">
-            <button id="darkToggleBtn" class="btn-action" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
-                <i class="bi bi-moon-stars-fill"></i>
-            </button>
-
             <button class="btn-action" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarCanvas" aria-controls="sidebarCanvas" aria-label="Toggle menu">
                 <i class="bi bi-list fs-4"></i>
             </button>

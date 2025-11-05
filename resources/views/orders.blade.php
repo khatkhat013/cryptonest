@@ -83,15 +83,15 @@ function showTab(tab) {
 }
 
 // Style for active pill button
-document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
     const style = document.createElement('style');
     style.textContent = `
         .btn.active {
-            background-color: white !important;
-            color: var(--bs-primary) !important;
+            background-color: var(--bg-surface) !important;
+            color: var(--primary) !important;
         }
         .btn:not(.active) {
-            color: white !important;
+            color: var(--text) !important;
         }
     `;
     document.head.appendChild(style);

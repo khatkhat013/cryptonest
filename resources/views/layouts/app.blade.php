@@ -87,9 +87,7 @@
             background-color: rgba(0, 102, 255, 0.1);
         }
 
-        body.dark .btn-action:hover {
-            background-color: rgba(51, 133, 255, 0.1);
-        }
+        /* dark-mode specific hover styles removed - site is light-mode only */
 
         /* Sidebar */
         .offcanvas {
@@ -105,7 +103,7 @@
 
         .credit-badge {
             background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
+            color: var(--text);
             padding: 0.35rem 0.75rem;
             border-radius: 50rem;
             font-weight: 600;
@@ -123,9 +121,7 @@
             background-color: rgba(0,0,0,0.03);
         }
 
-        body.dark .user-id {
-            background-color: rgba(255,255,255,0.03);
-        }
+        /* removed dark-mode user-id override */
 
         .function-label {
             color: var(--text-muted);
@@ -152,9 +148,7 @@
             transform: translateX(4px);
         }
 
-        body.dark .list-group-item:hover {
-            background-color: rgba(255,255,255,0.05);
-        }
+        /* removed dark-mode list hover override */
 
         .list-group-item i {
             color: var(--text-muted);
@@ -185,10 +179,7 @@
             color: var(--primary-dark);
         }
 
-        body.dark .btn-action:hover {
-            background-color: var(--primary-bg);
-            color: var(--primary-light);
-        }
+        /* removed dark-mode btn-action hover override */
 
         /* Layout */
         .container-main {
@@ -208,7 +199,7 @@
 
     @stack('styles')
 </head>
-<body class="{{ old('dark', '') }}">
+<body>
 
     {{-- Include the header component once for all pages --}}
 
@@ -224,32 +215,10 @@
     <!-- Custom JS -->
     <script src="{{ asset('js/plan-modal.js') }}"></script>
     <!-- DotLottie web component (used for success animations) -->
-    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.1/dist/dotlottie-wc.js" type="module"></script>
+    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.8.5/dist/dotlottie-wc.js" type="module"></script>
 </body>
 </html>
-    <script>
-        (function(){
-            // Dark mode persistence
-            const key = 'crypto-nest-dark';
-            const body = document.body;
-            const btn = document.getElementById('darkToggleBtn');
-            const isDarkStored = localStorage.getItem(key) === '1';
-            if(isDarkStored) body.classList.add('dark');
-            if(btn) {
-                const icon = btn.querySelector('i');
-                if(icon) icon.className = isDarkStored ? 'bi bi-sun fs-5' : 'bi bi-moon-stars fs-5';
-            }
-
-            window.toggleDarkMode = function(){
-                const isDark = body.classList.toggle('dark');
-                localStorage.setItem(key, isDark ? '1' : '0');
-                if(btn) {
-                    const icon = btn.querySelector('i');
-                    if(icon) icon.className = isDark ? 'bi bi-sun fs-5' : 'bi bi-moon-stars fs-5';
-                }
-            };
-        })();
-    </script>
+    <!-- dark-mode toggle removed: site operates in single light mode -->
 
 
     <!-- Floating Support Button -->
@@ -295,7 +264,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: var(--text);
             box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
             transition: all 0.3s ease;
             z-index: 1000;
@@ -304,7 +273,7 @@
         .support-btn:hover {
             transform: translateY(-5px) scale(1.05);
             box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
-            color: white;
+            color: var(--text);
         }
 
         .support-btn i {

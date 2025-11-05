@@ -51,7 +51,7 @@
                         Supported Currencies
                     </h6>
                     <div class="d-flex align-items-center gap-2 mb-4">
-                        @php $arbSymbols = ['btc','eth','usdt','doge','xrp','bnb']; @endphp
+                        @php $arbSymbols = ['btc','eth','usdt','doge','xrp']; @endphp
                         @foreach($arbSymbols as $s)
                             @php $local = public_path('images/icons/' . $s . '.svg'); @endphp
                             @if(file_exists($local))

@@ -68,9 +68,35 @@
                                 </div>
                             </div>
                             <div class="text-end">
-                                <div class="wallet-usd" data-symbol="{{ $sym }}" data-balance="{{ $balanceDisplay }}">US$ 0.00</div>
-                                <small class="text-muted">{{ $balanceDisplay }} {{ $sym }}</small>
-                            </div>
+                                    {{-- Try to show USD value server-side as a fallback so the page is useful even when client /prices fetch fails --}}
+                                    @php
+                                        $serverPrice = null;
+                                        try {
+                                            // Treat common stablecoins as pegged to USD
+                                            $stableCoins = ['USDT','USDC','PYUSD','TUSD','BUSD'];
+                                            if (in_array(strtoupper($sym), $stableCoins)) {
+                                                $serverPrice = 1.0;
+                                            } else {
+                                                $serverPrice = \App\Services\PriceService::getCryptoPrice($sym);
+                                                // If primary lookup failed, try common aliases (USD{SYM} or {SYM}USD)
+                                                if ($serverPrice === null) {
+                                                    $alt1 = \App\Services\PriceService::getCryptoPrice('USD' . strtoupper($sym));
+                                                    $alt2 = \App\Services\PriceService::getCryptoPrice(strtoupper($sym) . 'USD');
+                                                    $serverPrice = $alt1 ?? $alt2 ?? null;
+                                                }
+                                            }
+                                        } catch (\Throwable $_) {
+                                            $serverPrice = null;
+                                        }
+                                        $usdValue = null;
+                                        if ($serverPrice !== null && is_numeric($serverPrice) && $balance > 0) {
+                                            $usdValue = number_format($serverPrice * $balance, 2, '.', ',');
+                                        }
+                                    @endphp
+
+                                    <div class="wallet-usd" data-symbol="{{ $sym }}" data-balance="{{ $balanceDisplay }}" data-usd="{{ $usdValue ?? '' }}">{{ $usdValue ? ('US$ ' . $usdValue) : 'US$ 0.00' }}</div>
+                                    <small class="text-muted">{{ $balanceDisplay }} {{ $sym }}</small>
+                                </div>
                         </div>
                     </a>
                 @endforeach
@@ -149,6 +175,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const sym = el.getAttribute('data-symbol');
         const balRaw = el.getAttribute('data-balance') || '0';
         const bal = parseFloat(balRaw) || 0;
+
+        // If server provided a USD value as a fallback, use it immediately
+        const serverUsd = el.getAttribute('data-usd');
+        if (serverUsd && serverUsd !== '') {
+            el.textContent = 'US$ ' + serverUsd;
+            return;
+        }
+
         if (bal <= 0) {
             el.textContent = 'US$ 0.00';
             return;
