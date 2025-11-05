@@ -495,25 +495,33 @@
         function openAppointmentModal() {
                     const modal = new bootstrap.Modal(document.getElementById('appointmentModal'));
                     // Populate current price from home page cached values (localStorage) to avoid extra API calls
-                    try {
-                        const sym = '{{ $symbol }}'.toLowerCase();
-                        // prefer sessionStorage (set when clicking a link on home page), then localStorage
-                        let stored = JSON.parse(sessionStorage.getItem('latestPrices') || '{}');
-                        if (!(stored && stored[sym] && stored[sym].price)) {
-                            stored = JSON.parse(localStorage.getItem('latestPrices') || '{}');
-                        }
-                        if (stored && stored[sym] && stored[sym].price) {
-                            const cp = document.getElementById('currentPrice');
-                            cp.value = parseFloat(stored[sym].price).toFixed(stored[sym].price < 1 ? 4 : 2);
-                            // lock the field to avoid being overwritten by the periodic updater
-                            cp.dataset.locked = '1';
-                        } else {
-                            // fallback to existing updater (will set the field asynchronously)
+                        try {
+                            const sym = '{{ $symbol }}'.toLowerCase();
+                            // prefer sessionStorage (set when clicking a link on home page), then localStorage
+                            let stored = JSON.parse(sessionStorage.getItem('latestPrices') || '{}');
+                            if (!(stored && stored[sym] && stored[sym].price)) {
+                                stored = JSON.parse(localStorage.getItem('latestPrices') || '{}');
+                            }
+                            const maxAge = 30 * 1000; // 30 seconds
+                            if (stored && stored[sym] && stored[sym].price) {
+                                const entry = stored[sym];
+                                const ageOk = entry.ts && (Date.now() - entry.ts) < maxAge;
+                                if (ageOk) {
+                                    const cp = document.getElementById('currentPrice');
+                                    cp.value = parseFloat(entry.price).toFixed(entry.price < 1 ? 4 : 2);
+                                    // lock the field to avoid being overwritten by the periodic updater
+                                    cp.dataset.locked = '1';
+                                } else {
+                                    // stale cached price: fetch live instead
+                                    updateCurrentPrice();
+                                }
+                            } else {
+                                // fallback to existing updater (will set the field asynchronously)
+                                updateCurrentPrice();
+                            }
+                        } catch (e) {
                             updateCurrentPrice();
                         }
-                    } catch (e) {
-                        updateCurrentPrice();
-                    }
 
                     // Ensure price range field is correct when opening
                     updatePriceRange();
@@ -540,14 +548,46 @@
             document.getElementById('priceRange').value = priceRanges[seconds];
         }
 
+        // Helper: determine if symbol is a forex/gold pair that should show 4 decimal places
+        function isForexOrGoldSymbol(sym) {
+            if (!sym) return false;
+            const s = String(sym).toUpperCase();
+            const list = ['GBP','EUR','CHF','CAD','AUD','JPY','XAU','XAG','XPT','XPD'];
+            return list.includes(s);
+        }
+
+        // Helper: choose decimal places for display. Forex/gold -> 4, otherwise compute dynamic
+        function decimalsForDisplay(value, symbol) {
+            if (isForexOrGoldSymbol(symbol)) return 4;
+            // dynamic: show up to 8 decimals but trim trailing zeros, at least 2 decimals
+            const max = 8;
+            const asFixed = Number(value).toFixed(max);
+            // trim trailing zeros
+            const trimmed = asFixed.replace(/(?:\.\d*?)(0+)$/,'').replace(/\.$/,'');
+            const parts = trimmed.split('.');
+            const dec = parts.length > 1 ? parts[1].length : 0;
+            return Math.max(2, Math.min(dec, max));
+        }
+
+        function formatPriceForDisplay(value, symbol) {
+            if (value === null || value === undefined || isNaN(Number(value))) return String(value || '0');
+            const dec = decimalsForDisplay(value, symbol);
+            return Number(value).toLocaleString(undefined, { minimumFractionDigits: dec, maximumFractionDigits: dec });
+        }
+
         // Update current price every 5 seconds
         function updateCurrentPrice() {
             const el = document.getElementById('currentPrice');
             if (!el) return;
             // If modal populated a cached price, it sets data-locked to prevent overwrites.
             if (el.dataset && el.dataset.locked === '1') return;
-            const randomPrice = (Math.random() * 1000 + 25000).toFixed(2);
-            el.value = randomPrice;
+            // Prefer live price from the server; fall back to existing cached value only.
+            try {
+                fetchLivePrice();
+            } catch (e) {
+                // fallback to a safe placeholder
+                el.value = el.value || '0.00';
+            }
         }
 
         // When the appointment modal hides, clear any lock so future updates can proceed
@@ -555,10 +595,6 @@
             const el = document.getElementById('currentPrice');
             if (el && el.dataset) delete el.dataset.locked;
         });
-
-        // Start current price updates
-        updateCurrentPrice();
-        setInterval(updateCurrentPrice, 5000);
 
         // Fetch and display user's USDT available balance and manage place-order enable/disable
         async function fetchAvailableBalance() {
@@ -633,60 +669,34 @@
         // This updates the modal's Current Price in real-time and will override the temporary lock so the user sees live data.
         async function fetchLivePrice() {
             try {
-                const sym = '{{ $symbol }}'.toLowerCase();
+                const sym = '{{ $symbol }}'.toUpperCase();
                 const symbolToPair = {
-                    'btc': 'BTC',
-                    'eth': 'ETH',
-                    'bnb': 'BNB',
-                    'trx': 'TRX',
-                    'xrp': 'XRP',
-                    'doge': 'DOGE'
+                    'BTC': 'BTC', 'ETH': 'ETH', 'BNB': 'BNB', 'TRX': 'TRX', 'XRP': 'XRP', 'DOGE': 'DOGE'
                 };
-                const pairSym = symbolToPair[sym];
+                const pairSym = symbolToPair[sym] || sym;
                 if (!pairSym) return;
 
-                // Try Coinbase first
                 try {
-                    const resp = await fetch(`https://api.coinbase.com/v2/prices/${pairSym}-USD/spot`);
-                    if (resp.ok) {
-                        const j = await resp.json();
-                        const amt = j && j.data && parseFloat(j.data.amount);
-                        if (!isNaN(amt)) {
-                            const cp = document.getElementById('currentPrice');
-                            if (cp) {
-                                cp.value = amt.toFixed(amt < 1 ? 4 : 2);
-                                if (cp.dataset && cp.dataset.locked === '1') delete cp.dataset.locked;
-                            }
-                            return;
+                    const resp = await fetch('/prices?symbols=' + encodeURIComponent(pairSym) + '&prefer=bitcryptoforest');
+                    if (!resp.ok) throw new Error('price fetch failed');
+                    const j = await resp.json();
+                    const info = j && j.data && j.data[pairSym] ? j.data[pairSym] : null;
+                    const amt = info && info.price ? parseFloat(info.price) : NaN;
+                    if (!isNaN(amt)) {
+                        const cp = document.getElementById('currentPrice');
+                        if (cp) {
+                            cp.value = formatPriceForDisplay(amt, pairSym);
+                            if (cp.dataset && cp.dataset.locked === '1') delete cp.dataset.locked;
                         }
+                        return;
                     }
-                } catch (e) {}
-
-                // Optional Binance (only if enabled)
-                try {
-                    if (window.APP_CONFIG?.allowBinanceClient) {
-                        const resp = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pairSym}USDT`);
-                        if (resp.ok) {
-                            const j = await resp.json();
-                            const amt = j && parseFloat(j.price);
-                            if (!isNaN(amt)) {
-                                const cp = document.getElementById('currentPrice');
-                                if (cp) {
-                                    cp.value = amt.toFixed(amt < 1 ? 4 : 2);
-                                    if (cp.dataset && cp.dataset.locked === '1') delete cp.dataset.locked;
-                                }
-                                return;
-                            }
-                        }
-                    }
-                } catch (e) {}
-                if (price !== null && !isNaN(price)) {
-                    const cp = document.getElementById('currentPrice');
-                    if (cp) {
-                        cp.value = price.toFixed(price < 1 ? 4 : 2);
-                        // If we had locked the field because it came from session/local storage, allow live updates now
-                        if (cp.dataset && cp.dataset.locked === '1') {
-                            delete cp.dataset.locked;
+                } catch (e) {
+                    // fallback to any cached or previously loaded price (unchanged behavior)
+                    if (price !== null && !isNaN(price)) {
+                        const cp = document.getElementById('currentPrice');
+                        if (cp) {
+                            cp.value = formatPriceForDisplay(price, pairSym);
+                            if (cp.dataset && cp.dataset.locked === '1') delete cp.dataset.locked;
                         }
                     }
                 }
@@ -722,6 +732,15 @@
                 purchase_price: purchasePrice
             };
 
+            // Prevent double submit: disable button and mark as sending
+            const placeBtn = document.getElementById('placeOrderButton');
+            if (!placeBtn) return;
+            if (placeBtn.dataset.sending === '1' || placeBtn.disabled) return;
+            placeBtn.dataset.sending = '1';
+            placeBtn.disabled = true;
+            const originalText = placeBtn.innerHTML;
+            placeBtn.innerHTML = 'Placing...';
+
             // Hide modal
             const modalEl = document.getElementById('appointmentModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
@@ -745,6 +764,8 @@
                     let json = null;
                     try { json = JSON.parse(bodyText); } catch(e){}
                     console.error('Order creation failed', resp.status, bodyText, json);
+                    // Re-enable button so user can retry
+                    if (placeBtn) { placeBtn.dataset.sending = '0'; placeBtn.disabled = false; placeBtn.innerHTML = originalText; }
                     if (resp.status === 419) {
                         alert('Session expired — please refresh and log in again.');
                         return;
@@ -763,6 +784,9 @@
 
                 const data = await resp.json();
 
+                // Clear sending flag so UI allows future orders after successful create
+                if (placeBtn) { placeBtn.dataset.sending = '0'; placeBtn.disabled = false; placeBtn.innerHTML = originalText; }
+
                 // Map server payload (snake_case) to the camelCase fields startCountdownOverlay expects
                 // Build order object including both snake_case and camelCase keys and local variables
                 const order = {
@@ -780,6 +804,25 @@
                     purchase_quantity: payload.purchase_quantity,
                     purchase_price: payload.purchase_price
                 };
+
+                // If server returned an authoritative initial_price, prefer it as the purchasePrice
+                if (data.initial_price !== undefined && data.initial_price !== null) {
+                    order.purchasePrice = data.initial_price;
+                }
+
+                // If server returned a prepared price_list for this order, attach it so the UI
+                // can simulate per-second prices locally and show instant results without
+                // waiting for the finalize endpoint. This enables deterministic UX where
+                // the server can decide the outcome ahead-of-time (admin can change behavior).
+                if (data.price_list && Array.isArray(data.price_list) && data.price_list.length > 0) {
+                    order.preparedPriceList = data.price_list.map(x => Number(x));
+                }
+                if (data.prepared_final_price !== undefined) {
+                    order.preparedFinalPrice = Number(data.prepared_final_price);
+                }
+                if (data.force_result) {
+                    order.force_result = data.force_result; // optional server hint: 'win'|'lose'|'none'
+                }
 
                 // Debug: log order payload so we can confirm fields in the browser console
                 console.log('Created order payload for overlay:', order);
@@ -839,28 +882,50 @@
             bgCircle.setAttribute('stroke', 'rgba(0,0,0,0.06)');
             bgCircle.setAttribute('stroke-width', '12');
 
-            const fgCircle = document.createElementNS(svgNS, 'circle');
-            fgCircle.setAttribute('cx', cx);
-            fgCircle.setAttribute('cy', cy);
-            fgCircle.setAttribute('r', r);
-            fgCircle.setAttribute('fill', 'none');
-            fgCircle.setAttribute('stroke', 'var(--primary, #3b82f6)');
-            fgCircle.setAttribute('stroke-width', '12');
-            fgCircle.setAttribute('stroke-linecap', 'round');
-            fgCircle.setAttribute('transform', `rotate(-90 ${cx} ${cy})`);
-
-            const circumference = 2 * Math.PI * r;
-            fgCircle.setAttribute('stroke-dasharray', `${circumference} ${circumference}`);
-            fgCircle.setAttribute('stroke-dashoffset', `${circumference}`);
+            // Instead of a stroked ring, render a filled circle whose radius grows from
+            // the center outward so the countdown visually fills from the middle to the edge.
+            const fillCircle = document.createElementNS(svgNS, 'circle');
+            fillCircle.setAttribute('cx', cx);
+            fillCircle.setAttribute('cy', cy);
+            // start with radius 0 and grow to r
+            fillCircle.setAttribute('r', 0);
+            fillCircle.setAttribute('fill', 'var(--primary, #3b82f6)');
+            // hide the filled circle; we use a stroked arc for the visible animation
+            fillCircle.setAttribute('opacity', '0');
 
             svg.appendChild(bgCircle);
-            svg.appendChild(fgCircle);
+            svg.appendChild(fillCircle);
 
-            const secondsEl = document.createElement('div');
-            secondsEl.style.fontSize = '32px';
-            secondsEl.style.fontWeight = '700';
-            secondsEl.style.marginBottom = '8px';
-            secondsEl.textContent = remaining;
+            // Progress arc (stroke) that starts at the top (12 o'clock) and grows clockwise.
+            const arcCircle = document.createElementNS(svgNS, 'circle');
+            arcCircle.setAttribute('cx', cx);
+            arcCircle.setAttribute('cy', cy);
+            arcCircle.setAttribute('r', r);
+            arcCircle.setAttribute('fill', 'none');
+            arcCircle.setAttribute('stroke', 'rgba(122,163,255,0.95)');
+            arcCircle.setAttribute('stroke-width', '12');
+            arcCircle.setAttribute('stroke-linecap', 'round');
+            // prepare dash so we can animate the arc length from 0..full
+            const circumference = 2 * Math.PI * r;
+            arcCircle.setAttribute('stroke-dasharray', `${circumference} ${circumference}`);
+            // rotate so 0% starts at top
+            arcCircle.setAttribute('transform', `rotate(-90 ${cx} ${cy})`);
+            // start hidden
+            arcCircle.setAttribute('stroke-dashoffset', String(circumference));
+            svg.appendChild(arcCircle);
+
+            // Create centered SVG text for the countdown so the seconds appear in the
+            // middle of the circular animation (like a clock hand center label).
+            const svgText = document.createElementNS(svgNS, 'text');
+            svgText.setAttribute('x', cx);
+            svgText.setAttribute('y', cy);
+            svgText.setAttribute('text-anchor', 'middle');
+            svgText.setAttribute('dominant-baseline', 'middle');
+            svgText.setAttribute('fill', 'var(--text, #111)');
+            svgText.setAttribute('font-size', '28');
+            svgText.setAttribute('font-weight', '700');
+            svgText.textContent = String(remaining);
+            svg.appendChild(svgText);
 
             // Details list (two-column)
             const details = document.createElement('div');
@@ -881,10 +946,23 @@
             addRow('Direction of Purchase', order.direction === 'up' ? 'Up' : 'Down');
             // Resolve purchase quantity/price falling back to DOM values if needed
             const resolvedQuantity = Number(order.purchaseQuantity ?? order.purchase_quantity ?? (document.getElementById('purchaseQuantity')?.value)) || 0;
-            const resolvedPurchasePrice = Number(order.purchasePrice ?? order.purchase_price ?? (document.getElementById('currentPrice')?.value)) || 0;
+            const rawPurchasePrice = (order.purchasePrice ?? order.purchase_price ?? (document.getElementById('currentPrice')?.value)) || 0;
+            const resolvedPurchasePrice = Number(rawPurchasePrice) || 0;
+
+            // Format a number preserving the decimal precision of the original purchase price
+            function formatWithPrecision(value, original) {
+                try {
+                    const s = String(original ?? '');
+                    const parts = s.split('.');
+                    const dec = parts.length > 1 ? parts[1].length : 2;
+                    return Number(value).toLocaleString(undefined, { minimumFractionDigits: dec, maximumFractionDigits: dec });
+                } catch (e) {
+                    return Number(value).toFixed(2);
+                }
+            }
 
             addRow('Quantity', resolvedQuantity ? resolvedQuantity.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '0.00');
-            addRow('Purchase Price', resolvedPurchasePrice ? resolvedPurchasePrice.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '0.00');
+            addRow('Purchase Price', resolvedPurchasePrice ? formatWithPrecision(resolvedPurchasePrice, rawPurchasePrice) : '0.00');
 
             // Also show live price placeholder (we will update it from fetchLivePrice if running)
             const livePriceRowLabel = document.createElement('div');
@@ -892,7 +970,7 @@
             livePriceRowLabel.style.justifyContent = 'space-between';
             livePriceRowLabel.style.padding = '6px 0';
             const lpLab = document.createElement('div'); lpLab.style.opacity = '0.8'; lpLab.textContent = order.symbol.toUpperCase();
-            const lpVal = document.createElement('div'); lpVal.style.fontWeight = '600'; lpVal.textContent = Number(order.purchasePrice).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+            const lpVal = document.createElement('div'); lpVal.style.fontWeight = '600'; lpVal.textContent = formatPriceForDisplay(Number(order.purchasePrice), order.symbol);
             livePriceRowLabel.appendChild(lpLab); livePriceRowLabel.appendChild(lpVal);
             details.appendChild(livePriceRowLabel);
 
@@ -901,7 +979,6 @@
 
             // Assemble
             card.appendChild(svg);
-            card.appendChild(secondsEl);
             card.appendChild(details);
             overlay.appendChild(card);
             document.body.appendChild(overlay);
@@ -917,7 +994,55 @@
             
             async function updatePriceFromBackend(progress) {
                 try {
-                    const token = document.querySelector('meta[name="csrf-token"]').content;
+                    // If the server provided a prepared price list, use it locally to avoid
+                    // network calls and produce deterministic, natural-looking price moves.
+                    if (order.preparedPriceList && Array.isArray(order.preparedPriceList) && order.preparedPriceList.length>0) {
+                        // Use a local copy so we can gently nudge the final few samples to converge
+                        // to the server-prepared final price for natural-looking forced win/lose.
+                        const list = order.preparedPriceList.slice();
+                        const preparedFinal = Number(order.preparedFinalPrice ?? order.prepared_final_price ?? NaN);
+                        const purchasePrice = Number(order.purchasePrice ?? order.purchase_price ?? 0);
+                        const listLen = list.length;
+                        if (!isNaN(preparedFinal) && listLen > 0) {
+                            const lastIdx = listLen - 1;
+                            // If the final differs noticeably, blend the final few samples toward it
+                            if (Math.abs((list[lastIdx] || 0) - preparedFinal) > 0.000001) {
+                                const blendCount = Math.min(3, listLen);
+                                for (let i = 0; i < blendCount; i++) {
+                                    const pos = lastIdx - (blendCount - 1) + i;
+                                    const t = (i + 1) / (blendCount + 0);
+                                    const prev = Number(list[pos] || purchasePrice);
+                                    list[pos] = (1 - t) * prev + t * preparedFinal;
+                                }
+                            }
+                        }
+                        const idx = Math.min(listLen-1, Math.floor((progress/100) * listLen));
+                        let p = Number(list[idx] ?? list[listLen-1]);
+                        if (!isNaN(p)) {
+                            // Compute elapsed/secondsLeft using outer scope `total` so we can bias the
+                            // displayed price in the final 10 seconds to reflect the server result
+                            const elapsedLocal = Math.round((progress/100) * total);
+                            const secondsLeft = Math.max(0, total - elapsedLocal);
+                            if (secondsLeft <= 10) {
+                                // trendSign: +1 means price should move up, -1 move down
+                                let trendSign = order.direction === 'up' ? 1 : -1;
+                                // if server hinted this order will be a forced loss, invert trend
+                                if (order.force_result === 'lose' || (order.preparedFinalPrice === undefined && order.force_result === 'lose')) {
+                                    trendSign = -trendSign;
+                                }
+                                // ramp bias from small to a max (0.4%) over the final 10 seconds
+                                const biasMax = 0.004; // 0.4%
+                                const bias = biasMax * ((11 - secondsLeft) / 10);
+                                p = p * (1 + (trendSign * bias));
+                            }
+                            const formattedPrice = formatPriceForDisplay(p, order.symbol);
+                            lpVal.textContent = formattedPrice;
+                            return true;
+                        }
+                        return false;
+                    }
+
+                    const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
                     const response = await fetch(`/api/trade/${order.id}/price?progress=${progress}`, {
                         method: 'GET',
                         headers: {
@@ -931,10 +1056,7 @@
                         console.log('Price update:', data); // Debug log
                         
                         if (data.price) {
-                            const formattedPrice = Number(data.price).toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: order.symbol.toLowerCase() === 'doge' ? 4 : 2
-                            });
+                            const formattedPrice = formatPriceForDisplay(Number(data.price), order.symbol);
                             lpVal.textContent = formattedPrice;
                             return true;
                         }
@@ -950,9 +1072,15 @@
                 remaining = Math.max(total - elapsed, 0);
                 
                 // Update countdown display
-                secondsEl.textContent = remaining;
-                const offset = circumference - (elapsed / total) * circumference;
-                fgCircle.setAttribute('stroke-dashoffset', Math.max(0, offset));
+                if (svgText) svgText.textContent = String(remaining);
+                // Update arc stroke to show progress starting at top and sweeping clockwise
+                try {
+                    const fraction = Math.max(0, Math.min(1, (elapsed / total)));
+                    const arcOffset = circumference * (1 - fraction);
+                    arcCircle.setAttribute('stroke-dashoffset', String(arcOffset));
+                } catch (e) {
+                    // ignore animation errors
+                }
 
                 // Update price if needed
                 if (elapsed !== lastSecond && elapsed <= total) {
@@ -967,8 +1095,12 @@
                     if (window.priceUpdateInterval) {
                         clearInterval(window.priceUpdateInterval);
                     }
+                    // When countdown ends, if server provided force_result or preparedPriceList,
+                    // prefer a fast-path finalize to avoid long waiting "Finalizing..." state.
                     showFinalizingState(card);
-                    finalizeOrderAndShowResult(order, card, overlay, lpVal, secondsEl);
+                    // Call finalize once. If the server included a force_result hint it will be
+                    // available in the order.meta and honored server-side; no extra param is needed.
+                    finalizeOrderAndShowResult(order, card, overlay, lpVal);
                 }
             }
 
@@ -1032,7 +1164,7 @@
                 const result = body?.result || 'lose';
                 const profit = Number(body?.profit_amount || 0);
                 const payout = Number(body?.payout || 0);
-                const finalPrice = body?.final_price ? Number(body.final_price).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : lpVal.textContent;
+                const finalPrice = body?.final_price ? formatPriceForDisplay(Number(body.final_price), order.symbol) : lpVal.textContent;
 
                 // Update small trading timer/result area if present
                 try {
@@ -1095,10 +1227,21 @@
             detailsContainer.style.marginBottom = '20px';
 
             // Add trade details in rows
+            function formatTradePricePreserve(value, original) {
+                try {
+                    const s = String(original ?? '');
+                    const parts = s.split('.');
+                    const dec = parts.length > 1 ? parts[1].length : 2;
+                    return Number(value).toLocaleString(undefined, { minimumFractionDigits: dec, maximumFractionDigits: dec });
+                } catch (e) {
+                    return Number(value).toFixed(2);
+                }
+            }
+
             const details = [
                 ['Direction of Purchase', tradeOrder.direction === 'up' ? 'Up' : 'Down'],
                 ['Quantity', Number(tradeOrder.purchaseQuantity).toLocaleString()],
-                ['Purchase Price', Number(tradeOrder.purchasePrice).toLocaleString()],
+                ['Purchase Price', formatTradePricePreserve(tradeOrder.purchasePrice, tradeOrder.purchasePrice)],
                 [tradeOrder.symbol.toUpperCase(), finalPrice],  // Using final price from backend
                 ['Price range', tradeOrder.priceRangeText],
                 ['Delivery Time', tradeOrder.delivery + 'S']

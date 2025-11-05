@@ -1,10 +1,20 @@
 @extends('layouts.app')
 
 @section('content')
-@php
+    @php
     $plan = strtoupper(request()->query('plan', 'A'));
     $plans = config('arbitrage.plans', []);
     $cfg = $plans[$plan] ?? ($plans['A'] ?? ['duration' => '1 Day','quantity_label' => '$500-2000','revenue_label' => '1.60-1.70%']);
+
+    // Determine how many times this user has started this plan (count all starts irrespective of status)
+    $userTotalStarts = 0;
+    $planMax = isset($cfg['max_times']) ? intval($cfg['max_times']) : null;
+    if (auth()->check() && \Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
+        $userTotalStarts = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
+            ->where('user_id', auth()->id())
+            ->where('plan_name', $plan)
+            ->count();
+    }
 @endphp
 
 <div class="container">
@@ -88,9 +98,10 @@
                             
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3 d-flex align-items-center justify-content-center gap-2" id="plan-submit-btn">
+                        @php $disabled = ($planMax !== null && $userTotalStarts >= $planMax); @endphp
+                        <button type="submit" class="btn {{ $disabled ? 'btn-outline-secondary disabled' : 'btn-primary' }} btn-lg w-100 rounded-3 d-flex align-items-center justify-content-center gap-2" id="plan-submit-btn" {{ $disabled ? 'disabled aria-disabled=true' : '' }}>
                             <i class="bi bi-rocket-takeoff"></i>
-                            <span>Join Now</span>
+                            <span>{{ $disabled ? 'Limit Reached' : 'Join Now' }}</span>
                         </button>
                     </form>
                 </div>
@@ -183,10 +194,11 @@
 
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             try {
+                const preorderVal = document.getElementById('preorder_input') ? document.getElementById('preorder_input').value : 0;
                 const res = await fetch(form.action, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token || '' },
-                    body: JSON.stringify({ quantity: val, plan_name: plan, duration_days: document.getElementById('duration_days')?.value || 1 })
+                    body: JSON.stringify({ quantity: val, plan_name: plan, duration_days: document.getElementById('duration_days')?.value || 1, preorder: preorderVal })
                 });
                 const data = await res.json().catch(()=>null);
                 if (!res.ok) {

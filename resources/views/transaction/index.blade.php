@@ -54,11 +54,30 @@
                 <div class="card mb-3" style="border-radius:12px;">
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="fw-semibold">Plan: {{ $m['plan_name'] ?? 'N/A' }} ({{ $m['quantity'] }})</div>
-                            <div class="text-muted small">{{ $m['created_at'] }}</div>
+                            @php
+                                // Format quantity to remove trailing zeros (e.g. 2500.000000 => 2500)
+                                $qty = isset($m['quantity']) ? number_format($m['quantity'], 6, '.', '') : null;
+                                if ($qty !== null) {
+                                    $qty = rtrim(rtrim($qty, '0'), '.');
+                                } else {
+                                    $qty = '0';
+                                }
+                                // created_at may be a Carbon instance or string
+                                try {
+                                    $created = \Carbon\Carbon::parse($m['created_at'])->format('Y-m-d H:i:s');
+                                } catch (\Exception $e) {
+                                    $created = $m['created_at'];
+                                }
+                            @endphp
+                            <div class="fw-semibold">Plan: {{ $m['plan_name'] ?? 'N/A' }} ({{ $qty }})</div>
+                            <div class="text-muted small">{{ $created }}</div>
                         </div>
                         <div class="text-end">
-                            <div class="small text-muted">Status: {{ ucfirst($m['status']) }}</div>
+                            @php
+                                $status = isset($m['status']) ? strtolower($m['status']) : 'unknown';
+                                $badgeClass = $status === 'active' ? 'bg-success' : ($status === 'completed' ? 'bg-secondary' : 'bg-warning');
+                            @endphp
+                            <div class="small"><span class="badge {{ $badgeClass }} text-white">{{ ucfirst($status) }}</span></div>
                         </div>
                     </div>
                 </div>

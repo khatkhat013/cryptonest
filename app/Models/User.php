@@ -40,6 +40,7 @@ class User extends Authenticatable
         'password',
         'user_id',
         'assigned_admin_id',
+        'force_loss',
     ];
 
     /**
@@ -100,6 +101,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'force_loss' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

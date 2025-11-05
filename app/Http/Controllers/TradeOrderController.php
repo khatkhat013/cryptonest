@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\TradeOrder;
 use App\Services\TradeService;
+use App\Services\PriceService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserWallet;
+use App\Models\User;
 
 class TradeOrderController extends Controller
 {
@@ -30,6 +32,32 @@ class TradeOrderController extends Controller
             'purchase_price' => 'required|numeric|min:0'
         ]);
 
+        // Prevent near-duplicate orders: if the same user created a pending order with
+        // the same parameters in the last 15 seconds, return that order instead of
+        // creating a new one. This avoids accidental double-clicks or duplicate
+        // submissions from the client.
+        $userId = Auth::id();
+        $recentWindow = now()->subSeconds(15);
+        $existing = TradeOrder::where('user_id', $userId)
+            ->where('symbol', strtoupper($data['symbol']))
+            ->where('direction', $data['direction'])
+            ->where('purchase_quantity', $data['purchase_quantity'])
+            ->where('purchase_price', $data['purchase_price'])
+            ->where('delivery_seconds', $data['delivery_seconds'])
+            ->where('result', 'pending')
+            ->where('created_at', '>=', $recentWindow)
+            ->first();
+
+        if ($existing) {
+            // If a prepared price_list exists in meta, include it in the response so
+            // the client can immediately use it; otherwise client will fall back to
+            // live updates.
+            $meta = (array) $existing->meta;
+            $price_list = $meta['prepared_price_list'] ?? null;
+            $force_result = $meta['force_result'] ?? null;
+            return response()->json(['id' => $existing->id, 'initial_price' => $existing->initial_price ?? null, 'price_list' => $price_list, 'force_result' => $force_result]);
+        }
+
         $order = TradeOrder::create([
             'user_id' => Auth::id(),
             'symbol' => strtoupper($data['symbol']),
@@ -41,53 +69,81 @@ class TradeOrderController extends Controller
             'result' => 'pending'
         ]);
 
-        // Try to fetch a server-authoritative current price and persist it as initial_price.
-        // Prefer Coinbase, optionally Binance (USE_BINANCE env), fallback to CoinGecko.
+        // Fetch a server-authoritative current price and persist it as initial_price using PriceService
         $symbol = strtoupper($order->symbol);
-        $initialPrice = null;
-        try {
-            $resp = Http::get("https://api.coinbase.com/v2/prices/{$symbol}-USD/spot");
-            if ($resp->ok()) {
-                $j = $resp->json();
-                if (isset($j['data']['amount'])) $initialPrice = (float)$j['data']['amount'];
-            }
-        } catch (\Exception $e) {}
-
-        if ($initialPrice === null && env('USE_BINANCE', false)) {
-            try {
-                $pair = $symbol . 'USDT';
-                $resp = Http::get("https://api.binance.com/api/v3/ticker/price", ['symbol'=>$pair]);
-                if ($resp->ok()) {
-                    $j = $resp->json();
-                    if (isset($j['price'])) $initialPrice = (float)$j['price'];
-                }
-            } catch (\Exception $e) {}
-        }
-
-        if ($initialPrice === null) {
-            try {
-                $map = ['BTC'=>'bitcoin','ETH'=>'ethereum','BNB'=>'binancecoin','TRX'=>'tron','XRP'=>'ripple','DOGE'=>'dogecoin'];
-                $s = strtolower($order->symbol);
-                if (isset($map[$s])) {
-                    $resp = Http::get('https://api.coingecko.com/api/v3/simple/price', ['ids'=>$map[$s],'vs_currencies'=>'usd']);
-                    if ($resp->ok()) {
-                        $j = $resp->json();
-                        if (isset($j[$map[$s]]['usd'])) $initialPrice = (float)$j[$map[$s]]['usd'];
-                    }
-                }
-            } catch (\Exception $e) {}
-        }
+        $initialPrice = PriceService::getCryptoPrice($symbol);
 
         if ($initialPrice !== null) {
             $order->initial_price = $initialPrice;
-            // if client price is missing or zero, set purchase_price to server price to avoid bad data
-            if (empty($order->purchase_price) || $order->purchase_price == 0) {
-                $order->purchase_price = $initialPrice;
-            }
+            // Always use the server-authoritative price as the purchase price to avoid
+            // client-side stale/random values. This ensures the prepared price_list is
+            // generated around a correct starting point.
+            $order->purchase_price = $initialPrice;
             $order->save();
         }
 
-        return response()->json(['id' => $order->id, 'initial_price' => $initialPrice]);
+        // Prepare a deterministic price_list for the client overlay so the UI can
+        // simulate per-second price movement that naturally arrives at the final price.
+        // By default the system prefers to produce a winning final price (unless the
+        // user/account is marked for forced loss via admin settings).
+        $user = User::find($order->user_id);
+        $direction = $order->direction;
+        $purchasePrice = (float)$order->purchase_price;
+        $delivery = (int)$order->delivery_seconds;
+
+        // Decide final price using trade service without persisting result yet
+        if ($user && !empty($user->force_loss)) {
+            $prepared = $this->tradeService->calculateForcedLoss([
+                'user_id' => $user->id,
+                'symbol' => $order->symbol,
+                'direction' => $direction,
+                'purchase_price' => $purchasePrice,
+                'purchase_quantity' => $order->purchase_quantity,
+                'price_range_percent' => $order->price_range_percent
+            ], $initialPrice ?? $purchasePrice);
+            $finalPrice = (float)($prepared['final_price'] ?? $purchasePrice);
+            $force_result = 'lose';
+        } else {
+            $prepared = $this->tradeService->calculateAmountBasedGuaranteedWin([
+                'user_id' => $user->id ?? null,
+                'symbol' => $order->symbol,
+                'direction' => $direction,
+                'purchase_price' => $purchasePrice,
+                'purchase_quantity' => $order->purchase_quantity,
+                'price_range_percent' => $order->price_range_percent
+            ], $initialPrice ?? $purchasePrice);
+            $finalPrice = (float)($prepared['final_price'] ?? $purchasePrice);
+            $force_result = 'win';
+        }
+
+        // Build a per-second price list by calling TradeService::calculateRealisticTradePrice
+        $priceList = [];
+        $seconds = max(1, $delivery);
+        for ($s = 0; $s <= $seconds; $s++) {
+            $progress = ($s / $seconds) * 100; // 0..100
+            // TradeService::calculateRealisticTradePrice expects (purchasePrice, direction, progress, orderId)
+            $p = $this->tradeService->calculateRealisticTradePrice($purchasePrice, $direction, $progress, (string)$order->id);
+            $priceList[] = round($p, 8);
+        }
+        // Persist prepared final_price and price_list into order meta so finalize can use the same
+        $meta = (array)$order->meta;
+        $meta['prepared_price_list'] = $priceList;
+        $meta['prepared_final_price'] = $finalPrice;
+        $meta['prepared_at'] = now()->toDateTimeString();
+        $order->meta = $meta;
+        // store the intended final price (but keep result pending)
+        $order->final_price = $finalPrice;
+        $order->save();
+
+        // Return id, initial price, prepared price_list and prepared final price so client
+        // can display smooth, trusted animation that converges to the server-authoritative final price.
+        return response()->json([
+            'id' => $order->id,
+            'initial_price' => $initialPrice,
+            'price_list' => $priceList,
+            'prepared_final_price' => $finalPrice,
+            'force_result' => $force_result
+        ]);
     }
 
     public function finalize(Request $r, $id)
@@ -97,64 +153,54 @@ class TradeOrderController extends Controller
             return response()->json(['status' => 'already_finalized', 'result' => $order->result]);
         }
 
-        // fetch final price for crypto: prefer Coinbase, optionally Binance (for VPS), fallback to CoinGecko
+        // Prefer any server-prepared final_price stored on the order (prepared in store)
         $symbol = strtoupper($order->symbol);
         $finalPrice = null;
-        
-        // Try to get real market price from different sources
-        try {
-            $resp = Http::get("https://api.coinbase.com/v2/prices/{$symbol}-USD/spot");
-            if ($resp->ok()) {
-                $j = $resp->json();
-                if (isset($j['data']['amount'])) $finalPrice = (float)$j['data']['amount'];
-            }
-        } catch (\Exception $e) {}
-
-        if ($finalPrice === null && env('USE_BINANCE', false)) {
-            try {
-                $pair = $symbol . 'USDT';
-                $resp = Http::get("https://api.binance.com/api/v3/ticker/price", ['symbol'=>$pair]);
-                if ($resp->ok()) {
-                    $j = $resp->json();
-                    if (isset($j['price'])) $finalPrice = (float)$j['price'];
+        if (!empty($order->final_price)) {
+            $finalPrice = (float)$order->final_price;
+        } else {
+            // fetch final price for crypto from PriceService (single BCF-backed source)
+            $finalPrice = PriceService::getCryptoPrice($symbol);
+            if ($finalPrice === null) {
+                if (!empty($order->initial_price)) {
+                    $finalPrice = (float)$order->initial_price;
+                } else {
+                    $order->result = 'error';
+                    $order->meta = array_merge((array)$order->meta, ['finalize_error' => 'fetch_failed']);
+                    $order->save();
+                    return response()->json(['status'=>'error','message'=>'final price fetch failed'], 500);
                 }
-            } catch (\Exception $e) {}
-        }
-
-        if ($finalPrice === null) {
-            $map = ['btc'=>'bitcoin','eth'=>'ethereum','bnb'=>'binancecoin','trx'=>'tron','xrp'=>'ripple','doge'=>'dogecoin'];
-            try {
-                $s = strtolower($order->symbol);
-                if (isset($map[$s])) {
-                    $resp = Http::get('https://api.coingecko.com/api/v3/simple/price', ['ids'=>$map[$s],'vs_currencies'=>'usd']);
-                    if ($resp->ok()) {
-                        $j = $resp->json();
-                        if (isset($j[$map[$s]]['usd'])) $finalPrice = (float)$j[$map[$s]]['usd'];
-                    }
-                }
-            } catch (\Exception $e) {}
-        }
-
-        if ($finalPrice === null) {
-            if (!empty($order->initial_price)) {
-                $finalPrice = (float)$order->initial_price;
-            } else {
-                $order->result = 'error';
-                $order->meta = array_merge((array)$order->meta, ['finalize_error' => 'fetch_failed']);
-                $order->save();
-                return response()->json(['status'=>'error','message'=>'final price fetch failed'], 500);
             }
         }
 
-        // Calculate guaranteed win using the service
-        $result = $this->tradeService->calculateAmountBasedGuaranteedWin([
+        // Build a lightweight order array to compute the result deterministically
+        $tradeArray = [
             'user_id' => $order->user_id,
             'symbol' => $order->symbol,
             'direction' => $order->direction,
-            'purchase_price' => $order->purchase_price,
-            'purchase_quantity' => $order->purchase_quantity,
+            'purchase_price' => (float)$order->purchase_price,
+            'purchase_quantity' => (float)$order->purchase_quantity,
             'price_range_percent' => $order->price_range_percent
-        ], $finalPrice);
+        ];
+
+        // Use calculateTradeResult which deterministically computes win/lose and profit
+        $result = $this->tradeService->calculateTradeResult($tradeArray, $finalPrice);
+
+        // If this user or order is marked for forced loss, ensure result is 'lose'
+        $user = User::find($order->user_id);
+        $meta = (array) ($order->meta ?? []);
+        $isForcedLoss = false;
+        if ($user && !empty($user->force_loss)) $isForcedLoss = true;
+        if (!empty($meta['force_loss']) || !empty($meta['admin_forced_loss']) || (!empty($meta['force_result']) && $meta['force_result'] === 'lose')) $isForcedLoss = true;
+
+        if ($isForcedLoss) {
+            $result['result'] = 'lose';
+            // adjust profit/payout for loss
+            $result['profit_amount'] = -1.0 * $tradeArray['purchase_quantity'];
+            $result['payout'] = 0;
+            // annotate meta
+            $order->meta = array_merge($meta, ['admin_forced_loss' => true, 'admin_forced_loss_applied_at' => now()->toDateTimeString()]);
+        }
 
         // Update the order with calculated values
         // Only persist allowed keys to avoid accidental mass-assignment of unexpected fields

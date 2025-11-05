@@ -107,9 +107,9 @@
                                     <span class="fw-bold">{{ number_format($trade->purchase_quantity, 2) }} USDT</span>
                                 </div>
                                 <div class="text-end">
-                                    <small class="text-muted d-block">Profit</small>
+                                    <small class="text-muted d-block">{{ $trade->result === 'win' ? 'Profit' : 'Loss' }}</small>
                                     <span class="fw-bold {{ $trade->result === 'win' ? 'text-success' : 'text-danger' }}">
-                                        {{ $trade->result === 'win' ? '+' : '-' }}{{ number_format($trade->profit_amount, 2) }}
+                                        {{ $trade->result === 'win' ? '+' : '-' }}{{ number_format(abs($trade->profit_amount), 2) }}
                                     </span>
                                 </div>
                             </div>

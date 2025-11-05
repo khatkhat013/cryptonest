@@ -168,9 +168,9 @@
                             <span class="fw-bold">{{ number_format($order->purchase_quantity, 2) }} USDT</span>
                         </div>
                         <div class="text-end">
-                            <small class="text-muted d-block">Profit</small>
+                            <small class="text-muted d-block">{{ $order->result === 'win' ? 'Profit' : 'Loss' }}</small>
                             <span class="fw-bold {{ $order->result === 'win' ? 'text-success' : 'text-danger' }}">
-                                {{ $order->result === 'win' ? '+' : '-' }}{{ number_format($order->profit_amount, 2) }}
+                                {{ $order->result === 'win' ? '+' : '-' }}{{ number_format(abs($order->profit_amount), 2) }}
                             </span>
                         </div>
                     </div>

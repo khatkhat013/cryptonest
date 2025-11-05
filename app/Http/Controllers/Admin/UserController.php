@@ -38,4 +38,17 @@ class UserController extends Controller
 
         return back()->with('success', 'User status updated successfully');
     }
+
+    /**
+     * Toggle admin-enforced forced-loss flag for a user.
+     * Only admins that can manage the user should be able to call this (routes/view already guard access).
+     */
+    public function toggleForceLoss(User $user)
+    {
+        $user->force_loss = !$user->force_loss;
+        $user->save();
+
+        $label = $user->force_loss ? 'enabled' : 'disabled';
+        return back()->with('success', "Force-loss has been {$label} for user {$user->user_id}");
+    }
 }

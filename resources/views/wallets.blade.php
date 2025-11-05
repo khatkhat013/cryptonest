@@ -113,16 +113,19 @@ document.addEventListener('DOMContentLoaded', function() {
         return Number(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
     }
 
-    async function fetchPriceFromCoingecko(symbol) {
-        const map = { BTC: 'bitcoin', ETH: 'ethereum', USDT: 'tether', USDC: 'usd-coin', PYUSD: 'paypal-usd', DOGE: 'dogecoin', XRP: 'ripple' };
-        const id = map[symbol.toUpperCase()];
-        if (!id) return null;
+    async function fetchPriceFromServer(symbol) {
         try {
-            const resp = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`);
+            const resp = await fetch('/prices?symbols=' + encodeURIComponent(symbol) + '&prefer=bitcryptoforest');
             if (!resp.ok) return null;
             const j = await resp.json();
-            if (j && j[id] && j[id].usd) return parseFloat(j[id].usd);
-        } catch (e) { console.warn('CoinGecko fetch failed', e); }
+            // accept price == 0 as valid (explicit null/undefined check)
+            if (j && j.data && j.data[symbol] && j.data[symbol].price !== undefined && j.data[symbol].price !== null) {
+                const p = parseFloat(j.data[symbol].price);
+                return isNaN(p) ? null : p;
+            }
+        } catch (e) {
+            console.warn('Server price fetch failed', e);
+        }
         return null;
     }
 
@@ -130,12 +133,14 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const stored = JSON.parse(localStorage.getItem('latestPrices') || '{}');
             const entry = stored[symbol.toLowerCase()];
-            if (entry && entry.price && (Date.now() - (entry.ts || 0) < 60 * 1000)) {
-                return parseFloat(entry.price);
+            // treat cached zero prices as invalid (likely seeded or stale). If API truly returns 0, server will provide it.
+            if (entry && entry.price !== undefined && entry.price !== null && entry.price !== 0 && (Date.now() - (entry.ts || 0) < 60 * 1000)) {
+                const p = parseFloat(entry.price);
+                if (!isNaN(p)) return p;
             }
         } catch (e) {}
-        // fallback to CoinGecko
-        const p = await fetchPriceFromCoingecko(symbol);
+        // fallback to server /prices endpoint
+        const p = await fetchPriceFromServer(symbol);
         return p;
     }
 

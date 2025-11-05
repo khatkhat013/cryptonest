@@ -587,99 +587,33 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const stored = JSON.parse(localStorage.getItem('latestPrices') || '{}');
             const entry = stored[symbol.toLowerCase()];
-            if (entry && entry.price && (Date.now() - (entry.ts || 0) < 60 * 1000)) {
-                return entry.price;
+            // treat cached zero prices as invalid (likely seeded or stale)
+            if (entry && entry.price !== undefined && entry.price !== null && entry.price !== 0 && (Date.now() - (entry.ts || 0) < 60 * 1000)) {
+                const p = parseFloat(entry.price);
+                if (!isNaN(p)) return p;
             }
         } catch (e) {}
 
-        // Try Coinbase
+        // Query server single-source prices (BitCryptoForest)
         try {
-            const resp = await fetch(`https://api.coinbase.com/v2/prices/${symbol}-USD/spot`);
+            const resp = await fetch('/prices?symbols=' + encodeURIComponent(symbol) + '&prefer=bitcryptoforest');
             if (resp.ok) {
                 const j = await resp.json();
-                const amt = j && j.data && parseFloat(j.data.amount);
-                if (!isNaN(amt)) {
-                    try {
-                        const s = JSON.parse(localStorage.getItem('latestPrices') || '{}');
-                        s[symbol.toLowerCase()] = { price: amt, change: 0, ts: Date.now() };
-                        localStorage.setItem('latestPrices', JSON.stringify(s));
-                    } catch (e) {}
-                    return amt;
-                }
-            }
-        } catch (e) {}
-
-        // Try Binance (public ticker)
-        try {
-            const pair = symbol.toUpperCase() + 'USDT';
-            const resp = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`);
-            if (resp.ok) {
-                const j = await resp.json();
-                const amt = j && parseFloat(j.price);
-                if (!isNaN(amt)) {
-                    try {
-                        const s = JSON.parse(localStorage.getItem('latestPrices') || '{}');
-                        s[symbol.toLowerCase()] = { price: amt, change: 0, ts: Date.now() };
-                        localStorage.setItem('latestPrices', JSON.stringify(s));
-                    } catch (e) {}
-                    return amt;
-                }
-            }
-        } catch (e) {}
-
-        // Fallback to CoinGecko (map common symbols)
-        try {
-            // First try a small builtin map for common coins for speed
-            const smallMap = { btc: 'bitcoin', eth: 'ethereum', bnb: 'binancecoin', trx: 'tron', xrp: 'ripple', doge: 'dogecoin', usdt: 'tether' };
-            const lc = symbol.toLowerCase();
-            let id = smallMap[lc];
-
-            // If not in small map, try cached coingeckoSymbols map (persisted for 24h)
-            try {
-                const cgMeta = JSON.parse(localStorage.getItem('coingeckoSymbols') || '{}');
-                if (cgMeta && cgMeta.ts && (Date.now() - cgMeta.ts < 24 * 60 * 60 * 1000) && cgMeta.map) {
-                    id = id || cgMeta.map[lc];
-                }
-            } catch (e) {}
-
-            // If still not found, fetch the coins list from CoinGecko and build a map symbol->id (cache it)
-            if (!id) {
-                try {
-                    const listResp = await fetch('https://api.coingecko.com/api/v3/coins/list');
-                    if (listResp.ok) {
-                        const list = await listResp.json();
-                        const map = {};
-                        for (const item of list) {
-                            if (item && item.symbol && item.id) {
-                                map[item.symbol.toLowerCase()] = item.id;
-                            }
-                        }
-                        try {
-                            localStorage.setItem('coingeckoSymbols', JSON.stringify({ ts: Date.now(), map }));
-                        } catch (e) {}
-                        id = map[lc];
-                    }
-                } catch (e) {
-                    // ignore network errors
-                }
-            }
-
-            if (id) {
-                const resp = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`);
-                if (resp.ok) {
-                    const j = await resp.json();
-                    const amt = j && j[id] && j[id].usd ? parseFloat(j[id].usd) : null;
-                    if (amt) {
+                if (j && j.data && j.data[symbol] && j.data[symbol].price !== undefined && j.data[symbol].price !== null) {
+                    const amt = parseFloat(j.data[symbol].price);
+                    if (!isNaN(amt)) {
                         try {
                             const s = JSON.parse(localStorage.getItem('latestPrices') || '{}');
-                            s[lc] = { price: amt, change: 0, ts: Date.now() };
+                            s[symbol.toLowerCase()] = { price: amt, change: j.data[symbol].change ?? 0, ts: Date.now() };
                             localStorage.setItem('latestPrices', JSON.stringify(s));
                         } catch (e) {}
                         return amt;
                     }
                 }
             }
-        } catch (e) {}
+        } catch (e) {
+            // ignore network errors
+        }
 
         return null;
     }

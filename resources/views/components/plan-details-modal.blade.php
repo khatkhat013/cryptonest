@@ -1,4 +1,17 @@
 <!-- Plan Details Modal -->
+@php
+    // Precompute user's total starts per plan so the modal can disable Join when limits reached
+    $planStartsMap = [];
+    $plansCfg = config('arbitrage.plans', []);
+    if (auth()->check() && \Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
+        foreach ($plansCfg as $pname => $pcfg) {
+            $planStartsMap[$pname] = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
+                ->where('user_id', auth()->id())
+                ->where('plan_name', $pname)
+                ->count();
+        }
+    }
+@endphp
 <div class="modal fade" id="planDetailsModal" tabindex="-1" aria-labelledby="planDetailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0">
@@ -52,6 +65,7 @@
                     <form id="planDetailsForm" method="POST" action="{{ url('/arbitrage') }}">
                         @csrf
                         <input type="hidden" name="plan_name" id="plan_name" value="A">
+                        <input type="hidden" name="preorder" id="modal_preorder_input" value="0">
                         <input type="hidden" name="duration_days" id="duration_days" value="1">
                         <div class="custody-input mb-4">
                             <label for="plan-quantity" class="form-label d-flex align-items-center mb-2">
@@ -114,6 +128,10 @@
                     const invalid = document.getElementById('plan-quantity-invalid');
                     const submitBtn = document.getElementById('plan-submit-btn');
 
+                    // Prepare a small client-side map of user's starts and plan max limits
+                    const _planStartsMap = @json($planStartsMap ?? []);
+                    const _planCfgMap = @json(array_map(function($p){ return ['max_times' => isset($p['max_times']) ? intval($p['max_times']) : null, 'quantity_label' => $p['quantity_label'] ?? ($p['quantity'] ?? null)]; }, config('arbitrage.plans', [])));
+
                     // when modal is opened, populate it with the plan data from the clicked card
                     const modalEl = document.getElementById('planDetailsModal');
                     modalEl.addEventListener('show.bs.modal', function (evt) {
@@ -125,6 +143,17 @@
                         const revenue = trigger.getAttribute('data-revenue') || '';
 
                         document.getElementById('plan_name').value = plan;
+                        // If the trigger included a preorder flag (data-preorder), propagate it to the modal form
+                        try {
+                            const preorderFlag = trigger.getAttribute('data-preorder') ? 1 : 0;
+                            const modalPre = document.getElementById('modal_preorder_input');
+                            if (modalPre) modalPre.value = preorderFlag;
+                            if (preorderFlag && submitBtn) {
+                                // Show intent to preorder on the button
+                                if (!submitBtn.dataset.origText) submitBtn.dataset.origText = submitBtn.innerHTML;
+                                submitBtn.innerHTML = 'Pre-Order';
+                            }
+                        } catch (e) {}
                         // duration in days - extract number
                         const daysMatch = (duration || '').match(/(\d+)/);
                         document.getElementById('duration_days').value = daysMatch ? parseInt(daysMatch[1], 10) : 1;
@@ -140,6 +169,33 @@
                         qtyInput.placeholder = `Enter amount between ${min}-${max}`;
                         
                         document.getElementById('plan-quantity-invalid').textContent = `Please enter an amount between ${min} and ${max} USDT`;
+                        // Check user's plan start limit and USDT balance; disable submit if necessary
+                        const submitBtn = document.getElementById('plan-submit-btn');
+                        try {
+                            const planStarts = parseInt(_planStartsMap[plan] || 0, 10);
+                            const planCfg = _planCfgMap[plan] || {};
+                            const planMax = planCfg.max_times !== undefined ? planCfg.max_times : null;
+                            if (planMax !== null && planStarts >= planMax) {
+                                // disable the submit button and show helpful message (less prominent)
+                                if (submitBtn) {
+                                    submitBtn.disabled = true;
+                                    submitBtn.dataset.origText = submitBtn.innerHTML;
+                                    // replace content with plain text and make style less prominent
+                                    submitBtn.textContent = 'Limit Reached';
+                                    submitBtn.classList.remove('btn-primary');
+                                    submitBtn.classList.add('btn-outline-secondary', 'disabled');
+                                }
+                                const invalidEl = document.getElementById('plan-quantity-invalid');
+                                if (invalidEl) {
+                                    invalidEl.textContent = `You have reached the maximum number of starts for plan ${plan} (${planStarts}/${planMax}).`;
+                                    invalidEl.classList.add('d-block');
+                                }
+                                // still fetch balance in background but no need to re-enable
+                            }
+                        } catch (e) {
+                            console.warn('Plan limit check failed', e);
+                        }
+
                         // Fetch user's USDT balance and disable submit if below plan minimum
                         (async function(){
                             try {
@@ -149,14 +205,15 @@
                                 const bal = j && j.balance ? parseFloat(String(j.balance).replace(/,/g, '')) || 0 : 0;
                                 // attach to modal for later checks
                                 modalEl.__available_usdt_balance = bal;
-                                const submitBtn = document.getElementById('plan-submit-btn');
                                 if (bal < min) {
                                     // disable and show helpful message
                                     if (submitBtn) {
-                                        submitBtn.disabled = true;
-                                        submitBtn.dataset.origText = submitBtn.innerHTML;
-                                        submitBtn.innerHTML = '<i class="bi bi-x-circle"></i> Insufficient balance';
-                                    }
+                                            submitBtn.disabled = true;
+                                            submitBtn.dataset.origText = submitBtn.innerHTML;
+                                            submitBtn.textContent = 'Insufficient balance';
+                                            submitBtn.classList.remove('btn-primary');
+                                            submitBtn.classList.add('btn-outline-secondary', 'disabled');
+                                        }
                                     const invalidEl = document.getElementById('plan-quantity-invalid');
                                     if (invalidEl) {
                                         invalidEl.textContent = `Insufficient USDT balance. Available: ${bal.toFixed(2)} USDT (minimum ${min})`;
@@ -167,10 +224,16 @@
                                     if (invalidEl) invalidEl.classList.remove('d-block');
                                     const submitBtn2 = document.getElementById('plan-submit-btn');
                                     if (submitBtn2) {
-                                        submitBtn2.disabled = false;
-                                        if (submitBtn2.dataset && submitBtn2.dataset.origText) {
-                                            submitBtn2.innerHTML = submitBtn2.dataset.origText;
-                                            delete submitBtn2.dataset.origText;
+                                        // Only re-enable if we didn't already disable due to plan limit
+                                        if (!(planCfg && planCfg.max_times !== undefined && parseInt(_planStartsMap[plan] || 0, 10) >= planCfg.max_times)) {
+                                            submitBtn2.disabled = false;
+                                            if (submitBtn2.dataset && submitBtn2.dataset.origText) {
+                                                submitBtn2.innerHTML = submitBtn2.dataset.origText;
+                                                // restore original styling
+                                                submitBtn2.classList.remove('btn-outline-secondary', 'disabled');
+                                                submitBtn2.classList.add('btn-primary');
+                                                delete submitBtn2.dataset.origText;
+                                            }
                                         }
                                     }
                                 }
@@ -229,6 +292,7 @@
                         const planName = document.getElementById('plan_name')?.value || 'A';
                         const durationDays = document.getElementById('duration_days')?.value || 1;
                         try {
+                            const preorderVal = document.getElementById('modal_preorder_input') ? document.getElementById('modal_preorder_input').value : 0;
                             const res = await fetch(form.action, {
                                 method: 'POST',
                                 headers: {
@@ -236,7 +300,7 @@
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': token || ''
                                 },
-                                body: JSON.stringify({ quantity: val, plan_name: planName, duration_days: durationDays })
+                                body: JSON.stringify({ quantity: val, plan_name: planName, duration_days: durationDays, preorder: preorderVal })
                             });
 
                             if (res.status === 419) {

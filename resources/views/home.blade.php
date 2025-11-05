@@ -55,7 +55,7 @@
                                             </div>
                                             <div class="ms-auto">
                                                 <div class="h5 mb-0 text-success">$<span class="price">0.00</span></div>
-                                                <small class="text-success"><span class="change">0.00</span>%</small>
+                                                <small class="text-success"><span class="change">0.00 (0.00%)</span></small>
                                             </div>
                                         </div>
                                     </div>
@@ -97,7 +97,7 @@
                                             </div>
                                             <div class="ms-auto">
                                                 <div class="h5 mb-0 text-success">$<span class="forex-price">0.00</span></div>
-                                                <small class="text-success"><span class="forex-change">0.00</span>%</small>
+                                                <small class="text-success"><span class="forex-change">0.00 (0.000%)</span></small>
                                             </div>
                                         </div>
                                     </div>
@@ -133,7 +133,7 @@
                                             </div>
                                             <div class="ms-auto">
                                                 <div class="h5 mb-0 text-success">$<span class="metal-price">0.00</span></div>
-                                                <small class="text-success"><span class="metal-change">0.00</span>%</small>
+                                                <small class="text-success"><span class="metal-change">0.00 (0.00%)</span></small>
                                             </div>
                                         </div>
                                     </div>
@@ -503,171 +503,147 @@
                 
                     // Update crypto prices using Coinbase primary, Binance optional, fallback to seeded/random
                 (async () => {
-                    const useBinance = window.APP_CONFIG?.allowBinanceClient === true;
-                    const symbolToId = {
-                        'BTC': 'BTC',
-                        'ETH': 'ETH',
-                        'BNB': 'BNB',
-                        'TRX': 'TRX',
-                        'XRP': 'XRP',
-                        'DOGE': 'DOGE'
-                    };
+                    // Build symbol lists for crypto, forex and metals
+                    const symbolToId = { 'BTC':'BTC','ETH':'ETH','BNB':'BNB','TRX':'TRX','XRP':'XRP','DOGE':'DOGE' };
+                    const cryptoSymbols = Object.keys(symbolToId);
+                    const forexSymbols = Object.keys(markets.forex);
+                    const metalSymbols = Object.keys(markets.metals);
 
-                    // Try Coinbase public spot prices per symbol (concurrent). Prefer these when available.
-                    const coinbasePrices = {};
-                    await Promise.all(Object.keys(symbolToId).map(async (sym) => {
-                        try {
-                            const resp = await fetch(`https://api.coinbase.com/v2/prices/${sym}-USD/spot`);
-                            if (!resp.ok) return;
+                    const allSymbols = [...cryptoSymbols, ...forexSymbols, ...metalSymbols];
+
+                    try {
+                        const resp = await fetch('/prices?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&prefer=bitcryptoforest');
+                        if (resp.ok) {
                             const j = await resp.json();
-                            const amt = j && j.data && parseFloat(j.data.amount);
-                            if (!isNaN(amt)) coinbasePrices[sym] = amt;
-                        } catch (err) {
-                            // ignore individual coin errors
-                        }
-                    }));
+                            const data = j && j.data ? j.data : {};
 
-                    // Optionally try Binance public API if allowed
-                    const binancePrices = {};
-                    if (useBinance) {
-                        await Promise.all(Object.keys(symbolToId).map(async (sym) => {
-                            try {
-                                // Binance uses lowercase symbols and USDT pairs
-                                const pair = sym.toUpperCase() + 'USDT';
-                                const resp = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${pair}`);
-                                if (!resp.ok) return;
-                                const j = await resp.json();
-                                const amt = j && parseFloat(j.price);
-                                if (!isNaN(amt)) binancePrices[sym] = amt;
-                            } catch (err) {}
-                        }));
+                            // Update crypto cards
+                            cryptoSymbols.forEach(symbol => {
+                                const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
+                                    const h5 = card.querySelector('h5');
+                                    return h5 && h5.textContent.trim().toLowerCase() === String(symbol).toLowerCase();
+                                });
+                                const info = data[symbol] || null;
+                                cards.forEach(card => {
+                                    const priceEl = card.querySelector('.price');
+                                    const changeEl = card.querySelector('.change');
+                                    if (info && info.price !== undefined && info.price !== null) {
+                                            const price = parseFloat(info.price);
+                                            const change = info.change !== undefined && info.change !== null ? parseFloat(info.change) : 0;
+                                            const rate = info.rate !== undefined && info.rate !== null && !isNaN(info.rate) ? parseFloat(info.rate) : null;
+                                            if (priceEl) priceEl.textContent = price.toFixed(price < 1 ? 4 : 2);
+                                            if (changeEl) {
+                                                // preserve API-provided change string exactly (do not round small amounts)
+                                                const rawChange = (info.change !== undefined && info.change !== null) ? String(info.change) : '0';
+                                                const parsedChange = parseFloat(rawChange) || 0;
+                                                const signed = (/^[+-]/.test(rawChange)) ? rawChange : (parsedChange >= 0 ? `+${rawChange}` : rawChange);
+                                                // prefer provided rate, else compute fallback percent
+                                                let pctText = '';
+                                                if (rate !== null) {
+                                                    pctText = `(${rate.toFixed(2)}%)`;
+                                                } else {
+                                                    const prev = price - parsedChange;
+                                                    const pct = (!isNaN(prev) && prev !== 0) ? (parsedChange / prev) * 100 : null;
+                                                    pctText = pct !== null ? `(${pct.toFixed(2)}%)` : '';
+                                                }
+                                                changeEl.textContent = `${signed} ${pctText}`;
+                                                // use parsedChange (numeric) when deciding positive/negative styling
+                                                const num = parsedChange;
+                                                changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
+                                                if (priceEl && priceEl.parentElement) priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
+                                            }
+                                        // persist
+                                        try {
+                                            const stored = JSON.parse(localStorage.getItem('latestPrices') || '{}');
+                                            stored[symbol.toLowerCase()] = { price: price, change: parseFloat(change) || 0, ts: Date.now() };
+                                            localStorage.setItem('latestPrices', JSON.stringify(stored));
+                                        } catch (e) {}
+                                    }
+                                });
+                            });
+
+                            // Update forex cards (USD/<symbol>)
+                            forexSymbols.forEach(symbol => {
+                                const lookup = `USD/${symbol}`;
+                                const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
+                                    const h5 = card.querySelector('h5');
+                                    return h5 && h5.textContent.trim().toLowerCase() === lookup.toLowerCase();
+                                });
+                                const info = data[symbol] || null;
+                                cards.forEach(card => {
+                                    const priceEl = card.querySelector('.forex-price');
+                                    const changeEl = card.querySelector('.forex-change');
+                                    if (info && info.price !== undefined && info.price !== null) {
+                                        const price = parseFloat(info.price);
+                                        const change = info.change !== undefined && info.change !== null ? parseFloat(info.change) : 0;
+                                        const rate = info.rate !== undefined && info.rate !== null && !isNaN(info.rate) ? parseFloat(info.rate) : null;
+                                        if (priceEl) priceEl.textContent = price.toFixed(4);
+                                        if (changeEl) {
+                                            // preserve API-provided change string exactly
+                                            const rawChange = (info.change !== undefined && info.change !== null) ? String(info.change) : '0';
+                                            const parsedChange = parseFloat(rawChange) || 0;
+                                            const signed = (/^[+-]/.test(rawChange)) ? rawChange : (parsedChange >= 0 ? `+${rawChange}` : rawChange);
+                                            let pctText = '';
+                                            if (rate !== null) {
+                                                pctText = `(${rate.toFixed(3)}%)`;
+                                            } else {
+                                                const prev = price - parsedChange;
+                                                const pct = (!isNaN(prev) && prev !== 0) ? (parsedChange / prev) * 100 : null;
+                                                pctText = pct !== null ? `(${pct.toFixed(3)}%)` : '';
+                                            }
+                                            changeEl.textContent = `${signed} ${pctText}`;
+                                            const num = parsedChange;
+                                            changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
+                                            if (priceEl && priceEl.parentElement) priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
+                                        }
+                                    }
+                                });
+                            });
+
+                            // Update metals cards (XAU/USD etc)
+                            metalSymbols.forEach(symbol => {
+                                const lookup = `${symbol}/USD`;
+                                const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
+                                    const h5 = card.querySelector('h5');
+                                    return h5 && h5.textContent.trim().toLowerCase() === lookup.toLowerCase();
+                                });
+                                const info = data[symbol] || null;
+                                cards.forEach(card => {
+                                    const priceEl = card.querySelector('.metal-price');
+                                    const changeEl = card.querySelector('.metal-change');
+                                    if (info && info.price !== undefined && info.price !== null) {
+                                        const price = parseFloat(info.price);
+                                        const change = info.change !== undefined && info.change !== null ? parseFloat(info.change) : 0;
+                                        const rate = info.rate !== undefined && info.rate !== null && !isNaN(info.rate) ? parseFloat(info.rate) : null;
+                                        if (priceEl) priceEl.textContent = price.toFixed(2);
+                                        if (changeEl) {
+                                            // preserve API-provided change string exactly
+                                            const rawChange = (info.change !== undefined && info.change !== null) ? String(info.change) : '0';
+                                            const parsedChange = parseFloat(rawChange) || 0;
+                                            const signed = (/^[+-]/.test(rawChange)) ? rawChange : (parsedChange >= 0 ? `+${rawChange}` : rawChange);
+                                            let pctText = '';
+                                            if (rate !== null) {
+                                                pctText = `(${rate.toFixed(2)}%)`;
+                                            } else {
+                                                const prev = price - parsedChange;
+                                                const pct = (!isNaN(prev) && prev !== 0) ? (parsedChange / prev) * 100 : null;
+                                                pctText = pct !== null ? `(${pct.toFixed(2)}%)` : '';
+                                            }
+                                            changeEl.textContent = `${signed} ${pctText}`;
+                                            const num = parsedChange;
+                                            changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
+                                            if (priceEl && priceEl.parentElement) priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('Price fetch failed', e);
                     }
-
-                    Object.entries(markets.crypto).forEach(([symbol, {base, variance}]) => {
-                        // select all .card elements and filter by their h5 text
-                        const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
-                            const h5 = card.querySelector('h5');
-                            return h5 && h5.textContent.trim().toLowerCase() === String(symbol).toLowerCase();
-                        });
-
-                        const id = symbolToId[symbol];
-                        let fetchedPrice = null;
-                        let fetchedChange = null;
-                        // Prefer Coinbase, then Binance if enabled, then fallback to seeded/random
-                        if (coinbasePrices[symbol] !== undefined) {
-                            fetchedPrice = coinbasePrices[symbol];
-                        } else if (binancePrices[symbol] !== undefined) {
-                            fetchedPrice = binancePrices[symbol];
-                        }
-
-                        cards.forEach(card => {
-                            const priceEl = card.querySelector('.price');
-                            const changeEl = card.querySelector('.change');
-
-                            // Prefer Coinbase price if we have it
-                            if (coinbasePrices[symbol] !== undefined) {
-                                const price = coinbasePrices[symbol];
-                                const change = fetchedChange !== null ? fetchedChange : '0.00';
-                                if (priceEl) priceEl.textContent = price.toFixed(price < 1 ? 4 : 2);
-                                if (changeEl) {
-                                    const num = parseFloat(change);
-                                    const signed = (isNaN(num) ? change : (num >= 0 ? `+${num.toFixed(change.includes('.') ? change.split('.')[1].length : 2)}` : `${num.toFixed(change.includes('.') ? change.split('.')[1].length : 2)}`));
-                                    changeEl.textContent = signed;
-                                    changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
-                                    if (priceEl && priceEl.parentElement) {
-                                        priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
-                                    }
-                                }
-                                // Persist latest price to localStorage for use by trade pages
-                                try {
-                                    const stored = JSON.parse(localStorage.getItem('latestPrices') || '{}');
-                                    stored[symbol.toLowerCase()] = { price: price, change: parseFloat(change) || 0, ts: Date.now() };
-                                    localStorage.setItem('latestPrices', JSON.stringify(stored));
-                                } catch (e) {
-                                    // ignore storage errors
-                                }
-                                return;
-                            }
-
-                            // Prefer CoinGecko fetched price next
-                            if (fetchedPrice !== null) {
-                                const price = fetchedPrice;
-                                const change = fetchedChange !== null ? fetchedChange : '0.00';
-                                if (priceEl) priceEl.textContent = price.toFixed(price < 1 ? 4 : 2);
-                                if (changeEl) {
-                                    const num = parseFloat(change);
-                                    const signed = (isNaN(num) ? change : (num >= 0 ? `+${num.toFixed(change.includes('.') ? change.split('.')[1].length : 2)}` : `${num.toFixed(change.includes('.') ? change.split('.')[1].length : 2)}`));
-                                    changeEl.textContent = signed;
-                                    changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
-                                    if (priceEl && priceEl.parentElement) {
-                                        priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
-                                    }
-                                }
-                                // Persist latest price to localStorage for use by trade pages
-                                try {
-                                    const stored = JSON.parse(localStorage.getItem('latestPrices') || '{}');
-                                    stored[symbol.toLowerCase()] = { price: price, change: parseFloat(change) || 0, ts: Date.now() };
-                                    localStorage.setItem('latestPrices', JSON.stringify(stored));
-                                } catch (e) {
-                                    // ignore storage errors
-                                }
-                                return;
-                            }
-
-                            // No fetched price from any source: only apply fallback if displayed price is empty or zero
-                            const existing = priceEl ? parseFloat(priceEl.textContent.replace(/[^0-9.-]+/g, '')) : 0;
-                            if (!priceEl || !existing || existing === 0) {
-                                // fallback to seeded/random behaviour
-                                const price = base + (Math.random() - 0.5) * variance;
-                                const change = (Math.random() * 5 - 1).toFixed(2);
-                                if (priceEl) priceEl.textContent = price.toFixed(price < 1 ? 4 : 2);
-                                // Persist latest price to localStorage for use by trade pages
-                                try {
-                                    const stored = JSON.parse(localStorage.getItem('latestPrices') || '{}');
-                                    stored[symbol.toLowerCase()] = { price: price, change: parseFloat(change) || 0, ts: Date.now() };
-                                    localStorage.setItem('latestPrices', JSON.stringify(stored));
-                                } catch (e) {
-                                    // ignore storage errors
-                                }
-                                if (changeEl) {
-                                    const num = parseFloat(change);
-                                    const signed = (isNaN(num) ? change : (num >= 0 ? `+${num.toFixed(change.includes('.') ? change.split('.')[1].length : 2)}` : `${num.toFixed(change.includes('.') ? change.split('.')[1].length : 2)}`));
-                                    changeEl.textContent = signed;
-                                    changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
-                                    if (priceEl && priceEl.parentElement) {
-                                        priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
-                                    }
-                                }
-                            }
-                        });
-                    });
                 })();
 
-                // Update forex prices
-                Object.entries(markets.forex).forEach(([symbol, {base, variance}]) => {
-                    // Match cards whose h5 equals 'USD/<symbol>' (case-insensitive)
-                    const lookup = `USD/${symbol}`;
-                    const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
-                        const h5 = card.querySelector('h5');
-                        return h5 && h5.textContent.trim().toLowerCase() === lookup.toLowerCase();
-                    });
-                    cards.forEach(card => {
-                        const price = base + (Math.random() - 0.5) * variance;
-                        const change = (Math.random() * 2 - 0.5).toFixed(3);
-                        const priceEl = card.querySelector('.forex-price');
-                        const changeEl = card.querySelector('.forex-change');
-                        if (priceEl) priceEl.textContent = price.toFixed(4);
-                        if (changeEl) {
-                            const num = parseFloat(change);
-                            const signed = (isNaN(num) ? change : (num >= 0 ? `+${num.toFixed(change.includes('.') ? change.split('.')[1].length : 3)}` : `${num.toFixed(change.includes('.') ? change.split('.')[1].length : 3)}`));
-                            changeEl.textContent = signed;
-                            changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
-                            if (priceEl && priceEl.parentElement) {
-                                priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
-                            }
-                        }
-                    });
-                });
+                // (Removed client-side seeded forex price generation — forex prices are now provided by the server via /prices)
 
                 // Attach click handlers to market links so the clicked card price is stored in sessionStorage
                 // This ensures the trade page can read the exact price from the home list immediately after navigation.
@@ -695,31 +671,7 @@
                     // ignore
                 }
 
-                // Update metals prices
-                Object.entries(markets.metals).forEach(([symbol, {base, variance}]) => {
-                    // Match cards whose h5 text equals like 'XAU/USD' (we render h5 as e.g. 'XAU/USD')
-                    const lookup = `${symbol}/USD`;
-                    const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
-                        const h5 = card.querySelector('h5');
-                        return h5 && h5.textContent.trim().toLowerCase() === lookup.toLowerCase();
-                    });
-                    cards.forEach(card => {
-                        const price = base + (Math.random() - 0.5) * variance;
-                        const change = (Math.random() * 3 - 1).toFixed(2);
-                        const priceEl = card.querySelector('.metal-price');
-                        const changeEl = card.querySelector('.metal-change');
-                        if (priceEl) priceEl.textContent = price.toFixed(2);
-                        if (changeEl) {
-                            const num = parseFloat(change);
-                            const signed = (isNaN(num) ? change : (num >= 0 ? `+${num.toFixed(change.includes('.') ? change.split('.')[1].length : 2)}` : `${num.toFixed(change.includes('.') ? change.split('.')[1].length : 2)}`));
-                            changeEl.textContent = signed;
-                            changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
-                            if (priceEl && priceEl.parentElement) {
-                                priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
-                            }
-                        }
-                    });
-                });
+                // (Removed client-side seeded metals price generation — metals prices are now provided by the server via /prices)
             }
             
             // Update prices every 5 seconds

@@ -55,16 +55,16 @@
                 @php
                     $cfg = config('arbitrage.plans.A', []);
                     $max = isset($cfg['max_times']) ? intval($cfg['max_times']) : 2;
-                    $active = 0;
+                    $totalStarts = 0;
                     if (auth()->check() && \Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
-                        $active = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
+                        // Count total starts (any status) so completed starts still count toward the limit
+                        $totalStarts = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
                             ->where('user_id', auth()->id())
                             ->where('plan_name', 'A')
-                            ->where('status', 'active')
                             ->count();
                     }
                 @endphp
-                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $active }}/{{ $max }} Times</span>
+                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $totalStarts }}/{{ $max }} Times</span>
             </div>
 
             <!-- Card Body -->
@@ -101,8 +101,9 @@
                         @endforeach
                     </div>
                 </div>
-                <a href="{{ route('arbitrage.aplan') }}?plan=A" class="btn btn-link text-primary d-flex align-items-center justify-content-center">
-                    <span class="me-2">Start</span>
+                @php $disabledA = ($totalStarts >= $max); @endphp
+                <a href="{{ $disabledA ? 'javascript:void(0);' : route('arbitrage.aplan') . '?plan=A' }}" class="btn {{ $disabledA ? 'btn-link text-muted disabled' : 'btn-link text-primary' }} d-flex align-items-center justify-content-center" {{ $disabledA ? 'aria-disabled=true' : '' }} style="text-decoration:none;">
+                    <span class="me-2">{{ $disabledA ? 'Limit Reached' : 'Start' }}</span>
                     <i class="bi bi-arrow-right"></i>
                 </a>
             </div>
@@ -129,16 +130,15 @@
                 @php
                     $cfg = config('arbitrage.plans.B', []);
                     $max = isset($cfg['max_times']) ? intval($cfg['max_times']) : 2;
-                    $active = 0;
+                    $totalStarts = 0;
                     if (auth()->check() && \Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
-                        $active = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
+                        $totalStarts = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
                             ->where('user_id', auth()->id())
                             ->where('plan_name', 'B')
-                            ->where('status', 'active')
                             ->count();
                     }
                 @endphp
-                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $active }}/{{ $max }} Times</span>
+                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $totalStarts }}/{{ $max }} Times</span>
             </div>
 
             <!-- Card Body -->
@@ -173,8 +173,9 @@
                         @endforeach
                     </div>
                 </div>
-                <a href="{{ route('arbitrage.aplan') }}?plan=B" class="btn btn-link text-primary d-flex align-items-center">
-                    <span class="me-2">Start</span>
+                @php $disabledB = ($totalStarts >= $max); @endphp
+                <a href="{{ $disabledB ? 'javascript:void(0);' : route('arbitrage.aplan') . '?plan=B' }}" class="btn {{ $disabledB ? 'btn-link text-muted disabled' : 'btn-link text-primary' }} d-flex align-items-center" {{ $disabledB ? 'aria-disabled=true' : '' }} style="text-decoration:none;">
+                    <span class="me-2">{{ $disabledB ? 'Limit Reached' : 'Start' }}</span>
                     <i class="bi bi-arrow-right"></i>
                 </a>
             </div>
@@ -201,16 +202,15 @@
                 @php
                     $cfg = config('arbitrage.plans.C', []);
                     $max = isset($cfg['max_times']) ? intval($cfg['max_times']) : 2;
-                    $active = 0;
+                    $totalStarts = 0;
                     if (auth()->check() && \Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
-                        $active = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
+                        $totalStarts = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
                             ->where('user_id', auth()->id())
                             ->where('plan_name', 'C')
-                            ->where('status', 'active')
                             ->count();
                     }
                 @endphp
-                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $active }}/{{ $max }} Times</span>
+                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $totalStarts }}/{{ $max }} Times</span>
             </div>
 
             <!-- Card Body -->
@@ -245,8 +245,9 @@
                         @endforeach
                     </div>
                 </div>
-                <a href="{{ route('arbitrage.aplan') }}?plan=C" class="btn btn-link text-primary d-flex align-items-center">
-                    <span class="me-2">Start</span>
+                @php $disabledC = ($totalStarts >= $max); @endphp
+                <a href="{{ $disabledC ? 'javascript:void(0);' : route('arbitrage.aplan') . '?plan=C' }}" class="btn {{ $disabledC ? 'btn-link text-muted disabled' : 'btn-link text-primary' }} d-flex align-items-center" {{ $disabledC ? 'aria-disabled=true' : '' }} style="text-decoration:none;">
+                    <span class="me-2">{{ $disabledC ? 'Limit Reached' : 'Start' }}</span>
                     <i class="bi bi-arrow-right"></i>
                 </a>
             </div>
@@ -273,16 +274,15 @@
                 @php
                     $cfg = config('arbitrage.plans.D', []);
                     $max = isset($cfg['max_times']) ? intval($cfg['max_times']) : 3;
-                    $active = 0;
+                    $totalStarts = 0;
                     if (auth()->check() && \Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
-                        $active = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
+                        $totalStarts = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
                             ->where('user_id', auth()->id())
                             ->where('plan_name', 'D')
-                            ->where('status', 'active')
                             ->count();
                     }
                 @endphp
-                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $active }}/{{ $max }} Times</span>
+                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $totalStarts }}/{{ $max }} Times</span>
             </div>
 
             <!-- Card Body -->
@@ -317,7 +317,8 @@
                         @endforeach
                     </div>
                 </div>
-                <a href="{{ route('arbitrage.aplan') }}?plan=D" class="btn btn-primary">Pre-Order</a>
+                @php $disabledD = ($totalStarts >= $max); @endphp
+                <a href="{{ $disabledD ? 'javascript:void(0);' : route('arbitrage.aplan') . '?plan=D' }}" class="btn {{ $disabledD ? 'btn-outline-secondary disabled' : 'btn-primary' }}" {{ $disabledD ? 'aria-disabled=true' : '' }}>{{ $disabledD ? 'Limit Reached' : 'Pre-Order' }}</a>
             </div>
         </div>
     </div>
@@ -342,16 +343,15 @@
                 @php
                     $cfg = config('arbitrage.plans.E', []);
                     $max = isset($cfg['max_times']) ? intval($cfg['max_times']) : 5;
-                    $active = 0;
+                    $totalStarts = 0;
                     if (auth()->check() && \Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
-                        $active = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
+                        $totalStarts = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
                             ->where('user_id', auth()->id())
                             ->where('plan_name', 'E')
-                            ->where('status', 'active')
                             ->count();
                     }
                 @endphp
-                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $active }}/{{ $max }} Times</span>
+                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $totalStarts }}/{{ $max }} Times</span>
             </div>
 
             <!-- Card Body -->
@@ -386,7 +386,8 @@
                         @endforeach
                     </div>
                 </div>
-                <a href="{{ route('arbitrage.aplan') }}?plan=E" class="btn btn-primary">Pre-Order</a>
+                @php $disabledE = ($totalStarts >= $max); @endphp
+                <a href="{{ $disabledE ? 'javascript:void(0);' : route('arbitrage.aplan') . '?plan=E' }}" class="btn {{ $disabledE ? 'btn-outline-secondary disabled' : 'btn-primary' }}" {{ $disabledE ? 'aria-disabled=true' : '' }}>{{ $disabledE ? 'Limit Reached' : 'Pre-Order' }}</a>
             </div>
         </div>
     </div>
@@ -411,16 +412,15 @@
                 @php
                     $cfg = config('arbitrage.plans.VIP', []);
                     $max = isset($cfg['max_times']) ? intval($cfg['max_times']) : 7;
-                    $active = 0;
+                    $totalStarts = 0;
                     if (auth()->check() && \Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
-                        $active = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
+                        $totalStarts = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
                             ->where('user_id', auth()->id())
                             ->where('plan_name', 'VIP')
-                            ->where('status', 'active')
                             ->count();
                     }
                 @endphp
-                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $active }}/{{ $max }} Times</span>
+                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $totalStarts }}/{{ $max }} Times</span>
             </div>
 
             <!-- Card Body -->
@@ -455,7 +455,8 @@
                         @endforeach
                     </div>
                 </div>
-                <a href="{{ route('arbitrage.aplan') }}?plan=VIP" class="btn btn-primary">Pre-Order</a>
+                @php $disabledVIP = ($totalStarts >= $max); @endphp
+                <a href="{{ $disabledVIP ? 'javascript:void(0);' : route('arbitrage.aplan') . '?plan=VIP' }}" class="btn {{ $disabledVIP ? 'btn-outline-secondary disabled' : 'btn-primary' }}" {{ $disabledVIP ? 'aria-disabled=true' : '' }}>{{ $disabledVIP ? 'Limit Reached' : 'Pre-Order' }}</a>
             </div>
         </div>
     </div>
@@ -480,16 +481,15 @@
                 @php
                     $cfg = config('arbitrage.plans.CN', []);
                     $max = isset($cfg['max_times']) ? intval($cfg['max_times']) : 9;
-                    $active = 0;
+                    $totalStarts = 0;
                     if (auth()->check() && \Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
-                        $active = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
+                        $totalStarts = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')
                             ->where('user_id', auth()->id())
                             ->where('plan_name', 'CN')
-                            ->where('status', 'active')
                             ->count();
                     }
                 @endphp
-                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $active }}/{{ $max }} Times</span>
+                <span class="badge bg-warning text-white px-3 py-2 rounded-pill">{{ $totalStarts }}/{{ $max }} Times</span>
             </div>
 
             <!-- Card Body -->
@@ -524,7 +524,8 @@
                         @endforeach
                     </div>
                 </div>
-                <a href="{{ route('arbitrage.aplan') }}?plan=CN" class="btn btn-primary">Pre-Order</a>
+                @php $disabledCN = ($totalStarts >= $max); @endphp
+                <a href="{{ $disabledCN ? 'javascript:void(0);' : route('arbitrage.aplan') . '?plan=CN' }}" class="btn {{ $disabledCN ? 'btn-outline-secondary disabled' : 'btn-primary' }}" {{ $disabledCN ? 'aria-disabled=true' : '' }}>{{ $disabledCN ? 'Limit Reached' : 'Pre-Order' }}</a>
             </div>
         </div>
     </div>
