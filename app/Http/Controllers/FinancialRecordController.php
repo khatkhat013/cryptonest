@@ -50,15 +50,33 @@ class FinancialRecordController extends Controller
         // Compute USD values using aggregated balances
         $walletsData = [];
         $totalAllUsd = 0.0;
+        // Known USD-pegged symbols we can safely treat as $1 when external price fetch fails
+        $stableUsdSymbols = ['USDT', 'USDC', 'PYUSD', 'USD', 'BUSD', 'TUSD'];
         foreach ($agg as $coin => $info) {
             $sym = strtolower($coin);
             $cacheKey = 'price_usd_' . $sym;
             $price = cache()->remember($cacheKey, 60, function () use ($sym) {
                 return PriceService::getCryptoPrice($sym);
             });
+
+            // Fallback: if price fetch failed for stablecoins, assume 1.0 USD
+            $symUpper = strtoupper($coin);
+            if ($price === null && in_array($symUpper, $stableUsdSymbols, true)) {
+                $price = 1.0;
+            }
+
+            // As a secondary fallback, try the more general getCryptoData which may parse variants
+            if ($price === null) {
+                $data = PriceService::getCryptoData($sym);
+                if (!empty($data) && isset($data['price']) && $data['price'] !== null) {
+                    $price = (float)$data['price'];
+                }
+            }
+
             $bal = (float)$info['balance'];
-            $usd = $price !== null ? ($price * $bal) : null;
-            if ($usd !== null) $totalAllUsd += $usd;
+            // If price still null, show USD as 0 (to avoid breaking layout). This keeps total numeric.
+            $usd = $price !== null ? ($price * $bal) : 0.0;
+            $totalAllUsd += $usd;
             $walletsData[] = [
                 'symbol' => strtoupper($coin),
                 'balance' => $bal,

@@ -139,30 +139,47 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @forelse($recentActivities ?? [] as $act)
                                 <tr>
-                                    <td>#TRX-123</td>
-                                    <td>John Doe</td>
-                                    <td>Buy BTC</td>
-                                    <td>0.25 BTC</td>
-                                    <td><span class="badge bg-success">Completed</span></td>
-                                    <td>2025-10-05</td>
+                                    <td>{{ $act->tx_id ?? ($act->type[0] . str_pad($act->id,5,'0',STR_PAD_LEFT)) }}</td>
+                                    <td>{{ $act->user?->name ?? $act->user?->email ?? '—' }}</td>
+                                    <td>
+                                        @if($act->type === 'deposit')
+                                            Deposit
+                                        @elseif($act->type === 'withdrawal')
+                                            Withdrawal
+                                        @else
+                                            Trade
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($act->amount !== null)
+                                            {{ rtrim(rtrim(number_format($act->amount, 8, '.', ''), '0'), '.') }} {{ strtoupper($act->coin ?? '') }}
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @php
+                                            $status = strtolower((string)($act->status ?? ''));
+                                        @endphp
+                                        @if(str_contains($status, 'comp') || $status === 'completed')
+                                            <span class="badge bg-success">{{ $act->status }}</span>
+                                        @elseif(str_contains($status, 'pend') || $status === 'pending' || $status === 'open')
+                                            <span class="badge bg-warning">{{ $act->status }}</span>
+                                        @elseif(str_contains($status, 'fail') || $status === 'failed')
+                                            <span class="badge bg-danger">{{ $act->status }}</span>
+                                        @else
+                                            <span class="badge bg-secondary">{{ $act->status }}</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ optional($act->created_at)->format('Y-m-d H:i') }}</td>
                                 </tr>
+                                @empty
                                 <tr>
-                                    <td>#TRX-124</td>
-                                    <td>Jane Smith</td>
-                                    <td>Sell ETH</td>
-                                    <td>5.5 ETH</td>
-                                    <td><span class="badge bg-warning">Pending</span></td>
-                                    <td>2025-10-05</td>
+                                    <td colspan="6" class="text-center text-muted">No recent activities found.</td>
                                 </tr>
-                                <tr>
-                                    <td>#TRX-125</td>
-                                    <td>Mike Johnson</td>
-                                    <td>Buy USDT</td>
-                                    <td>1000 USDT</td>
-                                    <td><span class="badge bg-danger">Failed</span></td>
-                                    <td>2025-10-05</td>
-                                </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
