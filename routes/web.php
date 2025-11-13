@@ -83,15 +83,145 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::delete('/withdraws/{withdrawal}', [App\Http\Controllers\Admin\WithdrawalAdminController::class, 'destroy'])->name('withdraws.destroy');
 
         // Admin placeholders for Trading and AI Arbitrage pages (pages to be implemented later)
-        Route::get('/trading', function() {
-            // placeholder: redirect to deposits until admin trading page is implemented
-            return redirect()->route('admin.deposits.index');
-        })->name('trading.index');
+    Route::get('/trading', [App\Http\Controllers\Admin\TradeOrderAdminController::class, 'index'])->name('trading.index');
+    Route::get('/trading/{trade}/edit', [App\Http\Controllers\Admin\TradeOrderAdminController::class, 'edit'])->name('trading.edit');
+    Route::post('/trading/{trade}/update', [App\Http\Controllers\Admin\TradeOrderAdminController::class, 'update'])->name('trading.update');
+    Route::delete('/trading/{trade}', [App\Http\Controllers\Admin\TradeOrderAdminController::class, 'destroy'])->name('trading.destroy');
 
         Route::get('/ai-arbitrage', function() {
-            // placeholder: redirect to deposits until admin arbitrage page is implemented
-            return redirect()->route('admin.deposits.index');
+            // Admin AI arbitrage list (mirror trading admin list) and restrict to assigned users
+            if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
+                return redirect()->route('admin.deposits.index');
+            }
+
+            $plansQuery = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans as p')
+                ->leftJoin('users as u', 'p.user_id', '=', 'u.id')
+                ->select('p.*', \Illuminate\Support\Facades\DB::raw("COALESCE(u.name, u.email) as user_name"))
+                ->orderBy('p.id', 'desc');
+
+            // Restrict non-super-admins to only see plans for users assigned to them
+            $admin = \Illuminate\Support\Facades\Auth::guard('admin')->user();
+            if ($admin && method_exists($admin, 'isSuperAdmin') && !$admin->isSuperAdmin()) {
+                // Only include plans where the user exists and their assigned_admin_id matches current admin
+                $plansQuery->where('u.assigned_admin_id', $admin->id);
+            }
+
+            $plans = $plansQuery->paginate(20);
+            return view('admin.ai_arbitrage', compact('plans'));
         })->name('ai.arbitrage.index');
+
+        // JSON endpoint for a single plan (used by admin UI to fetch details)
+        Route::get('/ai-arbitrage/{id}/json', function ($id) {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
+                return response()->json(['success' => false, 'message' => 'ai_arbitrage_plans table not found'], 404);
+            }
+
+            $row = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans as p')
+                ->leftJoin('users as u', 'p.user_id', '=', 'u.id')
+                ->select('p.*', \Illuminate\Support\Facades\DB::raw("COALESCE(u.name, u.email) as user_name"))
+                ->where('p.id', intval($id))
+                ->first();
+
+            if (!$row) {
+                return response()->json(['success' => false, 'message' => 'Plan not found'], 404);
+            }
+
+            return response()->json(['success' => true, 'plan' => $row]);
+        })->name('ai.arbitrage.json');
+
+        // Admin edit form for a plan
+        Route::get('/ai-arbitrage/{id}/edit', function ($id) {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
+                return redirect()->route('admin.deposits.index');
+            }
+            $plan = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans as p')
+                ->leftJoin('users as u', 'p.user_id', '=', 'u.id')
+                ->select('p.*', \Illuminate\Support\Facades\DB::raw("COALESCE(u.name, u.email) as user_name"))
+                ->where('p.id', intval($id))
+                ->first();
+
+            if (!$plan) return redirect()->route('admin.ai.arbitrage.index')->with('error', 'Plan not found');
+
+            return view('admin.ai_arbitrage_edit', ['plan' => $plan]);
+        })->name('ai.arbitrage.edit');
+
+        // Update handler
+        Route::post('/ai-arbitrage/{id}/update', function (\Illuminate\Http\Request $request, $id) {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
+                return redirect()->route('admin.deposits.index');
+            }
+
+            $data = [];
+
+            // Determine actual columns present in the table and map incoming inputs to them.
+            $has = function($col) {
+                return \Illuminate\Support\Facades\Schema::hasColumn('ai_arbitrage_plans', $col);
+            };
+
+            // Map amount -> amount or quantity
+            if ($request->filled('amount')) {
+                if ($has('amount')) {
+                    $data['amount'] = $request->input('amount');
+                } elseif ($has('quantity')) {
+                    $data['quantity'] = $request->input('amount');
+                }
+            }
+
+            // Map profit_rate -> profit_rate or daily_revenue_percentage or profit
+            if ($request->filled('profit_rate')) {
+                if ($has('profit_rate')) {
+                    $data['profit_rate'] = $request->input('profit_rate');
+                } elseif ($has('daily_revenue_percentage')) {
+                    $data['daily_revenue_percentage'] = $request->input('profit_rate');
+                } elseif ($has('profit')) {
+                    $data['profit'] = $request->input('profit_rate');
+                }
+            }
+
+            // Status
+            if ($request->filled('status')) {
+                if ($has('status')) $data['status'] = $request->input('status');
+            }
+
+            // Duration: duration_hours preferred; fall back to duration_days if needed
+            if ($request->filled('duration_hours')) {
+                $hours = intval($request->input('duration_hours'));
+                if ($has('duration_hours')) {
+                    $data['duration_hours'] = $hours;
+                } elseif ($has('duration_days')) {
+                    // convert hours to days (round up to nearest whole day)
+                    $days = max(1, (int) ceil($hours / 24));
+                    $data['duration_days'] = $days;
+                }
+            } elseif ($request->filled('duration_days')) {
+                if ($has('duration_days')) $data['duration_days'] = intval($request->input('duration_days'));
+            }
+
+            // started_at and completed_at (if present)
+            foreach (['started_at','completed_at'] as $tcol) {
+                if ($request->filled($tcol) && $has($tcol)) {
+                    // ensure we convert HTML5 datetime-local format to SQL friendly (replace T with space)
+                    $val = $request->input($tcol);
+                    $val = str_replace('T', ' ', $val);
+                    $data[$tcol] = $val;
+                }
+            }
+
+            if (count($data)) {
+                \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')->where('id', intval($id))->update($data);
+            }
+
+            return redirect()->route('admin.ai.arbitrage.index')->with('success', 'Plan updated');
+        })->name('ai.arbitrage.update');
+
+        // Delete handler
+        Route::delete('/ai-arbitrage/{id}', function ($id) {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
+                return redirect()->route('admin.deposits.index');
+            }
+            \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')->where('id', intval($id))->delete();
+            return redirect()->route('admin.ai.arbitrage.index')->with('success', 'Plan deleted');
+        })->name('ai.arbitrage.delete');
         
         // Admin Management Routes
         Route::resource('admins', App\Http\Controllers\Admin\AdminController::class);

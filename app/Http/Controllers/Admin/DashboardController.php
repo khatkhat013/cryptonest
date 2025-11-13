@@ -29,9 +29,9 @@ class DashboardController extends Controller
             });
         }
 
-        $recentDeposits = $depositsQuery->limit(20)->get();
-        $recentWithdrawals = $withdrawalsQuery->limit(20)->get();
-        $recentTrades = $tradesQuery->limit(20)->get();
+    $recentDeposits = $depositsQuery->limit(15)->get();
+    $recentWithdrawals = $withdrawalsQuery->limit(15)->get();
+    $recentTrades = $tradesQuery->limit(15)->get();
 
         // Merge into a single recent activities collection and sort by created_at desc
         $activities = collect();
@@ -72,8 +72,40 @@ class DashboardController extends Controller
             ]);
         }
 
-        $recentActivities = $activities->sortByDesc('created_at')->values()->take(20);
+    $recentActivities = $activities->sortByDesc('created_at')->values()->take(15);
 
-        return view('admin.dashboard', ['recentActivities' => $recentActivities]);
+        // Summary counts (total + "new" in last 24 hours)
+        $depositsCount = $depositsQuery->count();
+        $depositsNew = $depositsQuery->where('created_at', '>=', now()->subDay())->count();
+
+        $withdrawalsCount = $withdrawalsQuery->count();
+        $withdrawalsNew = $withdrawalsQuery->where('created_at', '>=', now()->subDay())->count();
+
+        $tradesCount = $tradesQuery->count();
+        $tradesNew = $tradesQuery->where('created_at', '>=', now()->subDay())->count();
+
+        // AI Arbitrage plans - use query builder to allow joining users for admin filtering
+        $aiArbBase = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans as p')
+            ->select('p.id', 'p.created_at')
+            ->leftJoin('users as u', 'p.user_id', '=', 'u.id');
+
+        if ($admin && method_exists($admin, 'isSuperAdmin') && !$admin->isSuperAdmin()) {
+            $aiArbBase->where('u.assigned_admin_id', $admin->id);
+        }
+
+        $aiArbCount = (clone $aiArbBase)->count();
+        $aiArbNew = (clone $aiArbBase)->where('p.created_at', '>=', now()->subDay())->count();
+
+        return view('admin.dashboard', [
+            'recentActivities' => $recentActivities,
+            'depositsCount' => $depositsCount,
+            'depositsNew' => $depositsNew,
+            'withdrawalsCount' => $withdrawalsCount,
+            'withdrawalsNew' => $withdrawalsNew,
+            'tradesCount' => $tradesCount,
+            'tradesNew' => $tradesNew,
+            'aiArbCount' => $aiArbCount,
+            'aiArbNew' => $aiArbNew,
+        ]);
     }
 }

@@ -188,6 +188,53 @@
         </div>
 
         <!-- Activity Stats -->
+        <!-- User Wallets -->
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="h5 mb-0">User Wallets</h3>
+                </div>
+                <div class="card-body">
+                    @php
+                        $uwallets = collect();
+                        try {
+                            if (\Illuminate\Support\Facades\Schema::hasTable('user_wallets')) {
+                                $uwallets = \Illuminate\Support\Facades\DB::table('user_wallets')
+                                    ->where('user_id', $user->id)
+                                    ->orderBy('coin')
+                                    ->get();
+                            }
+                        } catch (\Exception $e) {
+                            // fail quietly and show empty list
+                            $uwallets = collect();
+                        }
+                    @endphp
+
+                    @if($uwallets->isEmpty())
+                        <p class="text-muted mb-0">No wallets found for this user.</p>
+                    @else
+                        <div class="row row-cols-1 row-cols-md-3 g-3">
+                            @foreach($uwallets as $w)
+                                <div class="col">
+                                    <div class="p-3 border rounded h-100">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="small text-muted">{{ strtoupper($w->coin ?? ($w->currency_id ? 'CUR' : '—')) }}</div>
+                                                <div class="fw-bold">{{ number_format($w->balance ?? 0, 8) }}</div>
+                                            </div>
+                                            <div class="text-end">
+                                                <small class="text-muted d-block">ID: {{ $w->id }}</small>
+                                                <small class="text-muted">{{ isset($w->created_at) ? \Carbon\Carbon::parse($w->created_at)->format('Y-m-d') : '' }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
         <div class="col-12 mb-4">
             <div class="card">
                 <div class="card-header">
