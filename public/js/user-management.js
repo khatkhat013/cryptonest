@@ -55,12 +55,22 @@ const UserManagement = {
             if (!noResults) {
                 noResults = document.createElement('tr');
                 noResults.className = 'no-results';
-                noResults.innerHTML = `
-                    <td colspan="8" class="text-center py-4">
-                        <i class="bi bi-search fs-1 text-muted d-block"></i>
-                        <p class="mt-2">No users found matching "${searchTerm}"</p>
-                    </td>
-                `;
+                
+                // Create elements safely without innerHTML to prevent XSS
+                const td = document.createElement('td');
+                td.colSpan = 8;
+                td.className = 'text-center py-4';
+                
+                const icon = document.createElement('i');
+                icon.className = 'bi bi-search fs-1 text-muted d-block';
+                
+                const p = document.createElement('p');
+                p.className = 'mt-2';
+                p.textContent = `No users found matching "${searchTerm}"`;
+                
+                td.appendChild(icon);
+                td.appendChild(p);
+                noResults.appendChild(td);
                 tableBody.appendChild(noResults);
             }
         } else if (noResults) {

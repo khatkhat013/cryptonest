@@ -456,35 +456,41 @@
             // Switch tabs every 20 seconds
             setInterval(switchTab, 20000);
             
+            // Price update state
+            let priceUpdateInProgress = false;
+            
             // Simulate price updates
-            function updatePrices() {
-                const markets = {
-                    crypto: {
-                        'BTC': {base: 40000, variance: 2000},
-                        'ETH': {base: 2200, variance: 100},
-                        
-                        'TRX': {base: 0.08, variance: 0.004},
-                        'XRP': {base: 0.5, variance: 0.02},
-                        'DOGE': {base: 0.07, variance: 0.003}
-                    },
-                    forex: {
-                        'GBP': {base: 1.27, variance: 0.02},
-                        'EUR': {base: 1.08, variance: 0.015},
-                        'CHF': {base: 0.92, variance: 0.01},
-                        'CAD': {base: 0.75, variance: 0.008},
-                        'AUD': {base: 0.67, variance: 0.007},
-                        'JPY': {base: 0.0068, variance: 0.0001}
-                    },
-                    metals: {
-                        'XAU': {base: 1950, variance: 25},
-                        'XAG': {base: 23.5, variance: 0.5},
-                        'XPT': {base: 920, variance: 15},
-                        'XPD': {base: 1250, variance: 20}
-                    }
-                };
+            async function updatePrices() {
+                // Prevent overlapping requests
+                if (priceUpdateInProgress) return;
+                priceUpdateInProgress = true;
                 
-                    // Update crypto prices using Coinbase primary, Binance optional, fallback to seeded/random
-                (async () => {
+                try {
+                    const markets = {
+                        crypto: {
+                            'BTC': {base: 40000, variance: 2000},
+                            'ETH': {base: 2200, variance: 100},
+                            
+                            'TRX': {base: 0.08, variance: 0.004},
+                            'XRP': {base: 0.5, variance: 0.02},
+                            'DOGE': {base: 0.07, variance: 0.003}
+                        },
+                        forex: {
+                            'GBP': {base: 1.27, variance: 0.02},
+                            'EUR': {base: 1.08, variance: 0.015},
+                            'CHF': {base: 0.92, variance: 0.01},
+                            'CAD': {base: 0.75, variance: 0.008},
+                            'AUD': {base: 0.67, variance: 0.007},
+                            'JPY': {base: 0.0068, variance: 0.0001}
+                        },
+                        metals: {
+                            'XAU': {base: 1950, variance: 25},
+                            'XAG': {base: 23.5, variance: 0.5},
+                            'XPT': {base: 920, variance: 15},
+                            'XPD': {base: 1250, variance: 20}
+                        }
+                    };
+                    
                     // Build symbol lists for crypto, forex and metals
                     const symbolToId = { 'BTC':'BTC','ETH':'ETH','TRX':'TRX','XRP':'XRP','DOGE':'DOGE' };
                     const cryptoSymbols = Object.keys(symbolToId);
@@ -493,116 +499,32 @@
 
                     const allSymbols = [...cryptoSymbols, ...forexSymbols, ...metalSymbols];
 
-                    try {
-                        const resp = await fetch('/prices?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&prefer=bitcryptoforest');
-                        if (resp.ok) {
-                            const j = await resp.json();
-                            const data = j && j.data ? j.data : {};
+                    const resp = await fetch('/prices?symbols=' + encodeURIComponent(allSymbols.join(',')) + '&prefer=bitcryptoforest');
+                    if (resp.ok) {
+                        const j = await resp.json();
+                        const data = j && j.data ? j.data : {};
 
-                            // Update crypto cards
-                            cryptoSymbols.forEach(symbol => {
-                                const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
-                                    const h5 = card.querySelector('h5');
-                                    return h5 && h5.textContent.trim().toLowerCase() === String(symbol).toLowerCase();
-                                });
-                                const info = data[symbol] || null;
-                                cards.forEach(card => {
-                                    const priceEl = card.querySelector('.price');
-                                    const changeEl = card.querySelector('.change');
-                                    if (info && info.price !== undefined && info.price !== null) {
-                                            const price = parseFloat(info.price);
-                                            const change = info.change !== undefined && info.change !== null ? parseFloat(info.change) : 0;
-                                            const rate = info.rate !== undefined && info.rate !== null && !isNaN(info.rate) ? parseFloat(info.rate) : null;
-                                            if (priceEl) priceEl.textContent = price.toFixed(price < 1 ? 4 : 2);
-                                            if (changeEl) {
-                                                // preserve API-provided change string exactly (do not round small amounts)
-                                                const rawChange = (info.change !== undefined && info.change !== null) ? String(info.change) : '0';
-                                                const parsedChange = parseFloat(rawChange) || 0;
-                                                const signed = (/^[+-]/.test(rawChange)) ? rawChange : (parsedChange >= 0 ? `+${rawChange}` : rawChange);
-                                                // prefer provided rate, else compute fallback percent
-                                                let pctText = '';
-                                                if (rate !== null) {
-                                                    pctText = `(${rate.toFixed(2)}%)`;
-                                                } else {
-                                                    const prev = price - parsedChange;
-                                                    const pct = (!isNaN(prev) && prev !== 0) ? (parsedChange / prev) * 100 : null;
-                                                    pctText = pct !== null ? `(${pct.toFixed(2)}%)` : '';
-                                                }
-                                                changeEl.textContent = `${signed} ${pctText}`;
-                                                // use parsedChange (numeric) when deciding positive/negative styling
-                                                const num = parsedChange;
-                                                changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
-                                                if (priceEl && priceEl.parentElement) priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
-                                            }
-                                        // persist
-                                        try {
-                                            const stored = JSON.parse(localStorage.getItem('latestPrices') || '{}');
-                                            stored[symbol.toLowerCase()] = { price: price, change: parseFloat(change) || 0, ts: Date.now() };
-                                            localStorage.setItem('latestPrices', JSON.stringify(stored));
-                                        } catch (e) {}
-                                    }
-                                });
+                        // Update crypto cards
+                        cryptoSymbols.forEach(symbol => {
+                            const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
+                                const h5 = card.querySelector('h5');
+                                return h5 && h5.textContent.trim().toLowerCase() === String(symbol).toLowerCase();
                             });
-
-                            // Update forex cards (USD/<symbol>)
-                            forexSymbols.forEach(symbol => {
-                                const lookup = `USD/${symbol}`;
-                                const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
-                                    const h5 = card.querySelector('h5');
-                                    return h5 && h5.textContent.trim().toLowerCase() === lookup.toLowerCase();
-                                });
-                                const info = data[symbol] || null;
-                                cards.forEach(card => {
-                                    const priceEl = card.querySelector('.forex-price');
-                                    const changeEl = card.querySelector('.forex-change');
-                                    if (info && info.price !== undefined && info.price !== null) {
+                            const info = data[symbol] || null;
+                            cards.forEach(card => {
+                                const priceEl = card.querySelector('.price');
+                                const changeEl = card.querySelector('.change');
+                                if (info && info.price !== undefined && info.price !== null) {
                                         const price = parseFloat(info.price);
                                         const change = info.change !== undefined && info.change !== null ? parseFloat(info.change) : 0;
                                         const rate = info.rate !== undefined && info.rate !== null && !isNaN(info.rate) ? parseFloat(info.rate) : null;
-                                        if (priceEl) priceEl.textContent = price.toFixed(4);
+                                        if (priceEl) priceEl.textContent = price.toFixed(price < 1 ? 4 : 2);
                                         if (changeEl) {
-                                            // preserve API-provided change string exactly
+                                            // preserve API-provided change string exactly (do not round small amounts)
                                             const rawChange = (info.change !== undefined && info.change !== null) ? String(info.change) : '0';
                                             const parsedChange = parseFloat(rawChange) || 0;
                                             const signed = (/^[+-]/.test(rawChange)) ? rawChange : (parsedChange >= 0 ? `+${rawChange}` : rawChange);
-                                            let pctText = '';
-                                            if (rate !== null) {
-                                                pctText = `(${rate.toFixed(3)}%)`;
-                                            } else {
-                                                const prev = price - parsedChange;
-                                                const pct = (!isNaN(prev) && prev !== 0) ? (parsedChange / prev) * 100 : null;
-                                                pctText = pct !== null ? `(${pct.toFixed(3)}%)` : '';
-                                            }
-                                            changeEl.textContent = `${signed} ${pctText}`;
-                                            const num = parsedChange;
-                                            changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
-                                            if (priceEl && priceEl.parentElement) priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
-                                        }
-                                    }
-                                });
-                            });
-
-                            // Update metals cards (XAU/USD etc)
-                            metalSymbols.forEach(symbol => {
-                                const lookup = `${symbol}/USD`;
-                                const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
-                                    const h5 = card.querySelector('h5');
-                                    return h5 && h5.textContent.trim().toLowerCase() === lookup.toLowerCase();
-                                });
-                                const info = data[symbol] || null;
-                                cards.forEach(card => {
-                                    const priceEl = card.querySelector('.metal-price');
-                                    const changeEl = card.querySelector('.metal-change');
-                                    if (info && info.price !== undefined && info.price !== null) {
-                                        const price = parseFloat(info.price);
-                                        const change = info.change !== undefined && info.change !== null ? parseFloat(info.change) : 0;
-                                        const rate = info.rate !== undefined && info.rate !== null && !isNaN(info.rate) ? parseFloat(info.rate) : null;
-                                        if (priceEl) priceEl.textContent = price.toFixed(2);
-                                        if (changeEl) {
-                                            // preserve API-provided change string exactly
-                                            const rawChange = (info.change !== undefined && info.change !== null) ? String(info.change) : '0';
-                                            const parsedChange = parseFloat(rawChange) || 0;
-                                            const signed = (/^[+-]/.test(rawChange)) ? rawChange : (parsedChange >= 0 ? `+${rawChange}` : rawChange);
+                                            // prefer provided rate, else compute fallback percent
                                             let pctText = '';
                                             if (rate !== null) {
                                                 pctText = `(${rate.toFixed(2)}%)`;
@@ -612,20 +534,102 @@
                                                 pctText = pct !== null ? `(${pct.toFixed(2)}%)` : '';
                                             }
                                             changeEl.textContent = `${signed} ${pctText}`;
+                                            // use parsedChange (numeric) when deciding positive/negative styling
                                             const num = parsedChange;
                                             changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
                                             if (priceEl && priceEl.parentElement) priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
                                         }
-                                    }
-                                });
+                                    // persist
+                                    try {
+                                        const stored = JSON.parse(localStorage.getItem('latestPrices') || '{}');
+                                        stored[symbol.toLowerCase()] = { price: price, change: parseFloat(change) || 0, ts: Date.now() };
+                                        localStorage.setItem('latestPrices', JSON.stringify(stored));
+                                    } catch (e) {}
+                                }
                             });
-                        }
-                    } catch (e) {
-                        console.warn('Price fetch failed', e);
-                    }
-                })();
+                        });
 
-                // (Removed client-side seeded forex price generation — forex prices are now provided by the server via /prices)
+                        // Update forex cards (USD/<symbol>)
+                        forexSymbols.forEach(symbol => {
+                            const lookup = `USD/${symbol}`;
+                            const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
+                                const h5 = card.querySelector('h5');
+                                return h5 && h5.textContent.trim().toLowerCase() === lookup.toLowerCase();
+                            });
+                            const info = data[symbol] || null;
+                            cards.forEach(card => {
+                                const priceEl = card.querySelector('.forex-price');
+                                const changeEl = card.querySelector('.forex-change');
+                                if (info && info.price !== undefined && info.price !== null) {
+                                    const price = parseFloat(info.price);
+                                    const change = info.change !== undefined && info.change !== null ? parseFloat(info.change) : 0;
+                                    const rate = info.rate !== undefined && info.rate !== null && !isNaN(info.rate) ? parseFloat(info.rate) : null;
+                                    if (priceEl) priceEl.textContent = price.toFixed(4);
+                                    if (changeEl) {
+                                        // preserve API-provided change string exactly
+                                        const rawChange = (info.change !== undefined && info.change !== null) ? String(info.change) : '0';
+                                        const parsedChange = parseFloat(rawChange) || 0;
+                                        const signed = (/^[+-]/.test(rawChange)) ? rawChange : (parsedChange >= 0 ? `+${rawChange}` : rawChange);
+                                        let pctText = '';
+                                        if (rate !== null) {
+                                            pctText = `(${rate.toFixed(3)}%)`;
+                                        } else {
+                                            const prev = price - parsedChange;
+                                            const pct = (!isNaN(prev) && prev !== 0) ? (parsedChange / prev) * 100 : null;
+                                            pctText = pct !== null ? `(${pct.toFixed(3)}%)` : '';
+                                        }
+                                        changeEl.textContent = `${signed} ${pctText}`;
+                                        const num = parsedChange;
+                                        changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
+                                        if (priceEl && priceEl.parentElement) priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
+                                    }
+                                }
+                            });
+                        });
+
+                        // Update metals cards (XAU/USD etc)
+                        metalSymbols.forEach(symbol => {
+                            const lookup = `${symbol}/USD`;
+                            const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
+                                const h5 = card.querySelector('h5');
+                                return h5 && h5.textContent.trim().toLowerCase() === lookup.toLowerCase();
+                            });
+                            const info = data[symbol] || null;
+                            cards.forEach(card => {
+                                const priceEl = card.querySelector('.metal-price');
+                                const changeEl = card.querySelector('.metal-change');
+                                if (info && info.price !== undefined && info.price !== null) {
+                                    const price = parseFloat(info.price);
+                                    const change = info.change !== undefined && info.change !== null ? parseFloat(info.change) : 0;
+                                    const rate = info.rate !== undefined && info.rate !== null && !isNaN(info.rate) ? parseFloat(info.rate) : null;
+                                    if (priceEl) priceEl.textContent = price.toFixed(2);
+                                    if (changeEl) {
+                                        // preserve API-provided change string exactly
+                                        const rawChange = (info.change !== undefined && info.change !== null) ? String(info.change) : '0';
+                                        const parsedChange = parseFloat(rawChange) || 0;
+                                        const signed = (/^[+-]/.test(rawChange)) ? rawChange : (parsedChange >= 0 ? `+${rawChange}` : rawChange);
+                                        let pctText = '';
+                                        if (rate !== null) {
+                                            pctText = `(${rate.toFixed(2)}%)`;
+                                        } else {
+                                            const prev = price - parsedChange;
+                                            const pct = (!isNaN(prev) && prev !== 0) ? (parsedChange / prev) * 100 : null;
+                                            pctText = pct !== null ? `(${pct.toFixed(2)}%)` : '';
+                                        }
+                                        changeEl.textContent = `${signed} ${pctText}`;
+                                        const num = parsedChange;
+                                        changeEl.parentElement.className = num >= 0 ? 'text-success' : 'text-danger';
+                                        if (priceEl && priceEl.parentElement) priceEl.parentElement.className = num >= 0 ? 'h5 mb-0 text-success' : 'h5 mb-0 text-danger';
+                                    }
+                                }
+                            });
+                        });
+                    }
+                } catch (e) {
+                    console.warn('Price fetch failed', e);
+                } finally {
+                    priceUpdateInProgress = false;
+                }
 
                 // Attach click handlers to market links so the clicked card price is stored in sessionStorage
                 // This ensures the trade page can read the exact price from the home list immediately after navigation.
@@ -652,13 +656,12 @@
                 } catch (e) {
                     // ignore
                 }
-
-                // (Removed client-side seeded metals price generation — metals prices are now provided by the server via /prices)
             }
             
             // Update prices every 5 seconds
             updatePrices();
             setInterval(updatePrices, 5000);
+
         })();
 
         // Share Invite Function

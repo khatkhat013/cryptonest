@@ -36,7 +36,7 @@ class PriceService
      */
     public static function getAllProducts(): array
     {
-        return Cache::remember('bcf:all_products_v2', 5, function () {
+        return Cache::remember('bcf:all_products_v2', 3, function () {
             try {
                 $resp = Http::timeout(6)->get(self::API_URL);
                 if (!$resp->ok()) return [];

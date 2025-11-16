@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\DashboardController;
 
 // Public routes - accessible without login
 Route::view('/', 'home');
+// Landing page (marketing) - public
+Route::view('/landing', 'landing.index')->name('landing');
 
 // Lightweight public price endpoint used by client UI to avoid exposing direct external API calls
 Route::get('/prices', [App\Http\Controllers\PriceController::class, 'prices'])->name('prices');
@@ -34,7 +36,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         return app(\App\Http\Controllers\Admin\AuthController::class)->showLoginForm();
     })->name('login');
 
-    Route::post('/login', [AdminAuthController::class, 'login']);
+    Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1');
 
     Route::get('/register', function () {
         if (Auth::guard('admin')->check()) {
@@ -43,7 +45,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         return app(\App\Http\Controllers\Admin\AuthController::class)->showRegisterForm();
     })->name('register');
 
-    Route::post('/register', [AdminAuthController::class, 'register']);
+    Route::post('/register', [AdminAuthController::class, 'register'])->middleware('throttle:5,1');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
     
     // Dashboard: ensure unauthenticated visitors are redirected to admin login.
@@ -177,60 +179,119 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 abort(403, 'You are not authorized to update this plan.');
             }
 
-            $data = [];
+            // Validate input data before processing
+            $validStatusValues = ['active', 'inactive', 'completed', 'paused'];
+            
+            $validated = [];
+            
+            // Validate and sanitize amount/quantity (numeric)
+            if ($request->filled('amount')) {
+                $amount = floatval($request->input('amount'));
+                if ($amount >= 0 && $amount <= 999999999.99999999) {
+                    $validated['amount'] = $amount;
+                }
+            }
 
-            // Determine actual columns present in the table and map incoming inputs to them.
+            // Validate and sanitize profit_rate (numeric, 0-100)
+            if ($request->filled('profit_rate')) {
+                $rate = floatval($request->input('profit_rate'));
+                if ($rate >= 0 && $rate <= 100) {
+                    $validated['profit_rate'] = $rate;
+                }
+            }
+
+            // Validate status (whitelist)
+            if ($request->filled('status')) {
+                $status = strtolower(trim($request->input('status')));
+                if (in_array($status, $validStatusValues)) {
+                    $validated['status'] = $status;
+                }
+            }
+
+            // Validate and sanitize plan_name (alphanumeric + spaces/hyphens/underscores)
+            if ($request->filled('plan_name')) {
+                $name = trim($request->input('plan_name'));
+                if (preg_match('/^[a-zA-Z0-9\s\-_]{0,255}$/', $name)) {
+                    $validated['plan_name'] = $name;
+                }
+            }
+
+            // Validate duration (positive integers)
+            if ($request->filled('duration_hours')) {
+                $hours = intval($request->input('duration_hours'));
+                if ($hours > 0 && $hours <= 87600) {
+                    $validated['duration_hours'] = $hours;
+                }
+            } elseif ($request->filled('duration_days')) {
+                $days = intval($request->input('duration_days'));
+                if ($days > 0 && $days <= 3650) {
+                    $validated['duration_days'] = $days;
+                }
+            }
+
+            // Validate date fields (ensure valid datetime format)
+            foreach (['started_at', 'completed_at'] as $dateCol) {
+                if ($request->filled($dateCol)) {
+                    $val = trim($request->input($dateCol));
+                    // Ensure format is YYYY-MM-DD HH:MM or handle HTML5 datetime-local
+                    if (preg_match('/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/', $val)) {
+                        // Normalize format (replace T with space if needed)
+                        $val = str_replace('T', ' ', $val);
+                        // Parse and reformat to ensure SQL safety
+                        try {
+                            $date = \Carbon\Carbon::createFromFormat('Y-m-d H:i', substr($val, 0, 16));
+                            $validated[$dateCol] = $date->format('Y-m-d H:i:s');
+                        } catch (\Exception $e) {
+                            // Skip invalid dates
+                        }
+                    }
+                }
+            }
+
+            // Determine actual columns present and map validated data to them
             $has = function($col) {
                 return \Illuminate\Support\Facades\Schema::hasColumn('ai_arbitrage_plans', $col);
             };
 
-            // Map amount -> amount or quantity
-            if ($request->filled('amount')) {
+            $data = [];
+            if (isset($validated['amount'])) {
                 if ($has('amount')) {
-                    $data['amount'] = $request->input('amount');
+                    $data['amount'] = $validated['amount'];
                 } elseif ($has('quantity')) {
-                    $data['quantity'] = $request->input('amount');
+                    $data['quantity'] = $validated['amount'];
                 }
             }
 
-            // Map profit_rate -> profit_rate or daily_revenue_percentage or profit
-            if ($request->filled('profit_rate')) {
+            if (isset($validated['profit_rate'])) {
                 if ($has('profit_rate')) {
-                    $data['profit_rate'] = $request->input('profit_rate');
+                    $data['profit_rate'] = $validated['profit_rate'];
                 } elseif ($has('daily_revenue_percentage')) {
-                    $data['daily_revenue_percentage'] = $request->input('profit_rate');
+                    $data['daily_revenue_percentage'] = $validated['profit_rate'];
                 } elseif ($has('profit')) {
-                    $data['profit'] = $request->input('profit_rate');
+                    $data['profit'] = $validated['profit_rate'];
                 }
             }
 
-            // Status
-            if ($request->filled('status')) {
-                if ($has('status')) $data['status'] = $request->input('status');
+            if (isset($validated['status']) && $has('status')) {
+                $data['status'] = $validated['status'];
             }
 
-            // Duration: duration_hours preferred; fall back to duration_days if needed
-            if ($request->filled('duration_hours')) {
-                $hours = intval($request->input('duration_hours'));
-                if ($has('duration_hours')) {
-                    $data['duration_hours'] = $hours;
-                } elseif ($has('duration_days')) {
-                    // convert hours to days (round up to nearest whole day)
-                    $days = max(1, (int) ceil($hours / 24));
-                    $data['duration_days'] = $days;
-                }
-            } elseif ($request->filled('duration_days')) {
-                if ($has('duration_days')) $data['duration_days'] = intval($request->input('duration_days'));
+            if (isset($validated['plan_name']) && $has('plan_name')) {
+                $data['plan_name'] = $validated['plan_name'];
             }
 
-            // started_at and completed_at (if present)
-            foreach (['started_at','completed_at'] as $tcol) {
-                if ($request->filled($tcol) && $has($tcol)) {
-                    // ensure we convert HTML5 datetime-local format to SQL friendly (replace T with space)
-                    $val = $request->input($tcol);
-                    $val = str_replace('T', ' ', $val);
-                    $data[$tcol] = $val;
-                }
+            if (isset($validated['duration_hours']) && $has('duration_hours')) {
+                $data['duration_hours'] = $validated['duration_hours'];
+            } elseif (isset($validated['duration_days']) && $has('duration_days')) {
+                $data['duration_days'] = $validated['duration_days'];
+            }
+
+            if (isset($validated['started_at']) && $has('started_at')) {
+                $data['started_at'] = $validated['started_at'];
+            }
+
+            if (isset($validated['completed_at']) && $has('completed_at')) {
+                $data['completed_at'] = $validated['completed_at'];
             }
 
             if (count($data)) {
@@ -307,9 +368,9 @@ Route::view('/arbitrage/introduction', 'arbitrage.introduction')->name('introduc
 // Authentication routes
 // Apply 'guest' middleware so authenticated regular users are redirected away from login/register
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post')->middleware('guest');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post')->middleware('guest','throttle:5,1');
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register')->middleware('guest');
-Route::post('/register', [AuthController::class, 'register'])->name('register.post')->middleware('guest');
+Route::post('/register', [AuthController::class, 'register'])->name('register.post')->middleware('guest','throttle:5,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     // Protected routes - require authentication
@@ -321,9 +382,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/lending/submit', [App\Http\Controllers\LendingController::class, 'store'])->name('lending.store');
     Route::get('/lending/list', [App\Http\Controllers\LendingController::class, 'index'])->name('lending.list');
     
-    // Trade API routes
-    Route::post('/api/trade/simulate-price', [App\Http\Controllers\TradeController::class, 'simulatePrice']);
-    Route::post('/api/trade/{orderId}/complete', [App\Http\Controllers\TradeController::class, 'complete']);
+    // Trade API routes - rate limited to prevent abuse
+    Route::post('/api/trade/simulate-price', [App\Http\Controllers\TradeController::class, 'simulatePrice'])->middleware('throttle:60,1');
+    Route::post('/api/trade/{orderId}/complete', [App\Http\Controllers\TradeController::class, 'complete'])->middleware('throttle:30,1');
     Route::get('/trade/orders', [App\Http\Controllers\TradeController::class, 'orders'])->name('trade.orders');
     Route::view('/lending-history', 'lending-history');
     Route::get('/financial/record', [App\Http\Controllers\FinancialRecordController::class, 'index'])->name('financial.record');
@@ -393,14 +454,14 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('wallet.detail');
 
-    // Deposit (Top-up) endpoint - handle image + amount
-    Route::post('/wallet/deposit', [App\Http\Controllers\DepositController::class, 'store'])->name('wallet.deposit');
+    // Deposit (Top-up) endpoint - handle image + amount - rate limited
+    Route::post('/wallet/deposit', [App\Http\Controllers\DepositController::class, 'store'])->name('wallet.deposit')->middleware('throttle:10,1');
 
-    // Withdrawal (Send) endpoint - handle user send requests
-    Route::post('/wallet/withdraw', [App\Http\Controllers\WithdrawalController::class, 'store'])->name('wallet.withdraw');
+    // Withdrawal (Send) endpoint - handle user send requests - rate limited
+    Route::post('/wallet/withdraw', [App\Http\Controllers\WithdrawalController::class, 'store'])->name('wallet.withdraw')->middleware('throttle:10,1');
 
-    // Conversion endpoint
-    Route::post('/wallet/convert', [App\Http\Controllers\ConversionController::class, 'store'])->name('wallet.convert');
+    // Conversion endpoint - rate limited
+    Route::post('/wallet/convert', [App\Http\Controllers\ConversionController::class, 'store'])->name('wallet.convert')->middleware('throttle:20,1');
 
     // Arbitrage section
     Route::get('/arbitrage', function () {

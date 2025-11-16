@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreDepositRequest;
 use App\Models\Deposit;
 use App\Models\AdminWallet;
 use App\Models\ActionStatus;
@@ -10,14 +10,10 @@ use Illuminate\Support\Facades\Storage;
 
 class DepositController extends Controller
 {
-    public function store(Request $request)
+    public function store(StoreDepositRequest $request)
     {
-        $request->validate([
-            'coin' => 'required|string|max:16',
-            'amount' => 'required|numeric|min:0.00000001',
-            'image' => 'nullable|image|max:5120', // max 5MB
-            'sent_address' => 'nullable|string|max:255'
-        ]);
+        // Validated data is automatically escaped and filtered via FormRequest
+        $validated = $request->validated();
 
         $user = $request->user();
 
@@ -26,6 +22,7 @@ class DepositController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
+            // File is validated by FormRequest - store safely
             $imagePath = $request->file('image')->store('deposits', 'public');
         }
 
@@ -35,9 +32,9 @@ class DepositController extends Controller
         $deposit = Deposit::create([
             'user_id' => $user->id,
             'admin_id' => $adminId,
-            'coin' => strtolower($request->input('coin')),
-            'sent_address' => $request->input('sent_address'),
-            'amount' => $request->input('amount'),
+            'coin' => strtolower($validated['coin']), // Already validated in FormRequest
+            'sent_address' => $validated['sent_address'] ?? null,
+            'amount' => $validated['amount'],
             'image_path' => $imagePath,
             'action_status_id' => $pendingStatus->id
         ]);

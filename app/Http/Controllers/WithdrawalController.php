@@ -2,24 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreWithdrawalRequest;
 use App\Models\Withdrawal;
 use App\Models\UserWallet;
+use Illuminate\Support\Facades\DB;
 
 class WithdrawalController extends Controller
 {
-    public function store(Request $request)
+    public function store(StoreWithdrawalRequest $request)
     {
-        $request->validate([
-            'destination_address' => 'required|string|max:512',
-            'amount' => 'required|numeric|min:0.00000001',
-            'coin' => 'required|string|max:16'
-        ]);
+        // Validated data is automatically escaped and filtered via FormRequest
+        $validated = $request->validated();
 
         $user = $request->user();
 
-        $coin = strtolower($request->input('coin'));
-        $amount = floatval($request->input('amount'));
+        $coin = strtolower($validated['coin']);
+        $amount = floatval($validated['amount']);
+        $destination = trim($validated['destination_address']);
 
         // Ensure user_wallets table has a wallet row for this user and coin
         $wallet = UserWallet::where('user_id', $user->id)
@@ -45,7 +44,7 @@ class WithdrawalController extends Controller
         $withdrawal = Withdrawal::create([
             'user_id' => $user->id,
             'coin' => $coin,
-            'destination_address' => $request->input('destination_address'),
+            'destination_address' => $destination,
             'amount' => $amount,
             'status' => 'pending'
         ]);
