@@ -134,13 +134,21 @@ Route::prefix('admin')->name('admin.')->group(function () {
             if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
                 return redirect()->route('admin.deposits.index');
             }
+
+            $admin = Auth::guard('admin')->user();
+            
             $plan = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans as p')
                 ->leftJoin('users as u', 'p.user_id', '=', 'u.id')
-                ->select('p.*', \Illuminate\Support\Facades\DB::raw("COALESCE(u.name, u.email) as user_name"))
+                ->select('p.*', \Illuminate\Support\Facades\DB::raw("COALESCE(u.name, u.email) as user_name"), 'u.assigned_admin_id')
                 ->where('p.id', intval($id))
                 ->first();
 
             if (!$plan) return redirect()->route('admin.ai.arbitrage.index')->with('error', 'Plan not found');
+
+            // Authorization: super admin can edit any plan, others can only edit plans for their assigned users
+            if (!$admin->isSuperAdmin() && $plan->assigned_admin_id !== $admin->id) {
+                abort(403, 'You are not authorized to edit this plan.');
+            }
 
             return view('admin.ai_arbitrage_edit', ['plan' => $plan]);
         })->name('ai.arbitrage.edit');
@@ -149,6 +157,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/ai-arbitrage/{id}/update', function (\Illuminate\Http\Request $request, $id) {
             if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
                 return redirect()->route('admin.deposits.index');
+            }
+
+            $admin = Auth::guard('admin')->user();
+            
+            // Fetch plan with user assignment info for authorization check
+            $plan = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans as p')
+                ->leftJoin('users as u', 'p.user_id', '=', 'u.id')
+                ->select('p.*', 'u.assigned_admin_id')
+                ->where('p.id', intval($id))
+                ->first();
+
+            if (!$plan) {
+                return redirect()->route('admin.ai.arbitrage.index')->with('error', 'Plan not found');
+            }
+
+            // Authorization: super admin can update any plan, others can only update plans for their assigned users
+            if (!$admin->isSuperAdmin() && $plan->assigned_admin_id !== $admin->id) {
+                abort(403, 'You are not authorized to update this plan.');
             }
 
             $data = [];
@@ -219,6 +245,25 @@ Route::prefix('admin')->name('admin.')->group(function () {
             if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
                 return redirect()->route('admin.deposits.index');
             }
+
+            $admin = Auth::guard('admin')->user();
+            
+            // Fetch plan with user assignment info for authorization check
+            $plan = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans as p')
+                ->leftJoin('users as u', 'p.user_id', '=', 'u.id')
+                ->select('p.*', 'u.assigned_admin_id')
+                ->where('p.id', intval($id))
+                ->first();
+
+            if (!$plan) {
+                return redirect()->route('admin.ai.arbitrage.index')->with('error', 'Plan not found');
+            }
+
+            // Authorization: super admin can delete any plan, others can only delete plans for their assigned users
+            if (!$admin->isSuperAdmin() && $plan->assigned_admin_id !== $admin->id) {
+                abort(403, 'You are not authorized to delete this plan.');
+            }
+
             \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans')->where('id', intval($id))->delete();
             return redirect()->route('admin.ai.arbitrage.index')->with('success', 'Plan deleted');
         })->name('ai.arbitrage.delete');

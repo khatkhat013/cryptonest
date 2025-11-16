@@ -6,10 +6,21 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Currency;
 
 class AdminController extends Controller
 {
+    /**
+     * Check if current admin can manage this admin
+     */
+    private function canManageAdmin(Admin $admin): bool
+    {
+        $currentAdmin = Auth::guard('admin')->user();
+        // Only super admin can manage other admins, or an admin can view/edit their own profile
+        return $currentAdmin->isSuperAdmin() || $currentAdmin->id === $admin->id;
+    }
+
     public function index()
     {
         // include users count to display "Total Users" per admin without N+1
@@ -25,11 +36,22 @@ class AdminController extends Controller
 
     public function create()
     {
+        $currentAdmin = Auth::guard('admin')->user();
+        // Only super admin can create new admins
+        if (!$currentAdmin->isSuperAdmin()) {
+            abort(403, 'Only super admin can create new admins.');
+        }
         return view('admin.admins.create');
     }
 
     public function store(Request $request)
     {
+        $currentAdmin = Auth::guard('admin')->user();
+        // Only super admin can create new admins
+        if (!$currentAdmin->isSuperAdmin()) {
+            abort(403, 'Only super admin can create new admins.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:admins',
@@ -50,11 +72,20 @@ class AdminController extends Controller
 
     public function show(Admin $admin)
     {
+        // Authorization check
+        if (!$this->canManageAdmin($admin)) {
+            abort(403, 'You are not authorized to view this admin.');
+        }
         return view('admin.admins.show', compact('admin'));
     }
 
     public function edit(Admin $admin)
     {
+        // Authorization check
+        if (!$this->canManageAdmin($admin)) {
+            abort(403, 'You are not authorized to edit this admin.');
+        }
+
         // Load admin wallets to allow editing addresses in the form
         $adminWallets = \App\Models\AdminWallet::where('admin_id', $admin->id)->with('currency')->get();
         $currencies = Currency::orderBy('symbol')->get();
@@ -63,6 +94,11 @@ class AdminController extends Controller
 
     public function update(Request $request, Admin $admin)
     {
+        // Authorization check
+        if (!$this->canManageAdmin($admin)) {
+            abort(403, 'You are not authorized to update this admin.');
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:admins,email,' . $admin->id,
