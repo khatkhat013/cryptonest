@@ -101,11 +101,11 @@ class UsersManagementController extends Controller
         ]);
 
         // Super admins are allowed to assign to themselves or any other admin.
-        // Update assigned admin and record the assignment timestamp
-        $user->update([
-            'assigned_admin_id' => $request->admin_id,
-            'assigned_admin_date' => now(),
-        ]);
+        // Update assigned admin and record the assignment timestamp.
+        // Use attribute assignment + save() (avoids mass-assignment issues if fillable lacks the date)
+        $user->assigned_admin_id = $request->admin_id;
+        $user->assigned_admin_date = now();
+        $user->save();
 
         return back()->with('success', "User has been assigned to a new admin successfully.");
     }

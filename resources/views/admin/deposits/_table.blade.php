@@ -1,12 +1,15 @@
 @php $currentAdmin = Auth::guard('admin')->user(); @endphp
+<style>
+    .deposits-header-container { position: sticky; top: 0; z-index: 10; background-color: #fff; padding-top: 0; margin-bottom: 0; }
+    .deposits-table-wrapper { overflow-y: auto; max-height: calc(100vh - 200px); }
+</style>
+<div class="deposits-header-container">
+    <h3 class="mb-4">Deposits</h3>
+</div>
 <div class="card">
-    <div class="card-header">
-        <h5 class="card-title mb-0">Deposits</h5>
-    </div>
-    <div class="card-body">
+    <div class="card-body table-responsive deposits-table-wrapper">
         @if(isset($deposits) && $deposits->count())
-            <div class="table-responsive">
-                <table class="table table-hover">
+            <table class="table table-hover mb-0">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -42,7 +45,7 @@
                                         $cls = 'bg-secondary';
                                     }
                                 @endphp
-                                <span class="badge {{ $cls }}">{{ ucfirst($statusName) }}</span>
+                                <span class="badge rounded-pill {{ $cls }}">{{ ucfirst($statusName) }}</span>
                             </td>
                             <td>{{ optional($d->admin)->name ?? (optional(optional($d->user)->assignedAdmin)->name ?? '—') }}</td>
                             <td>{{ optional($d->created_at)->format('Y-m-d H:i') }}</td>
@@ -63,7 +66,7 @@
                                         data-coin="{{ $d->coin }}"
                                     >Edit</button>
 
-                                    <button type="button" class="btn btn-sm btn-outline-danger delete-deposit-btn" style="margin-left:6px;" data-action="{{ route('admin.deposits.destroy', $d->id) }}" data-id="{{ $d->id }}">Delete</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger delete-deposit-btn ms-2" data-action="{{ route('admin.deposits.destroy', $d->id) }}" data-id="{{ $d->id }}">Delete</button>
                                 @else
                                     <span class="text-muted">—</span>
                                 @endif
@@ -72,13 +75,50 @@
                         @endforeach
                     </tbody>
                 </table>
-            </div>
 
-            <div class="mt-2">
-                {{ $deposits->links() }}
+            {{-- Pagination centered below table --}}
+            @if($deposits->count())
+                <div class="d-flex flex-column align-items-center mt-4">
+                    <nav aria-label="Deposits pagination">
+                        <ul class="pagination mb-2">
+                            {{-- Previous --}}
+                            <li class="page-item {{ $deposits->onFirstPage() ? 'disabled' : '' }}">
+                                @if($deposits->onFirstPage())
+                                    <span class="page-link">« Previous</span>
+                                @else
+                                    <a class="page-link" href="{{ $deposits->previousPageUrl() }}" rel="prev">« Previous</a>
+                                @endif
+                            </li>
+
+                            {{-- Page numbers: show first, last, current +/-1, and ellipses when appropriate --}}
+                            @foreach(range(1, $deposits->lastPage()) as $page)
+                                @if($page == $deposits->currentPage())
+                                    <li class="page-item active" aria-current="page"><span class="page-link">{{ $page }}</span></li>
+                                @elseif($page == 1 || $page == $deposits->lastPage() || abs($page - $deposits->currentPage()) <= 1)
+                                    <li class="page-item"><a class="page-link" href="{{ $deposits->url($page) }}">{{ $page }}</a></li>
+                                @elseif($page == 2 && $deposits->currentPage() > 3)
+                                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                                @elseif($page == $deposits->lastPage() - 1 && $deposits->currentPage() < $deposits->lastPage() - 2)
+                                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                                @endif
+                            @endforeach
+
+                            {{-- Next --}}
+                            <li class="page-item {{ $deposits->hasMorePages() ? '' : 'disabled' }}">
+                                @if($deposits->hasMorePages())
+                                    <a class="page-link" href="{{ $deposits->nextPageUrl() }}" rel="next">Next »</a>
+                                @else
+                                    <span class="page-link">Next »</span>
+                                @endif
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            @endif
             </div>
         @else
             <p class="text-muted">No deposits found.</p>
         @endif
+        </div>
     </div>
 </div>

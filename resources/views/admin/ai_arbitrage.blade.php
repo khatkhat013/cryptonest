@@ -1,9 +1,15 @@
 @extends('layouts.admin')
 @section('content')
 <div class="container-fluid">
-    <h3 class="mb-4">AI Arbitrage Plans</h3>
+    <style>
+        .ai-arb-header-container { position: sticky; top: 0; z-index: 10; background-color: #fff; padding-top: 0; margin-bottom: 0; }
+        .ai-arb-table-wrapper { overflow-y: auto; max-height: calc(100vh - 200px); }
+    </style>
+    <div class="ai-arb-header-container">
+        <h3 class="mb-4">AI Arbitrage Plans</h3>
+    </div>
     <div class="card">
-        <div class="card-body table-responsive">
+        <div class="card-body table-responsive ai-arb-table-wrapper">
             <table class="table table-hover">
                 <thead>
                     <tr>

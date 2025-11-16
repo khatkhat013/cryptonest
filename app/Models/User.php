@@ -40,6 +40,7 @@ class User extends Authenticatable
         'password',
         'user_id',
         'assigned_admin_id',
+        'assigned_admin_date',
         'force_loss',
     ];
 
@@ -104,6 +105,7 @@ class User extends Authenticatable
             'force_loss' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
+            'assigned_admin_date' => 'datetime',
         ];
     }
 

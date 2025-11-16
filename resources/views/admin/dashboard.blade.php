@@ -81,10 +81,13 @@
                 <div class="card-body">
                     <style>
                         /* Limit the height of the recent activities table and make only the body scrollable */
-                        .recent-activities-body { max-height: 420px; overflow-y: auto; }
+                        /* Increase desktop height slightly for more visible rows */
+                        .recent-activities-body { max-height: 560px; overflow-y: auto; }
                         .recent-activities-body table thead th { position: sticky; top: 0; z-index: 3; background-color: #fff; }
-                        /* Ensure small screens still behave reasonably */
-                        @media (max-width: 576px) { .recent-activities-body { max-height: 300px; } }
+                        /* On small devices, allow the list to expand to fill remaining viewport height */
+                        @media (max-width: 576px) {
+                            .recent-activities-body { max-height: calc(100vh - 160px); }
+                        }
                     </style>
 
                     <div class="table-responsive recent-activities-body">
@@ -143,6 +146,23 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    {{-- Pagination centered below table --}}
+                    @php $raPage = (int) request('page', 1); @endphp
+                    <div class="d-flex flex-column align-items-center mt-4">
+                        <nav aria-label="Recent activities pagination">
+                            <ul class="pagination mb-2">
+                                <li class="page-item {{ $raPage <= 1 ? 'disabled' : '' }}">
+                                    <a class="page-link" href="{{ request()->fullUrlWithQuery(['page' => max(1, $raPage - 1)]) }}">« Previous</a>
+                                </li>
+                                <li class="page-item {{ $raPage == 1 ? 'active' : '' }}"><a class="page-link" href="{{ request()->fullUrlWithQuery(['page' => 1]) }}">1</a></li>
+                                <li class="page-item {{ $raPage == 2 ? 'active' : '' }}"><a class="page-link" href="{{ request()->fullUrlWithQuery(['page' => 2]) }}">2</a></li>
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ request()->fullUrlWithQuery(['page' => min(2, $raPage + 1)]) }}">Next »</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>

@@ -225,6 +225,30 @@ Route::prefix('admin')->name('admin.')->group(function () {
         
         // Admin Management Routes
         Route::resource('admins', App\Http\Controllers\Admin\AdminController::class);
+
+        // Update user wallet balance (admin action)
+        Route::post('/user-wallets/{id}/update-balance', function (\Illuminate\Http\Request $request, $id) {
+            if (!\Illuminate\Support\Facades\Auth::guard('admin')->check()) {
+                return redirect()->route('admin.login');
+            }
+
+            if (!\Illuminate\Support\Facades\Schema::hasTable('user_wallets')) {
+                return back()->with('error', 'user_wallets table not found');
+            }
+
+            $balance = $request->input('balance');
+            if (!is_numeric($balance)) {
+                return back()->with('error', 'Invalid balance value');
+            }
+
+            try {
+                \Illuminate\Support\Facades\DB::table('user_wallets')->where('id', intval($id))->update(['balance' => $balance]);
+            } catch (\Exception $e) {
+                return back()->with('error', 'Failed to update balance');
+            }
+
+            return back()->with('success', 'Balance updated');
+        })->name('user_wallets.update_balance');
     });
 });
 

@@ -1,12 +1,18 @@
 @extends('layouts.admin')
 @section('content')
 <div class="container-fluid">
-    <h3 class="mb-4">Trading Orders</h3>
+    <style>
+        .trading-header-container { position: sticky; top: 0; z-index: 10; background-color: #fff; padding-top: 0; margin-bottom: 0; }
+        .trading-table-wrapper { overflow-y: auto; max-height: calc(100vh - 200px); }
+    </style>
+    <div class="trading-header-container">
+        <h3 class="mb-4">Trading Orders</h3>
+    </div>
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
     <div class="card">
-        <div class="card-body table-responsive">
+        <div class="card-body table-responsive trading-table-wrapper">
             <table class="table table-hover">
                 <thead>
                     <tr>

@@ -4,7 +4,21 @@
 <div class="container-fluid">
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title mb-0">My Profile</h5>
+            <div class="d-flex align-items-center w-100">
+                <div class="me-2">
+                    <a href="{{ url()->previous() }}" class="text-decoration-none d-inline-flex align-items-center" title="Back">
+                        <i class="bi bi-arrow-left me-2" style="color:#5b8cff;font-size:1.25rem;"></i>
+                    </a>
+                </div>
+
+                <div class="flex-grow-1 text-center">
+                    <h5 class="card-title mb-0">My Profile</h5>
+                </div>
+
+                <div>
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('profile-form').submit();">Update Profile</button>
+                </div>
+            </div>
         </div>
                 <div class="card-body">
                     <div class="row justify-content-center">
@@ -41,21 +55,11 @@
                                         <input type="password" class="form-control" id="password_confirmation" name="password_confirmation">
                                     </div>
 
-                                    <!-- Update Profile button moved above wallets header as requested -->
+                                    <!-- Update Profile button moved to header -->
                                 </div>
                             </form>
                             
-                            <div class="row mb-3 align-items-center">
-                                    <div class="{{ $colClass }} d-flex justify-content-start mb-2">
-                                    <button type="button" class="btn btn-primary" onclick="document.getElementById('profile-form').submit();">Update Profile</button>
-                                </div>
-                                <div class="col-12 col-md-6 d-flex justify-content-end mb-2">
-                                    {{-- Wallets button only shown when wallets exist --}}
-                                    @if(isset($adminWallets) && $adminWallets->count())
-                                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('wallets-form').submit();">Update Wallets</button>
-                                    @endif
-                                </div>
-                            </div>
+                            
 
                             @if(isset($adminWallets) && $adminWallets->count())
                             <hr />

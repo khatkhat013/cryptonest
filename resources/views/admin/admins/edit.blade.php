@@ -6,15 +6,24 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Edit Admin</h5>
-                        <a href="{{ route('admin.admins.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Back to List
-                        </a>
+                    <div class="d-flex align-items-center w-100">
+                        <div class="me-2">
+                            <a href="{{ route('admin.admins.index') }}" class="text-decoration-none d-inline-flex align-items-center" title="Back to list">
+                                <i class="bi bi-arrow-left me-2" style="color:#5b8cff;font-size:1.25rem;"></i>
+                            </a>
+                        </div>
+
+                        <div class="flex-grow-1 text-center">
+                            <h5 class="mb-0">Edit Admin</h5>
+                        </div>
+
+                        <div>
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('admin-form').submit();">Update Admin</button>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('admin.admins.update', $admin) }}" method="POST">
+                    <form id="admin-form" action="{{ route('admin.admins.update', $admin) }}" method="POST">
                         @csrf
                         @method('PUT')
                         @php $colClass = 'col-12 col-md-6'; @endphp
@@ -81,30 +90,34 @@
 
                         {{-- Password fields removed per UI request --}}
 
-                        @if(isset($adminWallets) && $adminWallets->count())
                         <div class="mb-3">
                             <label class="form-label">Wallet Addresses</label>
                             <div class="list-group">
-                                @foreach($adminWallets as $w)
+                                @php
+                                    $adminWallets = isset($adminWallets) ? $adminWallets : collect();
+                                @endphp
+                                @foreach($currencies as $currency)
+                                    @php
+                                        $existing = $adminWallets->firstWhere('currency_id', $currency->id);
+                                        $key = $existing ? $existing->id : 'new_' . $currency->id;
+                                        $address = old('wallets.' . $key . '.address', $existing ? $existing->address : '');
+                                    @endphp
                                     <div class="list-group-item d-flex align-items-center gap-3">
                                         <div style="width:48px;">
-                                            @if(optional($w->currency)->symbol)
-                                                <img src="{{ asset('images/icons/' . strtolower(optional($w->currency)->symbol) . '.svg') }}" alt="{{ optional($w->currency)->symbol }}" style="width:36px;height:36px;" />
+                                            @if(optional($currency)->symbol)
+                                                <img src="{{ asset('images/icons/' . strtolower(optional($currency)->symbol) . '.svg') }}" alt="{{ optional($currency)->symbol }}" style="width:36px;height:36px;" />
                                             @endif
                                         </div>
                                         <div class="flex-grow-1">
-                                            <label class="form-label visually-hidden">Address</label>
-                                            <input type="text" name="wallets[{{ $w->id }}][address]" class="form-control" value="{{ old('wallets.' . $w->id . '.address', $w->address) }}" />
+                                            <label class="form-label visually-hidden">{{ optional($currency)->symbol }} Address</label>
+                                            <input type="text" name="wallets[{{ $key }}][address]" class="form-control" value="{{ $address }}" />
+                                            <input type="hidden" name="wallets[{{ $key }}][currency_id]" value="{{ $currency->id }}" />
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
                         </div>
-                        @endif
 
-                        <div class="text-end">
-                            <button type="submit" class="btn btn-primary">Update Admin</button>
-                        </div>
                     </form>
                 </div>
             </div>

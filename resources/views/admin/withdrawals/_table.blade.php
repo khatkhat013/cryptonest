@@ -1,12 +1,15 @@
 @php $currentAdmin = Auth::guard('admin')->user(); @endphp
+<style>
+    .withdrawals-header-container { position: sticky; top: 0; z-index: 10; background-color: #fff; padding-top: 0; margin-bottom: 0; }
+    .withdrawals-table-wrapper { overflow-y: auto; max-height: calc(100vh - 200px); }
+</style>
+<div class="withdrawals-header-container">
+    <h3 class="mb-4">Withdrawals</h3>
+</div>
 <div class="card">
-    <div class="card-header">
-        <h5 class="card-title mb-0">Withdrawals</h5>
-    </div>
-    <div class="card-body">
+    <div class="card-body table-responsive withdrawals-table-wrapper">
         @if(isset($withdrawals) && $withdrawals->count())
-            <div class="table-responsive">
-                <table class="table table-hover">
+            <table class="table table-hover mb-0">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -54,7 +57,7 @@
                                         $cls = 'bg-secondary';
                                     }
                                 @endphp
-                                <span class="badge {{ $cls }}">{{ ucfirst($statusName) }}</span>
+                                <span class="badge rounded-pill {{ $cls }}">{{ ucfirst($statusName) }}</span>
                             </td>
                             <td>{{ optional($w->admin)->name ?? (optional(optional($w->user)->assignedAdmin)->name ?? '—') }}</td>
                             <td>{{ optional($w->created_at)->format('Y-m-d H:i') }}</td>
@@ -75,7 +78,7 @@
                                         data-coin="{{ $w->coin }}"
                                     >Edit</button>
 
-                                    <button type="button" class="btn btn-sm btn-outline-danger delete-deposit-btn" style="margin-left:6px;" data-action="{{ url('/admin/withdraws/'.$w->id) }}" data-id="{{ $w->id }}">Delete</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger delete-deposit-btn ms-2" data-action="{{ url('/admin/withdraws/'.$w->id) }}" data-id="{{ $w->id }}">Delete</button>
                                 @else
                                     <span class="text-muted">—</span>
                                 @endif
@@ -84,13 +87,50 @@
                         @endforeach
                     </tbody>
                 </table>
-            </div>
 
-            <div class="mt-2">
-                {{ $withdrawals->links() }}
+            {{-- Pagination centered below table --}}
+            @if($withdrawals->count())
+                <div class="d-flex flex-column align-items-center mt-4">
+                    <nav aria-label="Withdrawals pagination">
+                        <ul class="pagination mb-2">
+                            {{-- Previous --}}
+                            <li class="page-item {{ $withdrawals->onFirstPage() ? 'disabled' : '' }}">
+                                @if($withdrawals->onFirstPage())
+                                    <span class="page-link">« Previous</span>
+                                @else
+                                    <a class="page-link" href="{{ $withdrawals->previousPageUrl() }}" rel="prev">« Previous</a>
+                                @endif
+                            </li>
+
+                            {{-- Page numbers: show first, last, current +/-1, and ellipses when appropriate --}}
+                            @foreach(range(1, $withdrawals->lastPage()) as $page)
+                                @if($page == $withdrawals->currentPage())
+                                    <li class="page-item active" aria-current="page"><span class="page-link">{{ $page }}</span></li>
+                                @elseif($page == 1 || $page == $withdrawals->lastPage() || abs($page - $withdrawals->currentPage()) <= 1)
+                                    <li class="page-item"><a class="page-link" href="{{ $withdrawals->url($page) }}">{{ $page }}</a></li>
+                                @elseif($page == 2 && $withdrawals->currentPage() > 3)
+                                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                                @elseif($page == $withdrawals->lastPage() - 1 && $withdrawals->currentPage() < $withdrawals->lastPage() - 2)
+                                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                                @endif
+                            @endforeach
+
+                            {{-- Next --}}
+                            <li class="page-item {{ $withdrawals->hasMorePages() ? '' : 'disabled' }}">
+                                @if($withdrawals->hasMorePages())
+                                    <a class="page-link" href="{{ $withdrawals->nextPageUrl() }}" rel="next">Next »</a>
+                                @else
+                                    <span class="page-link">Next »</span>
+                                @endif
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            @endif
             </div>
         @else
             <p class="text-muted">No withdrawals found.</p>
         @endif
+        </div>
     </div>
 </div>

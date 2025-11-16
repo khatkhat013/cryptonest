@@ -90,10 +90,22 @@ class AdminController extends Controller
             ]);
         }
 
-        // Update admin wallet addresses if present
+        // Update admin wallet addresses if present and create new ones for submitted empty slots
         $wallets = $request->input('wallets', []);
         foreach ($wallets as $wid => $wdata) {
-            if ($wid) {
+            // New wallet entries are submitted with a key like "new_{$currencyId}"
+            if (is_string($wid) && strpos($wid, 'new_') === 0) {
+                $currencyId = $wdata['currency_id'] ?? null;
+                $address = $wdata['address'] ?? null;
+                if (!empty($address) && $currencyId) {
+                    \App\Models\AdminWallet::create([
+                        'admin_id' => $admin->id,
+                        'currency_id' => $currencyId,
+                        'address' => $address
+                    ]);
+                }
+            } else {
+                // existing wallet by id
                 $update = [];
                 if (isset($wdata['address'])) {
                     $update['address'] = $wdata['address'];

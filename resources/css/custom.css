@@ -30,3 +30,31 @@
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0,0,0,0.1);
 }
+
+/* Fixed table body for admin lists: keep header/buttons fixed while rows scroll */
+.fixed-table-body {
+    max-height: 520px;
+    overflow: auto;
+}
+
+@media (max-width: 768px) {
+    .fixed-table-body {
+        max-height: calc(100vh - 160px);
+    }
+}
+
+.fixed-table-body table thead th,
+.fixed-table-body table thead td {
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    z-index: 5;
+}
+
+/* Prevent scroll chaining so wheel/touch inside the table doesn't scroll the page */
+.fixed-table-body {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.pagination.mb-2 { margin: .5rem 0; }
