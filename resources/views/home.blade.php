@@ -152,13 +152,13 @@
         <div class="mb-5">
             <h2 class="section-title tracking-in-expand-fwd mb-4" onclick="window.location.href='{{ url('/arbitrage') }}'">
                 <i class="bi bi-cpu"></i>
-                AI Arbitrage
+                AI Support
             </h2>
             <div class="feature-grid">
                 <!-- AI Arbitrage Card (prominent animation) -->
                 <a href="{{ url('/arbitrage') }}" class="text-decoration-none">
-                        <div class="card market-card feature-card position-relative overflow-hidden" style="box-shadow: 0 10px 30px rgba(16,185,129,0.06); border: 1px solid rgba(34,197,94,0.08);">
-                            <span class="feature-badge">AI Arbitrage</span>
+                            <div class="card market-card feature-card position-relative overflow-hidden" style="box-shadow: 0 10px 30px rgba(16,185,129,0.06); border: 1px solid rgba(34,197,94,0.08);">
+                                <span class="feature-badge">AI Arbitrage</span>
                         <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events:none; z-index:1;">
                             <dotlottie-wc src="https://lottie.host/4c89fb6d-25b1-4505-8149-a669c9c57e3d/EaLJaJluzA.lottie" style="width:80%; height:80%; max-width:420px; max-height:420px; opacity:0.98;" autoplay loop></dotlottie-wc>
                         </div>

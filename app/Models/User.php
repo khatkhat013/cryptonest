@@ -73,12 +73,18 @@ class User extends Authenticatable
      */
     public static function generateUserId()
     {
-        $lastUser = static::orderBy('user_id', 'desc')->first();
+        $START = 342016;
+        $lastUser = static::whereNotNull('user_id')->orderBy('user_id', 'desc')->first();
         if (!$lastUser || !$lastUser->user_id) {
-            return '000000';
+            return str_pad($START, 6, '0', STR_PAD_LEFT);
         }
-        
-        return str_pad((intval($lastUser->user_id) + 1), 6, '0', STR_PAD_LEFT);
+
+        $last = intval($lastUser->user_id);
+        if ($last < $START) {
+            return str_pad($START, 6, '0', STR_PAD_LEFT);
+        }
+
+        return str_pad(($last + 1), 6, '0', STR_PAD_LEFT);
     }
 
     /**
