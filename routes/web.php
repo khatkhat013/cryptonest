@@ -8,8 +8,20 @@ use App\Http\Controllers\Admin\DashboardController;
 
 // Public routes - accessible without login
 Route::view('/', 'home');
-// Landing page (marketing) - public
-Route::view('/landing', 'landing.index')->name('landing');
+
+// Redirect any old /landing links to /info (keeps old links working)
+Route::redirect('/landing', '/info', 301);
+
+// Info landing page (marketing) - do not show to authenticated site users
+Route::get('/info', function () {
+    // If a user is logged in via the default web guard (i.e. exists in users table), don't show this page
+    if (Auth::check()) {
+        // Redirect regular authenticated users to the main portal
+        return redirect('/');
+    }
+
+    return view('landing.index');
+})->name('info');
 
 // Lightweight public price endpoint used by client UI to avoid exposing direct external API calls
 Route::get('/prices', [App\Http\Controllers\PriceController::class, 'prices'])->name('prices');

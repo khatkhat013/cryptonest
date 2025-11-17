@@ -201,6 +201,8 @@
 </head>
 <body>
 
+    
+
     {{-- Include the header component once for all pages --}}
 
     <x-app-header />
@@ -315,5 +317,6 @@
     </style>
 
     @stack('scripts')
+    
 </body>
 </html>
