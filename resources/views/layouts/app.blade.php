@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Crypto Nest') }}</title>
+    <!-- Favicon / Site icon: prefer logo in public/images. Use jpg fallback and include shortcut icon to override cached root favicon.ico -->
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/cryptonest.jpg') }}?v=2">
+    <link rel="shortcut icon" href="{{ asset('images/cryptonest.jpg') }}?v=2">
+    <link rel="apple-touch-icon" href="{{ asset('images/cryptonest.jpg') }}?v=2">
+    <meta name="theme-color" content="#f59e0b">
     <script>
         // expose a small runtime flag so client JS can decide whether to call Binance (set in .env)
         window.APP_CONFIG = {
@@ -246,6 +251,13 @@
                     $supportLink = 'https://t.me/' . $username;
                 }
             }
+        }
+    @endphp
+
+    {{-- ensure default support link falls back to official Telegram if no admin username is available --}}
+    @php
+        if (empty($supportLink) || $supportLink === url('/support')) {
+            $supportLink = 'https://t.me/CryptoNest_Support';
         }
     @endphp
 

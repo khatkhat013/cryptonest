@@ -372,9 +372,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 Route::view('/support', 'support');
 Route::view('/knowledge', 'trade');
+Route::view('/knowledge/service-agreement', 'knowledge.service-agreement');
 Route::view('/knowledge/faq', 'knowledge.faq');
-Route::view('/knowledge/whitepaper', 'knowledge.whitepaper');
-Route::view('/knowledge/regulatory', 'knowledge.regulatory');
 Route::view('/arbitrage/introduction', 'arbitrage.introduction')->name('introduction');
 
 // Authentication routes

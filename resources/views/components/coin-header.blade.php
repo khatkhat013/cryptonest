@@ -54,7 +54,11 @@
                     @endif
 
                     <div class="text-center">
-                        <div class="coin-symbol">{{ strtoupper($symbol) }}/USDT</div>
+                        @php
+                            // Show USD for forex and metal types, otherwise default to USDT for crypto
+                            $quote = in_array($typeLower, ['forex', 'metal']) ? 'USD' : 'USDT';
+                        @endphp
+                        <div class="coin-symbol">{{ strtoupper($symbol) }}/{{ $quote }}</div>
                         @if($showPrice)
                             <div class="placeholder-price">00.00</div>
                         @endif

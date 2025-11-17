@@ -31,8 +31,8 @@
         <!-- What can be done on the platform -->
         <div class="accordion-item border-0 mb-3">
             <h2 class="accordion-header">
-                <button class="accordion-button collapsed bg-light rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#platform">
-                    What can be done on the Crypto Forest futures trading platform?
+                    <button class="accordion-button collapsed bg-light rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#platform">
+                    What can be done on the Crypto Nest futures trading platform?
                 </button>
             </h2>
             <div id="platform" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
@@ -81,7 +81,7 @@
             </h2>
             <div id="safety" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                 <div class="accordion-body">
-                    <p>We work very hard to ensure every aspect of the platform. We also conduct professional audits of all smart contracts. From the ground up, we designed the Crypto Forest to be as powerful as possible: from the price prediction mechanism to the liquidation mechanism to the underlying smart contracts.</p>
+                    <p>We work very hard to ensure every aspect of the platform. We also conduct professional audits of all smart contracts. From the ground up, we designed Crypto Nest to be as powerful as possible: from the price prediction mechanism to the liquidation mechanism to the underlying smart contracts.</p>
                 </div>
             </div>
         </div>
@@ -170,7 +170,7 @@
                         <li>721 points: Unlimited withdrawals and above.</li>
                     </ul>
                     
-                    <p>Credit scores can be obtained from the bank providing credit or from Crypto Forest's internal system</p>
+                    <p>Credit scores can be obtained from the bank providing credit or from Crypto Nest's internal system</p>
                 </div>
             </div>
         </div>
@@ -184,18 +184,18 @@
             </h2>
             <div id="custodyFees" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                 <div class="accordion-body">
-                    <p>Crypto Forest's custody fees refer to the various fees that users need to pay when trading or managing digital assets on decentralized exchanges. These fees can cover multiple aspects, as follows:</p>
+                    <p>Crypto Nest's custody fees refer to the various fees that users need to pay when trading or managing digital assets on decentralized exchanges. These fees can cover multiple aspects, as follows:</p>
 
                     <ol>
-                        <li><strong>Asset custody fees:</strong> Although Crypto Forest does not store user assets centrally by nature, in some cases, users may choose to use custody services to ensure the safety of their assets. These custody service providers charge a certain custody fee, usually based on the total value of the assets or a fixed amount.</li>
+                        <li><strong>Asset custody fees:</strong> Although Crypto Nest does not store user assets centrally by nature, in some cases, users may choose to use custody services to ensure the safety of their assets. These custody service providers charge a certain custody fee, usually based on the total value of the assets or a fixed amount.</li>
                         
-                        <li><strong>Transaction fees:</strong> Users usually need to pay transaction fees when trading on Crypto Forest. These fees are used to compensate liquidity providers, maintain the operation and technical support of the platform. Transaction fees may vary depending on the transaction volume or asset type.</li>
+                        <li><strong>Transaction fees:</strong> Users usually need to pay transaction fees when trading on Crypto Nest. These fees are used to compensate liquidity providers, maintain the operation and technical support of the platform. Transaction fees may vary depending on the transaction volume or asset type.</li>
                         
-                        <li><strong>Withdrawal fees:</strong> When users withdraw assets from Crypto Forest, withdrawal fees may be incurred. These fees are used to cover network fees and other related costs.</li>
+                        <li><strong>Withdrawal fees:</strong> When users withdraw assets from Crypto Nest, withdrawal fees may be incurred. These fees are used to cover network fees and other related costs.</li>
                         
                         <li><strong>Service fees:</strong> If users choose to participate in additional services such as trust plans, asset management or advisory services, additional custody fees may be incurred. These fees are usually related to the content and complexity of the services provided.</li>
                         
-                        <li><strong>Other fees:</strong> In some cases, Crypto Forest may charge other related fees, such as transaction report generation fees or compliance review fees.</li>
+                        <li><strong>Other fees:</strong> In some cases, Crypto Nest may charge other related fees, such as transaction report generation fees or compliance review fees.</li>
                     </ol>
                 </div>
             </div>

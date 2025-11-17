@@ -92,7 +92,7 @@
                                                 <div class="currency-icon me-2">{{ $symbol }}</div>
                                             @endif
                                             <div>
-                                                <h5 class="mb-0">USD/{{ $symbol }}</h5>
+                                                <h5 class="mb-0">{{ $symbol }}/USD</h5>
                                                 <small class="text-muted">{{ $name }}</small>
                                             </div>
                                             <div class="ms-auto">
@@ -157,7 +157,8 @@
             <div class="feature-grid">
                 <!-- AI Arbitrage Card (prominent animation) -->
                 <a href="{{ url('/arbitrage') }}" class="text-decoration-none">
-                    <div class="card market-card feature-card position-relative overflow-hidden" style="box-shadow: 0 10px 30px rgba(16,185,129,0.06); border: 1px solid rgba(34,197,94,0.08);">
+                        <div class="card market-card feature-card position-relative overflow-hidden" style="box-shadow: 0 10px 30px rgba(16,185,129,0.06); border: 1px solid rgba(34,197,94,0.08);">
+                            <span class="feature-badge">AI Arbitrage</span>
                         <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events:none; z-index:1;">
                             <dotlottie-wc src="https://lottie.host/4c89fb6d-25b1-4505-8149-a669c9c57e3d/EaLJaJluzA.lottie" style="width:80%; height:80%; max-width:420px; max-height:420px; opacity:0.98;" autoplay loop></dotlottie-wc>
                         </div>
@@ -167,6 +168,7 @@
                 <!-- Mining Card (prominent animation only) -->
                 <a href="{{ url('/mining') }}" class="text-decoration-none">
                     <div class="card market-card feature-card position-relative overflow-hidden" style="box-shadow: 0 10px 30px rgba(16,185,129,0.08); border: 1px solid rgba(34,197,94,0.10);">
+                            <span class="feature-badge mining">Mining</span>
                         <!-- Large centered animation; pointer-events disabled so the link remains clickable -->
                         <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events:none; z-index:1;">
                             <dotlottie-wc src="https://lottie.host/3b3a89d1-eaa6-4fb6-9118-1d5804faaf5a/RNsMUkyjxt.lottie" style="width: 80%; height: 80%; max-width: 420px; max-height: 420px; opacity:0.98;" autoplay loop></dotlottie-wc>
@@ -187,6 +189,7 @@
             <div class="feature-grid">
                 <!-- Invite Friends Card (prominent animation) -->
                 <div class="card market-card feature-card position-relative overflow-hidden" onclick="shareInvite()" style="box-shadow: 0 10px 30px rgba(16,185,129,0.06); border: 1px solid rgba(34,197,94,0.08);">
+                    <span class="feature-badge">Invite Friend</span>
                     <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events:none; z-index:1;">
                         <dotlottie-wc src="https://lottie.host/bb1ba882-5cec-4676-add1-d008f39ae2ee/I9uAcddYg9.lottie" style="width:80%; height:80%; max-width:420px; max-height:420px; opacity:0.98;" autoplay loop></dotlottie-wc>
                     </div>
@@ -195,6 +198,7 @@
                 <!-- News Card replaced with dotlottie animation -->
                 <a href="{{ url('/news') }}" class="text-decoration-none">
                     <div class="card market-card feature-card position-relative overflow-hidden" style="border:1px solid rgba(34,197,94,0.06);">
+                        <span class="feature-badge">News</span>
                         <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events:none; z-index:1;">
                             <dotlottie-wc src="https://lottie.host/7169eae3-0464-443d-89bf-fa2ee684a3b8/f05cXmuwHZ.lottie" style="width:300px;height:300px;opacity:0.98;" autoplay loop></dotlottie-wc>
                         </div>
@@ -399,6 +403,29 @@
             gap: 1.5rem;
         }
 
+        /* Feature badge (pill) */
+        .feature-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            left: auto;
+            z-index: 3;
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #f59e0b, #f97316);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.85rem;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+        }
+
+        /* keep mining variant for future overrides (matches same look) */
+        .feature-badge.mining {
+            background: linear-gradient(90deg, #f59e0b, #f97316);
+            color: #fff;
+        }
+
         .btn-primary {
             background: var(--primary);
             border-color: var(--primary);
@@ -549,9 +576,9 @@
                             });
                         });
 
-                        // Update forex cards (USD/<symbol>)
+                        // Update forex cards (showing <symbol>/USD in the UI)
                         forexSymbols.forEach(symbol => {
-                            const lookup = `USD/${symbol}`;
+                            const lookup = `${symbol}/USD`;
                             const cards = Array.from(document.querySelectorAll('.card')).filter(card => {
                                 const h5 = card.querySelector('h5');
                                 return h5 && h5.textContent.trim().toLowerCase() === lookup.toLowerCase();

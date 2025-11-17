@@ -9,8 +9,23 @@
             @endauth
         </div>
 
-        <!-- Centered brand -->
-        <a class="navbar-brand" href="{{ url('/') }}">Crypto Nest</a>
+        <!-- Centered brand (use logo image if available) -->
+        <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
+            @php
+                $logoSrc = null;
+                if (file_exists(public_path('images/cryptonest.png'))) {
+                    $logoSrc = asset('images/cryptonest.png');
+                } elseif (file_exists(public_path('images/cryptonest.jpg'))) {
+                    $logoSrc = asset('images/cryptonest.jpg');
+                } elseif (file_exists(public_path('images/cryptonest.svg'))) {
+                    $logoSrc = asset('images/cryptonest.svg');
+                }
+            @endphp
+            @if ($logoSrc)
+                <img src="{{ $logoSrc }}" alt="Crypto Nest" class="site-logo me-2"> 
+            @endif
+            <span class="d-none d-sm-inline">Crypto Nest</span>
+        </a>
 
         <!-- Right actions -->
         <div class="d-flex align-items-center gap-2">
@@ -23,7 +38,22 @@
     <!-- Sidebar -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarCanvas" aria-labelledby="sidebarLabel">
         <div class="offcanvas-header justify-content-between align-items-center border-bottom">
-            <h5 class="offcanvas-title mb-0" id="sidebarLabel">Crypto Nest</h5>
+            <h5 class="offcanvas-title mb-0 d-flex align-items-center" id="sidebarLabel">
+                @php
+                    $sidebarLogo = null;
+                    if (file_exists(public_path('images/cryptonest.png'))) {
+                        $sidebarLogo = asset('images/cryptonest.png');
+                    } elseif (file_exists(public_path('images/cryptonest.jpg'))) {
+                        $sidebarLogo = asset('images/cryptonest.jpg');
+                    } elseif (file_exists(public_path('images/cryptonest.svg'))) {
+                        $sidebarLogo = asset('images/cryptonest.svg');
+                    }
+                @endphp
+                @if ($sidebarLogo)
+                    <img src="{{ $sidebarLogo }}" alt="Crypto Nest" class="site-logo sidebar-logo me-2">
+                @endif
+                <span>Crypto Nest</span>
+            </h5>
             <button type="button" class="btn-close text-reset ms-3" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         
@@ -121,15 +151,15 @@
                             <a href="{{ url('/knowledge/faq') }}" class="list-group-item list-group-item-action border-0 ps-4">
                                 Frequently Asked Questions
                             </a>
-                            <a href="{{ url('/knowledge/whitepaper') }}" class="list-group-item list-group-item-action border-0 ps-4">
+                            <a href="{{ asset('pdf/whitepaper.pdf') }}" target="_blank" rel="noopener" class="list-group-item list-group-item-action border-0 ps-4">
                                 White Paper
                             </a>
                                     <a href="{{ url('/knowledge/service-agreement') }}" class="list-group-item list-group-item-action border-0 ps-4">
-                                        Service Agreement
+                                                Service Agreement
+                                            </a>
+                                    <a href="{{ asset('pdf/regulatorylicense.pdf') }}" target="_blank" rel="noopener" class="list-group-item list-group-item-action border-0 ps-4">
+                                        Regulatory License
                                     </a>
-                            <a href="{{ url('/knowledge/regulatory') }}" class="list-group-item list-group-item-action border-0 ps-4">
-                                Regulatory License
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -253,5 +283,20 @@
 .offcanvas-header .btn-close {
     margin-left: 1rem;
     padding: 0.5rem;
+}
+
+/* Logo styles */
+.site-logo {
+    height: 34px;
+    width: 34px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.03);
+}
+
+.sidebar-logo {
+    height: 28px;
+    width: 28px;
 }
 </style>
