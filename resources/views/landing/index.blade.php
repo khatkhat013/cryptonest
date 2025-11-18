@@ -352,7 +352,7 @@
                                 <i class="fab fa-bitcoin me-2"></i>ပေးချေရမည့်ပမာဏ
                             </h6>
                             <p class="h5 mb-0 text-dark">
-                                <strong id="usd-amount">222</strong> USDT/USDC (TRC20)
+                                <strong id="usd-amount">222</strong> USDT (TRC20)
                             </p>
                         </div>
 
@@ -371,8 +371,8 @@
                                     <tr>
                                         <td class="fw-bold py-2">Wallet Address:</td>
                                         <td class="py-2">
-                                            <code class="text-dark d-block text-break">TMxXXXXXXXXXXXXTRC20XXXXX</code>
-                                            <i class="far fa-copy copy-icon mt-1" role="button" data-text="TMxXXXXXXXXXXXXTRC20XXXXX" title="ကူးယူပါ"></i>
+                                            <code class="text-dark d-block text-break">0x446f72a777E6dfF5FCc4236fD4144dB86377100B</code>
+                                            <i class="far fa-copy copy-icon mt-1" role="button" data-text="0x446f72a777E6dfF5FCc4236fD4144dB86377100B" title="ကူးယူပါ"></i>
                                         </td>
                                     </tr>
                                 </table>
@@ -381,7 +381,7 @@
 
                         <div class="alert alert-info" role="alert">
                             <i class="fas fa-lightbulb me-2"></i>
-                            <strong>အလှဖြင့် မြှင့်တင်မှု:</strong> Crypto ဖြင့် ပေးချေပါက <strong>10 သိန်း = 222 USDT/USDC</strong> ဖြင့် တွက်ချက်ထားသည့် အထူးဈေးနှုန်းဖြင့် ဝန်ဆောင်မှုပေးပါသည်!
+                            Crypto ဖြင့် ပေးချေပါက <strong>10 သိန်း = 222 USDT/USDC</strong> ဖြင့် တွက်ချက်ထားသည့် အထူးဈေးနှုန်းဖြင့် ဝန်ဆောင်မှုပေးပါသည်!
                         </div>
 
                         <button class="btn btn-success w-100 fw-bold py-2" data-bs-dismiss="modal">
@@ -412,12 +412,12 @@
                                         <table class="w-100 payment-details">
                                             <tr>
                                                 <td class="fw-bold py-2">အမည်:</td>
-                                                <td class="py-2">U Aung Aung</td>
+                                                <td class="py-2">Myo Ko Aung</td>
                                             </tr>
                                             <tr>
                                                 <td class="fw-bold py-2">ဖုန်း:</td>
                                                 <td class="py-2">
-                                                    <code class="text-dark">09-XXX-XXXXX</code>
+                                                    <code class="text-dark">09-950-569-539</code>
                                                     <i class="far fa-copy copy-icon ms-2" role="button" data-text="09-XXX-XXXXX" title="ကူးယူပါ"></i>
                                                 </td>
                                             </tr>
@@ -435,12 +435,12 @@
                                         <table class="w-100 payment-details">
                                             <tr>
                                                 <td class="fw-bold py-2">အမည်:</td>
-                                                <td class="py-2">U Aung Aung</td>
+                                                <td class="py-2">Myo Ko Aung</td>
                                             </tr>
                                             <tr>
                                                 <td class="fw-bold py-2">ဖုန်း:</td>
                                                 <td class="py-2">
-                                                    <code class="text-dark">09-XXX-XXXXX</code>
+                                                    <code class="text-dark">09-950-569-539</code>
                                                     <i class="far fa-copy copy-icon ms-2" role="button" data-text="09-XXX-XXXXX" title="ကူးယူပါ"></i>
                                                 </td>
                                             </tr>
