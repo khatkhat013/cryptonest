@@ -313,10 +313,10 @@
         <div class="modal-content">
             <!-- Modal Header -->
             <div class="modal-header" style="background: linear-gradient(135deg, #1f4068 0%, #162447 100%); color: white; border: none;">
-                <h5 class="modal-title fw-bold" id="paymentModalLabel">
+                <h5 class="modal-title fw-bold w-100 text-center" id="paymentModalLabel">
                     <i class="fas fa-credit-card me-2"></i>ငွေပေးချေမှု အချက်အလက်
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <!-- Modal Body -->
@@ -329,10 +329,10 @@
                 </div>
 
                 <!-- Payment Tabs -->
-                <ul class="nav nav-tabs mb-4 border-0" id="paymentTabs" role="tablist" style="border-bottom: 2px solid #e0e0e0;">
+                <ul class="nav nav-tabs mb-4 border-0 justify-content-center" id="paymentTabs" role="tablist" style="border-bottom: 2px solid #e0e0e0;">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active fw-bold py-2 px-4" id="crypto-tab" data-bs-toggle="tab" data-bs-target="#crypto-payment" type="button" role="tab" aria-controls="crypto-payment" aria-selected="true">
-                            <i class="fab fa-bitcoin me-2"></i> Crypto (USDT/USDC)
+                            <i class="fab fa-bitcoin me-2"></i> Crypto (USDT)
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
@@ -347,11 +347,11 @@
 
                     <!-- Crypto Payment Tab (now the default active tab) -->
                     <div class="tab-pane fade show active" id="crypto-payment" role="tabpanel" aria-labelledby="crypto-tab">
-                        <div class="alert alert-success mb-4" role="alert">
+                        <div class="alert alert-success mb-4 text-center" role="alert">
                             <h6 class="alert-heading fw-bold mb-2">
                                 <i class="fab fa-bitcoin me-2"></i>ပေးချေရမည့်ပမာဏ
                             </h6>
-                            <p class="h5 mb-0 text-dark">
+                            <p class="h5 mb-0 text-dark text-center">
                                 <strong id="usd-amount">222</strong> USDT (TRC20)
                             </p>
                         </div>
@@ -371,8 +371,8 @@
                                     <tr>
                                         <td class="fw-bold py-2">Wallet Address:</td>
                                         <td class="py-2">
-                                            <code class="text-dark d-block text-break">0x446f72a777E6dfF5FCc4236fD4144dB86377100B</code>
-                                            <i class="far fa-copy copy-icon mt-1" role="button" data-text="0x446f72a777E6dfF5FCc4236fD4144dB86377100B" title="ကူးယူပါ"></i>
+                                            <code class="text-dark d-block text-break">TXycHE9DBY9abd5Cj9zgbErfmz4cShvFVN</code>
+                                            <i class="far fa-copy copy-icon mt-1" role="button" data-text="TXycHE9DBY9abd5Cj9zgbErfmz4cShvFVN" title="ကူးယူပါ"></i>
                                         </td>
                                     </tr>
                                 </table>
@@ -381,23 +381,28 @@
 
                         <div class="alert alert-info" role="alert">
                             <i class="fas fa-lightbulb me-2"></i>
-                            Crypto ဖြင့် ပေးချေပါက <strong>10 သိန်း = 222 USDT/USDC</strong> ဖြင့် တွက်ချက်ထားသည့် အထူးဈေးနှုန်းဖြင့် ဝန်ဆောင်မှုပေးပါသည်!
+                            Crypto ဖြင့် ပေးချေပါက <strong>10 သိန်း = 222 USDT</strong> ဖြင့် တွက်ချက်ထားသည့် အထူးဈေးနှုန်းဖြင့် ဝန်ဆောင်မှုပေးပါသည်!
                         </div>
 
-                        <button class="btn btn-success w-100 fw-bold py-2" data-bs-dismiss="modal">
-                            <i class="fas fa-check me-2"></i>ရှင်းလင်းပြီး ပိတ်မည်
-                        </button>
+                        <div class="d-grid gap-2">
+                            <a href="https://t.me/cryptonest_support" target="_blank" rel="noopener" class="btn btn-info fw-bold py-2">
+                                <i class="fab fa-telegram-plane me-2"></i>Admin သို့ ဆက်သွယ်မည်
+                            </a>
+                            <a href="/admin/login" class="btn btn-outline-dark fw-bold py-2">
+                                <i class="fas fa-user-shield me-2"></i>Admin Login
+                            </a>
+                        </div>
                     </div>
 
                     
 
                     <!-- Mobile Money Tab -->
                     <div class="tab-pane fade" id="mobile-payment" role="tabpanel" aria-labelledby="mobile-tab">
-                        <div class="alert alert-success mb-4" role="alert">
+                        <div class="alert alert-success mb-4 text-center" role="alert">
                             <h6 class="alert-heading fw-bold mb-2">
                                 <i class="fas fa-mobile-alt me-2"></i>ပေးချေရမည့်ပမာဏ
                             </h6>
-                            <p class="h5 mb-0 text-dark">
+                            <p class="h5 mb-0 text-dark text-center">
                                 <strong id="mmk-amount-mobile">1,000,000</strong> MMK
                             </p>
                         </div>
@@ -406,8 +411,9 @@
                             <div class="col-md-6">
                                 <div class="card border-0 bg-light h-100">
                                     <div class="card-body">
-                                        <h6 class="card-title fw-bold mb-3" style="color: #1f4068;">
-                                            <i class="fas fa-building me-2"></i>KBZ Pay
+                                        <h6 class="card-title fw-bold mb-3 d-flex align-items-center" style="color: #1f4068;">
+                                            <img src="{{ asset('images/icons/kpay.png') }}" alt="KBZ Pay" class="provider-icon">
+                                            KBZ Pay
                                         </h6>
                                         <table class="w-100 payment-details">
                                             <tr>
@@ -429,8 +435,9 @@
                             <div class="col-md-6">
                                 <div class="card border-0 bg-light h-100">
                                     <div class="card-body">
-                                        <h6 class="card-title fw-bold mb-3" style="color: #1f4068;">
-                                            <i class="fas fa-wave-square me-2"></i>Wave Money
+                                        <h6 class="card-title fw-bold mb-3 d-flex align-items-center" style="color: #1f4068;">
+                                            <img src="{{ asset('images/icons/wavepay.jpg') }}" alt="Wave Money" class="provider-icon">
+                                            Wave Money
                                         </h6>
                                         <table class="w-100 payment-details">
                                             <tr>
@@ -452,12 +459,17 @@
 
                         <div class="alert alert-warning mt-4" role="alert">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>အရေးကြီး:</strong> ငွေလွှဲပြီးကြောင်းကို စခရင်ရှော့ဖြင့် Admin Dashboard ရှိ <strong>Payment Verification</strong> တွင် တင်ပြပေးပါ။
+                            <strong>အရေးကြီး:</strong> ငွေလွှဲပြီးကြောင်းကို  Telegram တွင် Screenshot ဖြင့် Admin သို့ ပို့ပေးပါ။
                         </div>
 
-                        <button class="btn btn-success w-100 fw-bold py-2" data-bs-dismiss="modal">
-                            <i class="fas fa-check me-2"></i>ရှင်းလင်းပြီး ပိတ်မည်
-                        </button>
+                        <div class="d-grid gap-2">
+                            <a href="https://t.me/cryptonest_support" target="_blank" rel="noopener" class="btn btn-info fw-bold py-2">
+                                <i class="fab fa-telegram-plane me-2"></i>Admin သို့ ဆက်သွယ်မည်
+                            </a>
+                            <a href="/admin/login" class="btn btn-outline-dark fw-bold py-2">
+                                <i class="fas fa-user-shield me-2"></i>Admin Login
+                            </a>
+                        </div>
                     </div>
 
                 </div>
@@ -763,6 +775,7 @@
         border-radius: 15px 15px 0 0;
         padding: 25px;
         border: none;
+        position: relative;
     }
 
     .nav-tabs .nav-link {
@@ -804,6 +817,24 @@
         cursor: pointer;
         color: #1f4068;
         transition: all 0.2s ease;
+    }
+
+    .provider-icon {
+        width: 28px;
+        height: auto;
+        object-fit: contain;
+        margin-right: 10px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .modal-close-btn {
+        position: absolute;
+        right: 18px;
+        top: 18px;
+        width: 1.6rem;
+        height: 1.6rem;
+        opacity: 0.95;
     }
 
     .copy-icon:hover {
