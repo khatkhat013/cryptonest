@@ -91,7 +91,9 @@
                         {{-- Password fields removed per UI request --}}
 
                         <div class="mb-3">
-                            <label class="form-label">Wallet Addresses</label>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label class="form-label mb-0">Wallet Addresses</label>
+                            </div>
                             <div class="list-group">
                                 @php
                                     $adminWallets = isset($adminWallets) ? $adminWallets : collect();
@@ -110,7 +112,35 @@
                                         </div>
                                         <div class="flex-grow-1">
                                             <label class="form-label visually-hidden">{{ optional($currency)->symbol }} Address</label>
-                                            <input type="text" name="wallets[{{ $key }}][address]" class="form-control" value="{{ $address }}" />
+                                            <div class="row gx-2">
+                                                <div class="col-8">
+                                                    <input type="text" name="wallets[{{ $key }}][address]" class="form-control" value="{{ $address }}" />
+                                                </div>
+                                                <div class="col-4">
+                                                    @php
+                                                        $oldSel = old('wallets.' . $key . '.network_id', null);
+                                                        if ($oldSel !== null && $oldSel !== '') {
+                                                            $currentNetworkId = $oldSel;
+                                                        } else {
+                                                            if (isset($existing)) {
+                                                                if (is_object($existing->network)) {
+                                                                    $currentNetworkId = optional($existing->network)->id ?? ($existing->network_id ?? null);
+                                                                } else {
+                                                                    $currentNetworkId = $existing->network_id ?? (is_numeric($existing->network) ? (int)$existing->network : null);
+                                                                }
+                                                            } else {
+                                                                $currentNetworkId = null;
+                                                            }
+                                                        }
+                                                    @endphp
+                                                    <select name="wallets[{{ $key }}][network_id]" class="form-select">
+                                                        <option value="">Networks</option>
+                                                        @foreach(optional($networks ?? collect())->sortBy('name') as $n)
+                                                            <option value="{{ $n->id }}" {{ $currentNetworkId == $n->id ? 'selected' : '' }}>{{ $n->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
                                             <input type="hidden" name="wallets[{{ $key }}][currency_id]" value="{{ $currency->id }}" />
                                         </div>
                                     </div>
@@ -125,4 +155,14 @@
     </div>
 </div>
 @endsection
+
+                @push('styles')
+                <style>
+                    /* Fix flex overflow for wallet rows in admin edit */
+                    .list-group-item { min-width: 0; }
+                    .list-group-item .row { min-width: 0; }
+                    .list-group-item .form-control { min-width: 0; overflow-wrap: anywhere; }
+                    .list-group-item .form-select { min-width: 0; }
+                </style>
+                @endpush
 

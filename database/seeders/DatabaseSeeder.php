@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         // Create default roles and currencies first
         $this->call([
             RoleSeeder::class,
+            NetworkSeeder::class,
             CurrencySeeder::class,
         ]);
 

@@ -442,6 +442,13 @@ Route::middleware(['auth'])->group(function () {
 
                 if ($wallet) {
                     $address = $wallet->address;
+                    $network = null;
+                    if (!empty($wallet->network_id)) {
+                        $net = \App\Models\Network::find($wallet->network_id);
+                        $network = $net ? $net->name : null;
+                    } elseif (!empty($wallet->network)) {
+                        $network = $wallet->network;
+                    }
                     break;
                 }
             }
@@ -461,6 +468,7 @@ Route::middleware(['auth'])->group(function () {
         return view('wallet.detail', [
             'type' => strtolower($type),
             'address' => $address,
+            'network' => $network ?? null,
             'initialBalance' => $initialBalance,
         ]);
     })->name('wallet.detail');

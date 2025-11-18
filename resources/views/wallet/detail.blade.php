@@ -181,6 +181,21 @@ body {
     border-color: inherit;
     box-shadow: none !important;
 }
+
+/* Network badge styling (pill) */
+.network-badge {
+    padding: .35rem .6rem;
+    font-weight: 700;
+    border-radius: 999px;
+    font-size: .8rem;
+    letter-spacing: .02em;
+}
+
+/* Center wallet address text inside the input */
+#walletAddress {
+    text-align: center;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Segoe UI Mono', 'Courier New', monospace;
+}
 </style>
 @endpush
 
@@ -273,11 +288,17 @@ body {
 
                             <!-- Wallet Address -->
                             <div class="mb-3">
-                                <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                                <div class="w-100 mb-2 d-flex justify-content-between align-items-center">
                                     <small class="text-muted">Wallet Address</small>
+                                    <div class="d-flex align-items-center">
+                                        <small class="text-muted me-2">Network</small>
+                                        <span class="badge bg-primary text-white network-badge">{{ !empty($network) ? strtoupper($network) : 'Network' }}</span>
+                                    </div>
                                 </div>
-                                <div class="bg-light rounded-4 p-3">
-                                    <input type="text" id="walletAddress" class="form-control border-0 bg-transparent text-center" value="{{ $address ?? '0x1234...5678' }}" readonly>
+                                <div class="bg-light rounded-4 p-3 d-flex align-items-center justify-content-between">
+                                    <div class="flex-grow-1 me-3">
+                                        <input type="text" id="walletAddress" class="form-control border-0 bg-transparent text-center" value="{{ $address ?? '0x1234...5678' }}" readonly>
+                                    </div>
                                 </div>
                             </div>
 

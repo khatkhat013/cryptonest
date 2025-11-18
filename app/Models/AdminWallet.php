@@ -13,8 +13,18 @@ class AdminWallet extends Model
         'admin_id',
         'currency_id',
         'address',
-        'coin_amount'
+        'coin_amount',
+        'network',
+        'network_id'
     ];
+
+    /**
+     * Network relation (optional)
+     */
+    public function network()
+    {
+        return $this->belongsTo(\App\Models\Network::class, 'network_id');
+    }
 
     /**
      * Get the admin that owns the wallet.

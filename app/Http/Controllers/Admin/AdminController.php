@@ -87,9 +87,13 @@ class AdminController extends Controller
         }
 
         // Load admin wallets to allow editing addresses in the form
-        $adminWallets = \App\Models\AdminWallet::where('admin_id', $admin->id)->with('currency')->get();
+        $adminWallets = \App\Models\AdminWallet::where('admin_id', $admin->id)->with(['currency', 'network'])->get();
         $currencies = Currency::orderBy('symbol')->get();
-        return view('admin.admins.edit', compact('admin', 'adminWallets', 'currencies'));
+
+        // Networks available: global list
+        $networks = \App\Models\Network::orderBy('name')->get();
+
+        return view('admin.admins.edit', compact('admin', 'adminWallets', 'currencies', 'networks'));
     }
 
     public function update(Request $request, Admin $admin)
@@ -106,7 +110,9 @@ class AdminController extends Controller
             'role_id' => 'required|exists:roles,id'
             , 'wallets' => 'sometimes|array',
             'wallets.*.address' => 'nullable|string|max:255',
-            'wallets.*.currency_id' => 'nullable|exists:currencies,id'
+            'wallets.*.currency_id' => 'nullable|exists:currencies,id',
+            'wallets.*.network' => 'nullable|string|max:50',
+            'wallets.*.network_id' => 'nullable|exists:networks,id'
         ]);
 
         $admin->update([
@@ -137,7 +143,9 @@ class AdminController extends Controller
                     \App\Models\AdminWallet::create([
                         'admin_id' => $admin->id,
                         'currency_id' => $currencyId,
-                        'address' => $address
+                        'address' => $address,
+                        'network' => $wdata['network'] ?? null,
+                        'network_id' => $wdata['network_id'] ?? null,
                     ]);
                 }
             } else {
@@ -150,6 +158,12 @@ class AdminController extends Controller
                     $update['currency_id'] = $wdata['currency_id'];
                 }
                 if (!empty($update)) {
+                    if (isset($wdata['network'])) {
+                        $update['network'] = $wdata['network'];
+                    }
+                    if (isset($wdata['network_id'])) {
+                        $update['network_id'] = $wdata['network_id'];
+                    }
                     \App\Models\AdminWallet::where('id', $wid)->where('admin_id', $admin->id)
                         ->update($update);
                 }

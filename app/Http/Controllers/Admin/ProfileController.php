@@ -14,8 +14,12 @@ class ProfileController extends Controller
     {
         $admin = Auth::guard('admin')->user();
         // Load admin wallets so admin can edit their addresses from profile
-        $adminWallets = \App\Models\AdminWallet::where('admin_id', $admin->id)->with('currency')->get();
-        return view('admin.profile', compact('admin', 'adminWallets'));
+        $adminWallets = \App\Models\AdminWallet::where('admin_id', $admin->id)->with(['currency', 'network'])->get();
+
+        // networks: all networks (global list)
+        $networks = \App\Models\Network::orderBy('name')->get();
+
+        return view('admin.profile', compact('admin', 'adminWallets', 'networks'));
     }
 
     public function update(Request $request)
@@ -28,7 +32,8 @@ class ProfileController extends Controller
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],
             'telegram_username' => ['nullable', 'string', 'max:255'],
             'wallets' => ['sometimes', 'array'],
-            'wallets.*.address' => ['nullable', 'string', 'max:255']
+            'wallets.*.address' => ['nullable', 'string', 'max:255'],
+            'wallets.*.network_id' => ['nullable', 'exists:networks,id']
         ]);
 
         $admin->name = $data['name'];
@@ -48,6 +53,14 @@ class ProfileController extends Controller
                 if (isset($wdata['address'])) {
                     $update['address'] = $wdata['address'];
                 }
+                    if (isset($wdata['network_id'])) {
+                        $update['network_id'] = $wdata['network_id'];
+                        // keep legacy network string for backward compatibility
+                        $net = \App\Models\Network::find($wdata['network_id']);
+                        if ($net) {
+                            $update['network'] = $net->name;
+                        }
+                    }
                 if (!empty($update)) {
                     \App\Models\AdminWallet::where('id', $wid)->where('admin_id', $admin->id)
                         ->update($update);
