@@ -20,11 +20,20 @@ class Admin extends Authenticatable
         'phone',
         'password',
         'telegram_username',
-        'role_id'
+        'role_id',
+        'is_approved',
+        'rejection_reason',
+        'approved_at',
+        'approved_by'
     ];
 
     protected $hidden = [
         'password',
+    ];
+
+    protected $casts = [
+        'is_approved' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     public function role()
@@ -65,6 +74,30 @@ class Admin extends Authenticatable
     {
         // RoleSeeder uses the name 'admin' for regular admins
         return $this->role?->name === 'admin';
+    }
+
+    /**
+     * Check if admin is approved by site owner
+     */
+    public function isApproved(): bool
+    {
+        return (bool) $this->is_approved;
+    }
+
+    /**
+     * Check if admin approval is pending
+     */
+    public function isPending(): bool
+    {
+        return !$this->is_approved && is_null($this->rejection_reason);
+    }
+
+    /**
+     * Check if admin was rejected
+     */
+    public function isRejected(): bool
+    {
+        return !$this->is_approved && !is_null($this->rejection_reason);
     }
 
     /**

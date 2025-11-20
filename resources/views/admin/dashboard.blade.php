@@ -2,6 +2,40 @@
 
 @section('content')
 <div class="container-fluid">
+    <!-- Admin Approval Status Alert -->
+    @php
+        $currentAdmin = Auth::guard('admin')->user();
+    @endphp
+    
+    @if($currentAdmin)
+        @if($currentAdmin->isPending())
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-clock"></i> Awaiting Approval</h5>
+                <p class="mb-0">Your admin account is pending approval from the Site Owner. You will be able to edit records once approved. Editing and deletion operations are currently disabled.</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @elseif($currentAdmin->isRejected())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-x-circle"></i> Account Rejected</h5>
+                <p class="mb-1">Your admin account has been rejected and you cannot edit records.</p>
+                @if($currentAdmin->rejection_reason)
+                    <p class="mb-0"><strong>Reason:</strong> {{ $currentAdmin->rejection_reason }}</p>
+                @endif
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @elseif($currentAdmin->isSuperAdmin())
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-check-circle"></i> Site Owner - Admin Approval</h5>
+                <p class="mb-0">
+                    <a href="{{ route('admin.admin_approval.index') }}" class="alert-link">
+                        <i class="bi bi-shield-check"></i> Manage Admin Approvals
+                    </a>
+                </p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+    @endif
+
     <!-- Statistics Cards -->
     <div class="row">
         <div class="col-md-3">
@@ -70,6 +104,83 @@
         </div>
     </div>
     <!-- Charts removed per request -->
+
+    <!-- Quick User Assignment Widget -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">👤 User ကို Admin ချိတ်ဆက်ခြင်း</h5>
+                </div>
+                <div class="card-body">
+                    <form id="quickAssignForm">
+                        @csrf
+                        <div class="form-group mb-2">
+                            <label for="quick_uid" class="form-label small">User UID (6 digits):</label>
+                            <input 
+                                type="text" 
+                                class="form-control form-control-sm" 
+                                id="quick_uid" 
+                                name="uid" 
+                                placeholder="ဥပမာ: 342016"
+                                pattern="^\d{6}$"
+                                required
+                            >
+                            <small class="text-muted">User ရဲ့ registration ခြင်းမှ UID</small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="quick_admin" class="form-label small">Admin Telegram Username:</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">@</span>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="quick_admin" 
+                                    name="telegram_username" 
+                                    placeholder="admin registration မှ username"
+                                    required
+                                >
+                            </div>
+                            <small class="text-muted">Admin account registration အချိန် သိမ်းဆည်းခဲ့တဲ့ username</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-sm btn-primary w-100">
+                            <span id="quickSubmitText">✓ Assign လုပ်ခြင်း</span>
+                            <span id="quickSpinner" class="spinner-border spinner-border-sm ms-2" style="display:none;"></span>
+                        </button>
+
+                        <div id="quickResultAlert" style="display:none;" class="alert alert-sm mt-2 mb-0" role="alert"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignment Info Card -->
+        <div class="col-md-6">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">ℹ️ အသုံးပြုမည့် အချက်များ</h5>
+                </div>
+                <div class="card-body small">
+                    <p class="mb-2"><strong>📋 လုပ်ဆောင်မည့် အဆင့်များ:</strong></p>
+                    <ol class="mb-3">
+                        <li>User သည် website သည့်ယ်တွင် register လုပ်ခြင်း</li>
+                        <li>User ရဲ့ UID ကို မှတ်သားခြင်း (success page သည့်ယ်တွင်)</li>
+                        <li>Admin ရဲ့ telegram username ဖြည့်သွင်းခြင်း</li>
+                        <li>"✓ Assign လုပ်ခြင်း" ကို နှိပ်ခြင်း</li>
+                    </ol>
+                    
+                    <p class="mb-2"><strong>✅ ရလဒ်:</strong></p>
+                    <ul class="mb-0">
+                        <li>User သည် အဲ့ဒီ admin ကိုချိတ်ဆက်သည်</li>
+                        <li>Database အပ်ဒေတ်သည်</li>
+                        <li>Success message ပြသည်</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Recent Activities -->
     <div class="row mt-4">
@@ -177,6 +288,79 @@
 
 @push('scripts')
 {{-- Charts removed per request: no dashboard chart scripts rendered --}}
+<script>
+// Quick Assign Form Handler
+document.getElementById('quickAssignForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const uid = document.getElementById('quick_uid').value;
+    const telegramUsername = document.getElementById('quick_admin').value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const resultAlert = document.getElementById('quickResultAlert');
+    const submitText = document.getElementById('quickSubmitText');
+    const spinner = document.getElementById('quickSpinner');
+    
+    // Show loading state
+    submitText.style.display = 'none';
+    spinner.style.display = 'inline-block';
+    submitBtn.disabled = true;
+    
+    try {
+        // Get CSRF token from form
+        const csrfToken = document.querySelector('form input[name="_token"]').value;
+        
+        const response = await fetch('/api/assignment/assign-user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                uid: uid,
+                telegram_username: telegramUsername
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Show result
+        resultAlert.classList.remove('alert-success', 'alert-danger');
+        resultAlert.classList.add(response.ok ? 'alert-success' : 'alert-danger');
+        
+        let resultHtml = `<strong>${response.ok ? '✅ အလုပ်လုပ်သည်' : '❌ အမှားအရာ'}</strong><br>`;
+        resultHtml += (data.message || 'Unknown error');
+        
+        if (data.user) {
+            resultHtml += `<br><small>👤 User: ${data.user.name}</small>`;
+        }
+        if (data.admin) {
+            resultHtml += `<br><small>👨‍💼 Admin: ${data.admin.name}</small>`;
+        }
+        
+        resultAlert.innerHTML = resultHtml;
+        resultAlert.style.display = 'block';
+        
+        // Clear form if successful
+        if (response.ok) {
+            setTimeout(() => {
+                document.getElementById('quickAssignForm').reset();
+                resultAlert.style.display = 'none';
+            }, 2000);
+        }
+    } catch (error) {
+        resultAlert.classList.remove('alert-success');
+        resultAlert.classList.add('alert-danger');
+        resultAlert.innerHTML = `<strong>❌ အမှားအရာ</strong><br>${error.message}`;
+        resultAlert.style.display = 'block';
+        console.error('Assignment error:', error);
+    } finally {
+        // Hide loading state
+        submitText.style.display = 'inline';
+        spinner.style.display = 'none';
+        submitBtn.disabled = false;
+    }
+});
+</script>
 @endpush
 
 {{-- Edit/Delete deposit scripts removed per request --}}

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="landing-page">
+<div class="landing-page" data-admin-auth="{{ Auth::guard('admin')->check() ? 'true' : 'false' }}">
     <section class="hero-section text-center text-white d-flex align-items-center" style="background: linear-gradient(135deg, #1f4068 0%, #162447 100%); min-height: 80vh; padding: 100px 0;">
         <div class="container">
             <div class="row">
@@ -123,10 +123,15 @@
                             </ul>
                         </div>
                         <div class="pricing-footer bg-light p-3">
-                            @auth
-                                <button class="btn btn-outline-secondary w-100" disabled>လက်ရှိ Plan</button>
+                            @auth('admin')
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-secondary w-100" disabled>လက်ရှိ Plan</button>
+                                    <button class="btn btn-sm btn-info contact-admin-btn" data-plan-id="free">
+                                        <i class="fas fa-paper-plane me-1"></i> Admin သို့ ဆက်သွယ်မည်
+                                    </button>
+                                </div>
                             @else
-                                <button class="btn btn-outline-success w-100 fw-bold payment-trigger" data-plan="free" data-mmk="0" data-usd="0" data-name="Free Trial" data-bs-toggle="modal" data-bs-target="#paymentModal">အခမဲ့ စတင်ပါ</button>
+                                <button class="btn btn-outline-success w-100 fw-bold payment-trigger" data-plan="free" data-mmk="0" data-usd="0" data-name="Free Trial">အခမဲ့ စတင်ပါ</button>
                             @endauth
                         </div>
                     </div>
@@ -153,10 +158,15 @@
                             </ul>
                         </div>
                         <div class="pricing-footer p-3" style="background: #e6e9f0;">
-                            @auth
-                                <a href="{{ route('admin.dashboard') }}" class="btn btn-primary w-100 fw-bold">အဆင့်မြှင့်တင်ပါ</a>
+                            @auth('admin')
+                                <div class="d-grid gap-2">
+                                    <a href="{{ route('admin.dashboard') }}" class="btn btn-primary fw-bold">အဆင့်မြှင့်တင်ပါ</a>
+                                    <button class="btn btn-sm btn-info contact-admin-btn" data-plan-id="standard">
+                                        <i class="fas fa-paper-plane me-1"></i> Admin သို့ ဆက်သွယ်မည်
+                                    </button>
+                                </div>
                             @else
-                                <button class="btn btn-primary w-100 fw-bold payment-trigger" data-plan="monthly" data-mmk="1,000,000" data-usd="222" data-name="Standard" data-bs-toggle="modal" data-bs-target="#paymentModal">စတင်ပါ</button>
+                                <button class="btn btn-primary w-100 fw-bold payment-trigger" data-plan="monthly" data-mmk="1,000,000" data-usd="222" data-name="Standard">စတင်ပါ</button>
                             @endauth
                         </div>
                     </div>
@@ -183,10 +193,15 @@
                             </ul>
                         </div>
                         <div class="pricing-footer bg-light p-3">
-                            @auth
-                                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-primary w-100 fw-bold">အဆင့်မြှင့်တင်ပါ</a>
+                            @auth('admin')
+                                <div class="d-grid gap-2">
+                                    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-primary fw-bold">အဆင့်မြှင့်တင်ပါ</a>
+                                    <button class="btn btn-sm btn-info contact-admin-btn" data-plan-id="pro">
+                                        <i class="fas fa-paper-plane me-1"></i> Admin သို့ ဆက်သွယ်မည်
+                                    </button>
+                                </div>
                             @else
-                                <button class="btn btn-outline-primary w-100 fw-bold payment-trigger" data-plan="two-months" data-mmk="2,000,000" data-usd="444" data-name="Pro" data-bs-toggle="modal" data-bs-target="#paymentModal">စတင်ပါ</button>
+                                <button class="btn btn-outline-primary w-100 fw-bold payment-trigger" data-plan="two-months" data-mmk="2,000,000" data-usd="444" data-name="Pro">စတင်ပါ</button>
                             @endauth
                         </div>
                     </div>
@@ -213,10 +228,15 @@
                             </ul>
                         </div>
                         <div class="pricing-footer bg-light p-3">
-                            @auth
-                                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary w-100 fw-bold">အဆင့်မြှင့်တင်ပါ</a>
+                            @auth('admin')
+                                <div class="d-grid gap-2">
+                                    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary fw-bold">အဆင့်မြှင့်တင်ပါ</a>
+                                    <button class="btn btn-sm btn-info contact-admin-btn" data-plan-id="advanced">
+                                        <i class="fas fa-paper-plane me-1"></i> Admin သို့ ဆက်သွယ်မည်
+                                    </button>
+                                </div>
                             @else
-                                <button class="btn btn-outline-secondary w-100 fw-bold payment-trigger" data-plan="three-months" data-mmk="3,000,000" data-usd="666" data-name="Advanced" data-bs-toggle="modal" data-bs-target="#paymentModal">စတင်ပါ</button>
+                                <button class="btn btn-outline-secondary w-100 fw-bold payment-trigger" data-plan="three-months" data-mmk="3,000,000" data-usd="666" data-name="Advanced">စတင်ပါ</button>
                             @endauth
                         </div>
                     </div>
@@ -243,10 +263,15 @@
                             </ul>
                         </div>
                         <div class="pricing-footer bg-light p-3">
-                            @auth
-                                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary w-100 fw-bold">အဆင့်မြှင့်တင်ပါ</a>
+                            @auth('admin')
+                                <div class="d-grid gap-2">
+                                    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary fw-bold">အဆင့်မြှင့်တင်ပါ</a>
+                                    <button class="btn btn-sm btn-info contact-admin-btn" data-plan-id="premium">
+                                        <i class="fas fa-paper-plane me-1"></i> Admin သို့ ဆက်သွယ်မည်
+                                    </button>
+                                </div>
                             @else
-                                <button class="btn btn-outline-secondary w-100 fw-bold payment-trigger" data-plan="five-months" data-mmk="5,000,000" data-usd="1110" data-name="Premium" data-bs-toggle="modal" data-bs-target="#paymentModal">စတင်ပါ</button>
+                                <button class="btn btn-outline-secondary w-100 fw-bold payment-trigger" data-plan="five-months" data-mmk="5,000,000" data-usd="1110" data-name="Premium">စတင်ပါ</button>
                             @endauth
                         </div>
                     </div>
@@ -274,10 +299,15 @@
                             </ul>
                         </div>
                         <div class="pricing-footer p-3" style="background: #d4edda;">
-                            @auth
-                                <a href="{{ route('admin.dashboard') }}" class="btn btn-success w-100 fw-bold">အဆင့်မြှင့်တင်ပါ</a>
+                            @auth('admin')
+                                <div class="d-grid gap-2">
+                                    <a href="{{ route('admin.dashboard') }}" class="btn btn-success fw-bold">အဆင့်မြှင့်တင်ပါ</a>
+                                    <button class="btn btn-sm btn-info contact-admin-btn" data-plan-id="enterprise">
+                                        <i class="fas fa-paper-plane me-1"></i> Admin သို့ ဆက်သွယ်မည်
+                                    </button>
+                                </div>
                             @else
-                                <button class="btn btn-success w-100 fw-bold payment-trigger" data-plan="twelve-months" data-mmk="10,000,000" data-usd="2220" data-name="VIP" data-bs-toggle="modal" data-bs-target="#paymentModal">စတင်ပါ</button>
+                                <button class="btn btn-success w-100 fw-bold payment-trigger" data-plan="twelve-months" data-mmk="10,000,000" data-usd="2220" data-name="VIP">စတင်ပါ</button>
                             @endauth
                         </div>
                     </div>
@@ -307,8 +337,44 @@
     </section>
 </div>
 
+<!-- Admin Auth Modal Template (hidden by default) -->
+<div class="modal fade" id="adminAuthModal" tabindex="-1" aria-labelledby="adminAuthModalLabel">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title fw-bold" id="adminAuthModalLabel">
+                    <i class="fas fa-shield-alt me-2"></i> Admin အကောင့် လိုအပ်သည်
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-warning mb-4" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>ငွေပေးချေမှု အချက်အလက်များကို ကြည့်ရှုရန် Admin အကောင့်သို့ ဝင်ရောက်ရန် လိုအပ်သည်။</strong>
+                </div>
+                
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-tie text-primary" style="font-size: 3rem;"></i>
+                </div>
+
+                <div class="mb-4">
+                    <a id="adminLoginBtn" href="#" class="btn btn-primary w-100 fw-bold py-2 mb-2">
+                        <i class="fas fa-sign-in-alt me-2"></i> Admin အဖြစ် ဝင်ရောက်ပါ
+                    </a>
+                </div>
+                
+                <div class="mb-2">
+                    <a id="adminRegisterBtn" href="#" class="btn btn-success w-100 fw-bold py-2">
+                        <i class="fas fa-user-plus me-2"></i> အခမဲ့ Admin အကောင့် အသစ်ဖွင့်ပါ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Payment Modal -->
-<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <!-- Modal Header -->
@@ -316,7 +382,7 @@
                 <h5 class="modal-title fw-bold w-100 text-center" id="paymentModalLabel">
                     <i class="fas fa-credit-card me-2"></i>ငွေပေးချေမှု အချက်အလက်
                 </h5>
-                <button type="button" class="btn-close btn-close-white modal-close-btn" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <!-- Modal Body -->
@@ -345,7 +411,7 @@
                 <!-- Tab Content -->
                 <div class="tab-content" id="paymentTabsContent">
 
-                    <!-- Crypto Payment Tab (now the default active tab) -->
+                    <!-- Crypto Payment Tab -->
                     <div class="tab-pane fade show active" id="crypto-payment" role="tabpanel" aria-labelledby="crypto-tab">
                         <div class="alert alert-success mb-4 text-center" role="alert">
                             <h6 class="alert-heading fw-bold mb-2">
@@ -388,13 +454,8 @@
                             <a href="https://t.me/cryptonest_support" target="_blank" rel="noopener" class="btn btn-info fw-bold py-2">
                                 <i class="fab fa-telegram-plane me-2"></i>Admin သို့ ဆက်သွယ်မည်
                             </a>
-                            <a href="/admin/login" class="btn btn-outline-dark fw-bold py-2">
-                                <i class="fas fa-user-shield me-2"></i>Admin Login
-                            </a>
                         </div>
                     </div>
-
-                    
 
                     <!-- Mobile Money Tab -->
                     <div class="tab-pane fade" id="mobile-payment" role="tabpanel" aria-labelledby="mobile-tab">
@@ -424,7 +485,7 @@
                                                 <td class="fw-bold py-2">ဖုန်း:</td>
                                                 <td class="py-2">
                                                     <code class="text-dark">09-950-569-539</code>
-                                                    <i class="far fa-copy copy-icon ms-2" role="button" data-text="09-XXX-XXXXX" title="ကူးယူပါ"></i>
+                                                    <i class="far fa-copy copy-icon ms-2" role="button" data-text="09-950-569-539" title="ကူးယူပါ"></i>
                                                 </td>
                                             </tr>
                                         </table>
@@ -448,7 +509,7 @@
                                                 <td class="fw-bold py-2">ဖုန်း:</td>
                                                 <td class="py-2">
                                                     <code class="text-dark">09-950-569-539</code>
-                                                    <i class="far fa-copy copy-icon ms-2" role="button" data-text="09-XXX-XXXXX" title="ကူးယူပါ"></i>
+                                                    <i class="far fa-copy copy-icon ms-2" role="button" data-text="09-950-569-539" title="ကူးယူပါ"></i>
                                                 </td>
                                             </tr>
                                         </table>
@@ -459,15 +520,12 @@
 
                         <div class="alert alert-warning mt-4" role="alert">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>အရေးကြီး:</strong> ငွေလွှဲပြီးကြောင်းကို  Telegram တွင် Screenshot ဖြင့် Admin သို့ ပို့ပေးပါ။
+                            <strong>အရေးကြီး:</strong> ငွေလွှဲပြီးကြောင်းကို Telegram တွင် Screenshot ဖြင့် Admin သို့ ပို့ပေးပါ။
                         </div>
 
                         <div class="d-grid gap-2">
                             <a href="https://t.me/cryptonest_support" target="_blank" rel="noopener" class="btn btn-info fw-bold py-2">
                                 <i class="fab fa-telegram-plane me-2"></i>Admin သို့ ဆက်သွယ်မည်
-                            </a>
-                            <a href="/admin/login" class="btn btn-outline-dark fw-bold py-2">
-                                <i class="fas fa-user-shield me-2"></i>Admin Login
                             </a>
                         </div>
                     </div>
@@ -911,29 +969,27 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Handle payment triggers for both checkout links and payment buttons
-    const checkoutButtons = document.querySelectorAll('a[href*="checkout"], .payment-trigger');
+    const checkoutButtons = document.querySelectorAll('.payment-trigger');
     
     checkoutButtons.forEach(button => {
         button.addEventListener('click', function(e) {
-            // Only intercept if user is not authenticated and it's a checkout link
-            const href = this.getAttribute('href');
-            if (href && href.includes('checkout')) {
-                const urlParams = new URL(href, window.location.origin).searchParams;
-                const plan = urlParams.get('plan');
-                
-                // If user is not authenticated, show payment modal instead
-                // For now, just show the modal (checkout links are only shown to authenticated users in Blade)
-                e.preventDefault();
-                showPaymentModal(plan);
-            } else if (this.classList.contains('payment-trigger')) {
-                e.preventDefault();
-                const plan = this.getAttribute('data-plan');
-                const mmk = this.getAttribute('data-mmk');
-                const usd = this.getAttribute('data-usd');
-                const name = this.getAttribute('data-name');
-                
+            e.preventDefault();
+            // Get plan data from button attributes
+            const plan = this.getAttribute('data-plan');
+            const mmk = this.getAttribute('data-mmk');
+            const usd = this.getAttribute('data-usd');
+            const name = this.getAttribute('data-name');
+            
+            // Check if admin is logged in
+            @if(Auth::guard('admin')->check())
+                // Admin is logged in - show payment details modal
                 updatePaymentModal(name, mmk, usd);
-            }
+            @else
+                // Admin is not logged in - show auth modal
+                const adminLoginUrl = '{{ route("admin.login") }}';
+                const adminRegisterUrl = '{{ route("admin.register") }}';
+                showAdminAuthModal(adminLoginUrl, adminRegisterUrl);
+            @endif
         });
     });
 
@@ -983,31 +1039,90 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Handle contact admin button clicks
+    document.querySelectorAll('.contact-admin-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const planId = this.getAttribute('data-plan-id');
+            contactAdminVia(planId);
+        });
+    });
 });
+
+function contactAdminVia(planId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    
+    fetch('{{ route("api.contact-admin") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ plan_id: planId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ ' + (data.message || 'Plan inquiry sent successfully!'));
+        } else {
+            alert('❌ ' + (data.message || 'Failed to send plan inquiry'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Error: ' + error.message);
+    });
+}
 
 function updatePaymentModal(planName, mmk, usd) {
     document.getElementById('selected-plan-name').textContent = planName;
     document.getElementById('mmk-amount-mobile').textContent = mmk;
     document.getElementById('usd-amount').textContent = usd;
+    
+    // Show the payment modal
+    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+    paymentModal.show();
 }
 
-function showPaymentModal(plan) {
-    const planPrices = {
-        'free': { mmk: '0', usd: '0', name: 'Free Trial' },
-        'monthly': { mmk: '1,000,000', usd: '222', name: 'Standard' },
-        'two-months': { mmk: '2,000,000', usd: '444', name: 'Pro' },
-        'three-months': { mmk: '3,000,000', usd: '666', name: 'Advanced' },
-        'five-months': { mmk: '5,000,000', usd: '1110', name: 'Premium' },
-        'twelve-months': { mmk: '10,000,000', usd: '2220', name: 'VIP' }
-    };
+function showAdminAuthModal(loginUrl, registerUrl) {
+    // Set the URLs
+    document.getElementById('adminLoginBtn').href = loginUrl;
+    document.getElementById('adminRegisterBtn').href = registerUrl;
     
-    if (planPrices[plan]) {
-        const planData = planPrices[plan];
-        updatePaymentModal(planData.name, planData.mmk, planData.usd);
-        const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
-        modal.show();
-    }
+    // Show modal using the existing template
+    const modal = new bootstrap.Modal(document.getElementById('adminAuthModal'));
+    modal.show();
 }
+
+// Clean up modal backdrops when modals are hidden and ensure focus is properly managed
+document.addEventListener('hide.bs.modal', function(event) {
+    // Remove focus from any focused element before aria-hidden is applied
+    if (document.activeElement) {
+        document.activeElement.blur();
+    }
+    // Optionally restore focus to body or a safe element
+    document.body.focus();
+}, true);
+
+document.addEventListener('hidden.bs.modal', function(event) {
+    // Remove modal-open class after a short delay to ensure Bootstrap completes its cleanup
+    setTimeout(function() {
+        if (document.querySelectorAll('.modal.show').length === 0) {
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+        
+        // Remove all orphaned backdrops
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+            if (!backdrop.closest('.show')) {
+                backdrop.remove();
+            }
+        });
+    }, 100);
+}, true);
 </script>
 @endpush
 @endsection

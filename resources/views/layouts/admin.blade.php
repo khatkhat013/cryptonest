@@ -208,6 +208,13 @@
                         </a>
                     </li>
                     @endif
+                    <li class="nav-item">
+                        <a href="{{ url('/info#plans') }}" 
+                           class="nav-link">
+                            <i class="bi bi-gem"></i>
+                            <span>Plans</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
         </div>
