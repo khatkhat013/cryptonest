@@ -77,8 +77,9 @@
                                         name="role_id" 
                                         required>
                                     <option value="">Select Role</option>
-                                    <option value="1" {{ old('role_id', $admin->role_id) == 1 ? 'selected' : '' }}>Admin</option>
-                                    <option value="2" {{ old('role_id', $admin->role_id) == 2 ? 'selected' : '' }}>Super Admin</option>
+                                    <option value="{{ config('roles.normal_id', 1) }}" {{ old('role_id', $admin->role_id) == config('roles.normal_id', 1) ? 'selected' : '' }}>Normal</option>
+                                    <option value="{{ config('roles.admin_id', 2) }}" {{ old('role_id', $admin->role_id) == config('roles.admin_id', 2) ? 'selected' : '' }}>Admin</option>
+                                    <option value="{{ config('roles.super_id', 3) }}" {{ old('role_id', $admin->role_id) == config('roles.super_id', 3) ? 'selected' : '' }}>Super Admin</option>
                                 </select>
                                 @error('role_id')
                                 <div class="invalid-feedback">

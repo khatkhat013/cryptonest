@@ -10,9 +10,7 @@ class Admin extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    // Role id mapping (match roles seeded in RoleSeeder)
-    protected $superRole = 2; // super admin role_id
-    protected $adminRole = 1; // normal admin role_id
+    // Role id mapping moved to config/roles.php. Use role->name checks or config values.
 
     protected $fillable = [
         'name',
@@ -72,8 +70,8 @@ class Admin extends Authenticatable
      */
     public function isNormalAdmin(): bool
     {
-        // RoleSeeder uses the name 'admin' for regular admins
-        return $this->role?->name === 'admin';
+        // RoleSeeder now uses the name 'normal' for basic accounts
+        return $this->role?->name === 'normal';
     }
 
     /**

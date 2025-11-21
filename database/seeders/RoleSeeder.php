@@ -12,20 +12,26 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        // Default roles
+        // Default roles (1=normal, 2=admin, 3=super)
         $roles = [
-            [
-                'id' => 1,
-                'name' => 'admin',
-                'display_name' => 'Admin',
-                'description' => 'Regular administrator with limited access'
-            ],
-            [
-                'id' => 2,
-                'name' => 'super',
-                'display_name' => 'Super Admin',
-                'description' => 'Administrator with full system access'
-            ]
+                [
+                    'id' => config('roles.normal_id', 1),
+                    'name' => 'normal',
+                    'display_name' => 'Normal',
+                    'description' => 'Registered admin with no elevated permissions'
+                ],
+                [
+                    'id' => config('roles.admin_id', 2),
+                    'name' => 'admin',
+                    'display_name' => 'Admin',
+                    'description' => 'Administrator who can manage assigned users and their data'
+                ],
+                [
+                    'id' => config('roles.super_id', 3),
+                    'name' => 'super',
+                    'display_name' => 'Super Admin',
+                    'description' => 'Administrator with full system access'
+                ]
         ];
 
         foreach ($roles as $role) {

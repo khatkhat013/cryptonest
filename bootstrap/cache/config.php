@@ -818,6 +818,12 @@
       'table' => 'failed_jobs',
     ),
   ),
+  'roles' => 
+  array (
+    'normal_id' => 1,
+    'admin_id' => 2,
+    'super_id' => 3,
+  ),
   'services' => 
   array (
     'postmark' => 

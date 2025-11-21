@@ -149,6 +149,47 @@ class DepositAdminController extends Controller
                         'coin' => $deposit->coin,
                         'admin_id' => Auth::guard('admin')->id()
                     ]);
+
+                    // If deposit references an admin who is currently a `normal` role,
+                    // promote them to `admin` and approve their account. This supports
+                    // the flow where a normal account pays and then is elevated.
+                    try {
+                        if (!empty($deposit->admin_id)) {
+                            $adminModel = \App\Models\Admin::find($deposit->admin_id);
+                            if ($adminModel) {
+                                $roleName = optional($adminModel->role)->name;
+                                // If role is "normal", promote to admin
+                                if ($roleName === 'normal' || ($adminModel->role_id ?? null) === config('roles.normal_id')) {
+                                    $adminModel->update([
+                                        'role_id' => config('roles.admin_id'),
+                                        'is_approved' => true,
+                                        'rejection_reason' => null,
+                                        'approved_at' => now(),
+                                        'approved_by' => Auth::guard('admin')->id()
+                                    ]);
+
+                                    // Activity log and notify via Telegram if configured
+                                    try {
+                                        \App\Services\ActivityLogger::log(Auth::guard('admin')->user(), $adminModel, 'Promoted normal->admin after deposit credited');
+                                    } catch (\Throwable $e) {
+                                        \Log::error('Activity log failed when promoting admin', ['error' => $e->getMessage()]);
+                                    }
+
+                                    try {
+                                        $notifyChat = config('services.telegram.channel_id') ?: env('TELEGRAM_CHANNEL_ID');
+                                        if ($notifyChat) {
+                                            $msg = "✅ Admin <b>{$adminModel->name}</b> (ID: {$adminModel->id}) was promoted to <b>admin</b> after a credited deposit.";
+                                            \App\Services\TelegramService::sendMessage($notifyChat, $msg);
+                                        }
+                                    } catch (\Throwable $e) {
+                                        \Log::error('Failed to send Telegram notify on admin promotion', ['error' => $e->getMessage()]);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        \Log::error('Error while attempting to promote admin after deposit credit', ['error' => $e->getMessage(), 'deposit_id' => $deposit->id]);
+                    }
                 }
             });
 

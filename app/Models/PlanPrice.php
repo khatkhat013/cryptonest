@@ -18,6 +18,9 @@ class PlanPrice extends Model
         'plan_price',
         'plan_duration',
         'plan_description',
+        'crypto_screenshot',
+        'mobile_screenshot',
+        'payment_method',
     ];
 
     public function admin()

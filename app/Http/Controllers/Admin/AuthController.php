@@ -78,7 +78,7 @@ class AuthController extends Controller
             'phone' => $data['phone'],
             'password' => Hash::make($data['password']),
             'telegram_username' => $data['telegram_username'],
-            'role_id' => 1
+            'role_id' => config('roles.normal_id', 1)
         ]);
 
         // Ensure currencies table exists

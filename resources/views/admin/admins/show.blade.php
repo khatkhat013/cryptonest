@@ -33,8 +33,9 @@
                                 <tr>
                                     <th>Role</th>
                                     <td>
-                                        <span class="badge bg-{{ $admin->role_id == 1 ? 'danger' : 'info' }}">
-                                            {{ $admin->role->name }}
+                                        @php $roleNormal = config('roles.normal_id', 1); @endphp
+                                        <span class="badge bg-{{ $admin->role_id == $roleNormal ? 'danger' : 'info' }}">
+                                            {{ $admin->role?->display_name ?? $admin->role->name ?? '—' }}
                                         </span>
                                     </td>
                                 </tr>

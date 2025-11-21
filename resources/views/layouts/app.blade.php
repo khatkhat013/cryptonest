@@ -240,7 +240,7 @@
                 $supportLink = 'https://t.me/' . $username;
             } else {
                 // 2) Fallback: find any super-admin (role_id = 2) that has a telegram username
-                $super = \App\Models\Admin::where('role_id', 2)
+                $super = \App\Models\Admin::where('role_id', config('roles.super_id', 3))
                     ->whereNotNull('telegram_username')
                     ->where('telegram_username', '!=', '')
                     ->orderBy('id')

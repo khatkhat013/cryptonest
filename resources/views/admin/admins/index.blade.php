@@ -27,12 +27,15 @@
                             <td>{{ $a->id }}</td>
                             <td>{{ $a->name }}</td>
                             <td>{{ $a->email }}</td>
-                            <td>{{ optional($a->role)->getDisplayName() ?? '—' }}</td>
+                            <td>
+                                @php $role = optional($a->role); @endphp
+                                {{ $role?->display_name ?? $role?->name ?? '—' }}
+                            </td>
                             <td>{{ $a->telegram_username ?? '—' }}</td>
                             <td>{{ optional($a->created_at)->format('Y-m-d') ?? '—' }}</td>
                             <td>
                                 @php $current = Auth::guard('admin')->user(); @endphp
-                                @if($current->isSuperAdmin())
+                                @if($current->isSuperAdmin() || ($current->role_id ?? null) === config('roles.super_id', 3))
                                     <a href="{{ route('admin.users.index', ['admin_id' => $a->id]) }}" class="badge bg-primary text-decoration-none">{{ $a->assigned_users_count ?? 0 }}</a>
                                 @else
                                     <span class="badge bg-secondary">{{ $a->assigned_users_count ?? 0 }}</span>
@@ -40,7 +43,7 @@
                             </td>
                             <td>
                                 @php $current = Auth::guard('admin')->user(); @endphp
-                                @if($current->isSuperAdmin())
+                                @if($current->isSuperAdmin() || ($current->role_id ?? null) === config('roles.super_id', 3))
                                     <a href="{{ route('admin.admins.edit', $a) }}" class="btn btn-sm btn-primary">Edit</a>
 
                                     <form action="{{ route('admin.admins.destroy', $a) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this admin?');">

@@ -19,6 +19,11 @@ class AdminApprovalRequired
     {
         $admin = Auth::guard('admin')->user();
 
+        // Allow admin role (role_id = 2) and super-admin role (role_id = 3) to bypass approval
+        if ($admin && ($admin->role_id === config('roles.admin_id', 2) || $admin->role_id === config('roles.super_id', 3))) {
+            return $next($request);
+        }
+
         if ($admin && !$admin->isApproved()) {
             // Admin not approved - redirect or return error
             if ($request->expectsJson()) {

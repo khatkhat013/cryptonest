@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Deposit;
+use App\Models\PlanPrice;
 
 class DashboardController extends Controller
 {
@@ -96,7 +97,15 @@ class DashboardController extends Controller
         $aiArbCount = (clone $aiArbBase)->count();
         $aiArbNew = (clone $aiArbBase)->where('p.created_at', '>=', now()->subDay())->count();
 
+        // Plan inquiries (recent)
+        $planPricesQuery = PlanPrice::with('admin')->latest();
+        if ($admin && method_exists($admin, 'isSuperAdmin') && !$admin->isSuperAdmin()) {
+            $planPricesQuery->where('admin_id', $admin->id);
+        }
+        $recentPlanInquiries = $planPricesQuery->limit(10)->get();
+
         return view('admin.dashboard', [
+                        'recentPlanInquiries' => $recentPlanInquiries,
             'recentActivities' => $recentActivities,
             'depositsCount' => $depositsCount,
             'depositsNew' => $depositsNew,

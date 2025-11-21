@@ -370,6 +370,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Admin Management Routes
         Route::resource('admins', App\Http\Controllers\Admin\AdminController::class);
+        // Activate admin (Site Owner / super admin only)
+        Route::post('/admins/{admin}/activate', [App\Http\Controllers\Admin\AdminController::class, 'activate'])->name('admins.activate');
+        Route::post('/admins/{admin}/deactivate', [App\Http\Controllers\Admin\AdminController::class, 'deactivate'])->name('admins.deactivate');
+        // Toggle approval (activate <-> deactivate)
+        Route::post('/admins/{admin}/toggle-approval', [App\Http\Controllers\Admin\AdminController::class, 'toggleApproval'])->name('admins.toggle');
 
         // Update user wallet balance (admin action)
         Route::post('/user-wallets/{id}/update-balance', function (\Illuminate\Http\Request $request, $id) {

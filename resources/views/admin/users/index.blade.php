@@ -84,6 +84,11 @@
                                             data-user-name="{{ $user->name }}">
                                         <i class="bi bi-person-check"></i>
                                     </button>
+                                    @else
+                                    <!-- Disabled assign button for non-super admins -->
+                                    <button type="button" class="btn btn-outline-secondary" disabled title="Only super admin can assign users">
+                                        <i class="bi bi-person-check"></i>
+                                    </button>
                                     @endif
 
                                     <!-- Toggle status button if admin can manage the user -->
@@ -125,6 +130,7 @@
 </div>
 
 <!-- Assign Admin Modal -->
+@if(Auth::guard('admin')->user()->isSuperAdmin())
 <div class="modal fade" id="assignAdminModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -160,6 +166,7 @@
         </div>
     </div>
 </div>
+@endif
 
 <!-- Filter Modal -->
 <div class="modal fade" id="filterModal" tabindex="-1">

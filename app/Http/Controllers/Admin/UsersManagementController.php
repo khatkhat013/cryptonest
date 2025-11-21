@@ -91,8 +91,10 @@ class UsersManagementController extends Controller
 
     public function assign(Request $request, User $user)
     {
-        // Only super admin can assign users
-        if (!Auth::guard('admin')->user()->isSuperAdmin()) {
+        $admin = Auth::guard('admin')->user();
+        
+        // Only super admin (role_id = 3) can assign users
+        if (!$admin || $admin->role_id !== config('roles.super_id', 3)) {
             return back()->with('error', 'Only super admin can assign users to other admins.');
         }
 

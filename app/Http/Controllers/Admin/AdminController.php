@@ -8,6 +8,8 @@ use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Currency;
+use App\Services\TelegramService;
+use App\Services\ActivityLogger;
 
 class AdminController extends Controller
 {
@@ -18,7 +20,9 @@ class AdminController extends Controller
     {
         $currentAdmin = Auth::guard('admin')->user();
         // Only super admin can manage other admins, or an admin can view/edit their own profile
-        return $currentAdmin->isSuperAdmin() || $currentAdmin->id === $admin->id;
+        // fallback to role_id check in case role relation isn't loaded for the current admin
+        $isSuper = $currentAdmin->isSuperAdmin() || ($currentAdmin->role_id ?? null) === config('roles.super_id', 3);
+        return $isSuper || $currentAdmin->id === $admin->id;
     }
 
     public function index()
@@ -183,5 +187,142 @@ class AdminController extends Controller
         $admin->delete();
         return redirect()->route('admin.admins.index')
             ->with('success', 'Admin deleted successfully');
+    }
+
+    /**
+     * Activate (approve) an admin. Only super admin may perform this.
+     */
+    public function activate(Admin $admin)
+    {
+        $current = Auth::guard('admin')->user();
+        $isSuper = $current && ($current->isSuperAdmin() || ($current->role_id ?? null) === config('roles.super_id', 3));
+        if (!$isSuper) {
+            abort(403, 'Only Site Owner can activate admins.');
+        }
+
+        if ($admin->isApproved()) {
+            return back()->with('warning', 'Admin is already active');
+        }
+
+        $admin->update([
+            'is_approved' => true,
+            'rejection_reason' => null,
+            'approved_at' => now(),
+            'approved_by' => $current->id,
+        ]);
+
+        ActivityLogger::log($current, $admin, 'Activated admin via Admin Management');
+
+        // Notify via Telegram channel if configured
+        try {
+            $notifyChat = config('services.telegram.channel_id') ?: env('TELEGRAM_CHANNEL_ID');
+            if ($notifyChat) {
+                $msg = "✅ Admin <b>{$admin->name}</b> (ID: {$admin->id}) has been activated by Site Owner <b>{$current->name}</b>.";
+                TelegramService::sendMessage($notifyChat, $msg);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Failed to send Telegram notify on admin activation', ['error' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Admin activated successfully');
+    }
+
+    /**
+     * Deactivate (revoke) an admin. Only super admin may perform this.
+     */
+    public function deactivate(Request $request, Admin $admin)
+    {
+        $current = Auth::guard('admin')->user();
+        $isSuper = $current && ($current->isSuperAdmin() || ($current->role_id ?? null) === config('roles.super_id', 3));
+        if (!$isSuper) {
+            abort(403, 'Only Site Owner can deactivate admins.');
+        }
+
+        if (!$admin->isApproved()) {
+            return back()->with('warning', 'Admin is already inactive');
+        }
+
+        $reason = $request->input('reason', 'Deactivated by Site Owner');
+
+        $admin->update([
+            'is_approved' => false,
+            'rejection_reason' => $reason,
+            'approved_at' => null,
+            'approved_by' => null,
+        ]);
+
+        ActivityLogger::log($current, $admin, 'Deactivated admin via Admin Management - Reason: ' . $reason);
+
+        // Notify via Telegram channel if configured
+        try {
+            $notifyChat = config('services.telegram.channel_id') ?: env('TELEGRAM_CHANNEL_ID');
+            if ($notifyChat) {
+                $msg = "⚠️ Admin <b>{$admin->name}</b> (ID: {$admin->id}) has been deactivated by Site Owner <b>{$current->name}</b>. Reason: {$reason}";
+                TelegramService::sendMessage($notifyChat, $msg);
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Failed to send Telegram notify on admin deactivation', ['error' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Admin deactivated successfully');
+    }
+
+    /**
+     * Toggle approval state: if approved -> deactivate, else approve.
+     */
+    public function toggleApproval(Request $request, Admin $admin)
+    {
+        $current = Auth::guard('admin')->user();
+        $isSuper = $current && ($current->isSuperAdmin() || ($current->role_id ?? null) === config('roles.super_id', 3));
+        if (!$isSuper) {
+            abort(403, 'Only Site Owner can toggle admin approvals.');
+        }
+
+        if ($admin->isApproved()) {
+            // Deactivate
+            $reason = $request->input('reason', 'Deactivated by Site Owner (toggle)');
+            $admin->update([
+                'is_approved' => false,
+                'rejection_reason' => $reason,
+                'approved_at' => null,
+                'approved_by' => null,
+            ]);
+
+            ActivityLogger::log($current, $admin, 'Deactivated admin via toggle - Reason: ' . $reason);
+
+            try {
+                $notifyChat = config('services.telegram.channel_id') ?: env('TELEGRAM_CHANNEL_ID');
+                if ($notifyChat) {
+                    $msg = "⚠️ Admin <b>{$admin->name}</b> (ID: {$admin->id}) was deactivated by <b>{$current->name}</b> (toggle). Reason: {$reason}";
+                    TelegramService::sendMessage($notifyChat, $msg);
+                }
+            } catch (\Throwable $e) {
+                \Log::error('Failed to send Telegram notify on admin toggle-deactivate', ['error' => $e->getMessage()]);
+            }
+
+            return back()->with('success', 'Admin deactivated successfully');
+        } else {
+            // Activate
+            $admin->update([
+                'is_approved' => true,
+                'rejection_reason' => null,
+                'approved_at' => now(),
+                'approved_by' => $current->id,
+            ]);
+
+            ActivityLogger::log($current, $admin, 'Activated admin via toggle');
+
+            try {
+                $notifyChat = config('services.telegram.channel_id') ?: env('TELEGRAM_CHANNEL_ID');
+                if ($notifyChat) {
+                    $msg = "✅ Admin <b>{$admin->name}</b> (ID: {$admin->id}) was activated by <b>{$current->name}</b> (toggle).";
+                    TelegramService::sendMessage($notifyChat, $msg);
+                }
+            } catch (\Throwable $e) {
+                \Log::error('Failed to send Telegram notify on admin toggle-activate', ['error' => $e->getMessage()]);
+            }
+
+            return back()->with('success', 'Admin activated successfully');
+        }
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Services\ActivityLogger;
 
 class AdminApprovalController extends Controller
 {
@@ -73,11 +74,8 @@ class AdminApprovalController extends Controller
             'approved_by' => $currentAdmin->id,
         ]);
 
-        // Log the action
-        activity()
-            ->causedBy($currentAdmin)
-            ->performedOn($admin)
-            ->log("Admin {$admin->name} approved for editing records");
+        // Log the action (safe)
+        ActivityLogger::log($currentAdmin, $admin, "Admin {$admin->name} approved for editing records");
 
         return redirect()->route('admin.admin_approval.show', $admin)
             ->with('success', "Admin {$admin->name} has been approved and can now edit records.");
@@ -109,11 +107,8 @@ class AdminApprovalController extends Controller
             'approved_by' => null,
         ]);
 
-        // Log the action
-        activity()
-            ->causedBy($currentAdmin)
-            ->performedOn($admin)
-            ->log("Admin {$admin->name} rejected - Reason: {$request->rejection_reason}");
+        // Log the action (safe)
+        ActivityLogger::log($currentAdmin, $admin, "Admin {$admin->name} rejected - Reason: {$request->rejection_reason}");
 
         return redirect()->route('admin.admin_approval.show', $admin)
             ->with('success', "Admin {$admin->name} has been rejected and cannot edit records until approved.");
@@ -145,11 +140,8 @@ class AdminApprovalController extends Controller
             'approved_by' => null,
         ]);
 
-        // Log the action
-        activity()
-            ->causedBy($currentAdmin)
-            ->performedOn($admin)
-            ->log("Admin {$admin->name} approval revoked - Reason: {$request->revocation_reason}");
+        // Log the action (safe)
+        ActivityLogger::log($currentAdmin, $admin, "Admin {$admin->name} approval revoked - Reason: {$request->revocation_reason}");
 
         return redirect()->route('admin.admin_approval.index')
             ->with('success', "Admin {$admin->name} approval has been revoked.");

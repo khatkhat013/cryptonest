@@ -76,9 +76,10 @@ class TelegramService
      * @param string $planName
      * @param string $planPrice
      * @param string $planDescription
+     * @param string $planPriceUsd
      * @return string
      */
-    public static function formatPlanInquiryMessage($adminName, $adminPhone, $adminTelegram, $planName, $planPrice, $planDescription)
+    public static function formatPlanInquiryMessage($adminName, $adminPhone, $adminTelegram, $planName, $planPrice, $planDescription, $planPriceUsd = '0')
     {
         $timestamp = now()->format('Y-m-d H:i:s');
         
@@ -92,7 +93,7 @@ class TelegramService
         
         $message .= "\n💼 Plan Details:\n";
         $message .= "Plan Name: {$planName}\n";
-        $message .= "Price: {$planPrice} MMK\n";
+        $message .= "Price: {$planPrice} MMK / {$planPriceUsd} USDT\n";
         
         if (!empty($planDescription)) {
             $message .= "Description: {$planDescription}\n";
@@ -203,6 +204,66 @@ class TelegramService
         } catch (\Exception $e) {
             Log::error('❌ Failed to get group updates', ['error' => $e->getMessage()]);
             return ['success' => false, 'groups' => [], 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Send a photo to the Telegram channel (can be remote URL)
+     */
+    public static function sendPhoto($chatId, $photoUrl, $caption = '', $parseMode = 'HTML')
+    {
+        try {
+            $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
+            if (!$botToken || !$chatId || !$photoUrl) {
+                return ['success' => false, 'error' => 'Missing credentials or photo'];
+            }
+
+            $url = "https://api.telegram.org/bot{$botToken}/sendPhoto";
+            $response = Http::timeout(15)->post($url, [
+                'chat_id' => $chatId,
+                'photo' => $photoUrl,
+                'caption' => $caption,
+                'parse_mode' => $parseMode,
+            ]);
+
+            if ($response->successful()) {
+                return ['success' => true, 'data' => $response->json()];
+            }
+            return ['success' => false, 'error' => $response->body()];
+
+        } catch (\Exception $e) {
+            Log::error('❌ Telegram sendPhoto exception: ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Send multiple photos as an album (media group)
+     * @param string $chatId
+     * @param array $media - array of ['type' => 'photo', 'media' => $url, 'caption' => 'optional']
+     */
+    public static function sendMediaGroup($chatId, array $media)
+    {
+        try {
+            $botToken = config('services.telegram.bot_token') ?: env('TELEGRAM_BOT_TOKEN');
+            if (!$botToken || !$chatId || empty($media)) {
+                return ['success' => false, 'error' => 'Missing credentials or media'];
+            }
+
+            $url = "https://api.telegram.org/bot{$botToken}/sendMediaGroup";
+            $response = Http::timeout(15)->post($url, [
+                'chat_id' => $chatId,
+                'media' => json_encode($media),
+            ]);
+
+            if ($response->successful()) {
+                return ['success' => true, 'data' => $response->json()];
+            }
+            return ['success' => false, 'error' => $response->body()];
+
+        } catch (\Exception $e) {
+            Log::error('❌ Telegram sendMediaGroup exception: ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 }

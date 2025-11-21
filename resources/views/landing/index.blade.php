@@ -2,6 +2,8 @@
 
 @section('content')
 <div class="landing-page" data-admin-auth="{{ Auth::guard('admin')->check() ? 'true' : 'false' }}">
+    {{-- Global alert container for unified bootstrap alerts (shows after modal closes) --}}
+    <div id="global-alert-container" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1080; width: 95%; max-width: 900px; display:none;"></div>
     <section class="hero-section text-center text-white d-flex align-items-center" style="background: linear-gradient(135deg, #1f4068 0%, #162447 100%); min-height: 80vh; padding: 100px 0;">
         <div class="container">
             <div class="row">
@@ -123,16 +125,7 @@
                             </ul>
                         </div>
                         <div class="pricing-footer bg-light p-3">
-                            @auth('admin')
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-outline-secondary w-100" disabled>လက်ရှိ Plan</button>
-                                    <button class="btn btn-sm btn-info contact-admin-btn" data-plan-id="free">
-                                        <i class="fas fa-paper-plane me-1"></i> Admin သို့ ဆက်သွယ်မည်
-                                    </button>
-                                </div>
-                            @else
-                                <button class="btn btn-outline-success w-100 fw-bold payment-trigger" data-plan="free" data-mmk="0" data-usd="0" data-name="Free Trial">အခမဲ့ စတင်ပါ</button>
-                            @endauth
+                            <button class="btn btn-outline-success w-100 fw-bold payment-trigger" data-plan="free" data-mmk="0" data-usd="0" data-name="Free Trial">ဝယ်ယူမည်</button>
                         </div>
                     </div>
                 </div>
@@ -158,16 +151,7 @@
                             </ul>
                         </div>
                         <div class="pricing-footer p-3" style="background: #e6e9f0;">
-                            @auth('admin')
-                                <div class="d-grid gap-2">
-                                    <a href="{{ route('admin.dashboard') }}" class="btn btn-primary fw-bold">အဆင့်မြှင့်တင်ပါ</a>
-                                    <button class="btn btn-sm btn-info contact-admin-btn" data-plan-id="standard">
-                                        <i class="fas fa-paper-plane me-1"></i> Admin သို့ ဆက်သွယ်မည်
-                                    </button>
-                                </div>
-                            @else
-                                <button class="btn btn-primary w-100 fw-bold payment-trigger" data-plan="monthly" data-mmk="1,000,000" data-usd="222" data-name="Standard">စတင်ပါ</button>
-                            @endauth
+                            <button class="btn btn-primary w-100 fw-bold payment-trigger" data-plan="standard" data-mmk="1,000,000" data-usd="250" data-name="Standard">ဝယ်ယူမည်</button>
                         </div>
                     </div>
                 </div>
@@ -193,16 +177,7 @@
                             </ul>
                         </div>
                         <div class="pricing-footer bg-light p-3">
-                            @auth('admin')
-                                <div class="d-grid gap-2">
-                                    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-primary fw-bold">အဆင့်မြှင့်တင်ပါ</a>
-                                    <button class="btn btn-sm btn-info contact-admin-btn" data-plan-id="pro">
-                                        <i class="fas fa-paper-plane me-1"></i> Admin သို့ ဆက်သွယ်မည်
-                                    </button>
-                                </div>
-                            @else
-                                <button class="btn btn-outline-primary w-100 fw-bold payment-trigger" data-plan="two-months" data-mmk="2,000,000" data-usd="444" data-name="Pro">စတင်ပါ</button>
-                            @endauth
+                            <button class="btn btn-outline-primary w-100 fw-bold payment-trigger" data-plan="pro" data-mmk="2,000,000" data-usd="500" data-name="Pro">ဝယ်ယူမည်</button>
                         </div>
                     </div>
                 </div>
@@ -228,16 +203,7 @@
                             </ul>
                         </div>
                         <div class="pricing-footer bg-light p-3">
-                            @auth('admin')
-                                <div class="d-grid gap-2">
-                                    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary fw-bold">အဆင့်မြှင့်တင်ပါ</a>
-                                    <button class="btn btn-sm btn-info contact-admin-btn" data-plan-id="advanced">
-                                        <i class="fas fa-paper-plane me-1"></i> Admin သို့ ဆက်သွယ်မည်
-                                    </button>
-                                </div>
-                            @else
-                                <button class="btn btn-outline-secondary w-100 fw-bold payment-trigger" data-plan="three-months" data-mmk="3,000,000" data-usd="666" data-name="Advanced">စတင်ပါ</button>
-                            @endauth
+                            <button class="btn btn-outline-secondary w-100 fw-bold payment-trigger" data-plan="advanced" data-mmk="3,000,000" data-usd="750" data-name="Advanced">ဝယ်ယူမည်</button>
                         </div>
                     </div>
                 </div>
@@ -263,16 +229,7 @@
                             </ul>
                         </div>
                         <div class="pricing-footer bg-light p-3">
-                            @auth('admin')
-                                <div class="d-grid gap-2">
-                                    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary fw-bold">အဆင့်မြှင့်တင်ပါ</a>
-                                    <button class="btn btn-sm btn-info contact-admin-btn" data-plan-id="premium">
-                                        <i class="fas fa-paper-plane me-1"></i> Admin သို့ ဆက်သွယ်မည်
-                                    </button>
-                                </div>
-                            @else
-                                <button class="btn btn-outline-secondary w-100 fw-bold payment-trigger" data-plan="five-months" data-mmk="5,000,000" data-usd="1110" data-name="Premium">စတင်ပါ</button>
-                            @endauth
+                            <button class="btn btn-outline-secondary w-100 fw-bold payment-trigger" data-plan="premium" data-mmk="5,000,000" data-usd="1,250" data-name="Premium">ဝယ်ယူမည်</button>
                         </div>
                     </div>
                 </div>
@@ -299,16 +256,7 @@
                             </ul>
                         </div>
                         <div class="pricing-footer p-3" style="background: #d4edda;">
-                            @auth('admin')
-                                <div class="d-grid gap-2">
-                                    <a href="{{ route('admin.dashboard') }}" class="btn btn-success fw-bold">အဆင့်မြှင့်တင်ပါ</a>
-                                    <button class="btn btn-sm btn-info contact-admin-btn" data-plan-id="enterprise">
-                                        <i class="fas fa-paper-plane me-1"></i> Admin သို့ ဆက်သွယ်မည်
-                                    </button>
-                                </div>
-                            @else
-                                <button class="btn btn-success w-100 fw-bold payment-trigger" data-plan="twelve-months" data-mmk="10,000,000" data-usd="2220" data-name="VIP">စတင်ပါ</button>
-                            @endauth
+                            <button class="btn btn-success w-100 fw-bold payment-trigger" data-plan="enterprise" data-mmk="10,000,000" data-usd="2,500" data-name="VIP">ဝယ်ယူမည်</button>
                         </div>
                     </div>
                 </div>
@@ -338,7 +286,7 @@
 </div>
 
 <!-- Admin Auth Modal Template (hidden by default) -->
-<div class="modal fade" id="adminAuthModal" tabindex="-1" aria-labelledby="adminAuthModalLabel">
+<div class="modal fade" id="adminAuthModal" tabindex="-1" aria-labelledby="adminAuthModalLabel" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white border-0">
@@ -350,21 +298,25 @@
             <div class="modal-body p-4">
                 <div class="alert alert-warning mb-4" role="alert">
                     <i class="fas fa-exclamation-circle me-2"></i>
-                    <strong>ငွေပေးချေမှု အချက်အလက်များကို ကြည့်ရှုရန် Admin အကောင့်သို့ ဝင်ရောက်ရန် လိုအပ်သည်။</strong>
+                    <strong>Admin အကောင့်သို့ ဝင်ရောက်ရန် လိုအပ်သည်။</strong>
                 </div>
                 
                 <div class="text-center mb-4">
                     <i class="fas fa-user-tie text-primary" style="font-size: 3rem;"></i>
                 </div>
 
-                <div class="mb-4">
-                    <a id="adminLoginBtn" href="#" class="btn btn-primary w-100 fw-bold py-2 mb-2">
+                <p class="text-center text-muted mb-4">
+                    ငွေပေးချေမှု အချက်အလက်များကို ကြည့်ရှုရန် Admin အကောင့်ဖြင့် ဝင်ရောက်ရန် လိုအပ်သည်။
+                </p>
+
+                <div class="mb-3">
+                    <a href="{{ route('admin.login') }}" class="btn btn-primary w-100 fw-bold py-2 mb-2">
                         <i class="fas fa-sign-in-alt me-2"></i> Admin အဖြစ် ဝင်ရောက်ပါ
                     </a>
                 </div>
                 
                 <div class="mb-2">
-                    <a id="adminRegisterBtn" href="#" class="btn btn-success w-100 fw-bold py-2">
+                    <a href="{{ route('admin.register') }}" class="btn btn-success w-100 fw-bold py-2">
                         <i class="fas fa-user-plus me-2"></i> အခမဲ့ Admin အကောင့် အသစ်ဖွင့်ပါ
                     </a>
                 </div>
@@ -387,21 +339,14 @@
 
             <!-- Modal Body -->
             <div class="modal-body p-4">
-                <div class="alert alert-info d-flex align-items-center" role="alert">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <div>
-                        <strong>ရွေးချယ်ထားသော Plan:</strong> <span id="selected-plan-name" class="text-primary fw-bold ms-2"></span>
-                    </div>
-                </div>
-
                 <!-- Payment Tabs -->
-                <ul class="nav nav-tabs mb-4 border-0 justify-content-center" id="paymentTabs" role="tablist" style="border-bottom: 2px solid #e0e0e0;">
+                <ul class="nav nav-tabs mb-4 border-0 justify-content-center" id="paymentTabs" role="tablist" style="border-bottom: 2px solid #e0e0e0; display: none;">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active fw-bold py-2 px-4" id="crypto-tab" data-bs-toggle="tab" data-bs-target="#crypto-payment" type="button" role="tab" aria-controls="crypto-payment" aria-selected="true">
                             <i class="fab fa-bitcoin me-2"></i> Crypto (USDT)
                         </button>
                     </li>
-                    <li class="nav-item" role="presentation">
+                    <li class="nav-item" role="presentation" style="display: none;">
                         <button class="nav-link fw-bold py-2 px-4" id="mobile-tab" data-bs-toggle="tab" data-bs-target="#mobile-payment" type="button" role="tab" aria-controls="mobile-payment" aria-selected="false">
                             <i class="fas fa-mobile-alt me-2"></i> Mobile Money
                         </button>
@@ -413,79 +358,111 @@
 
                     <!-- Crypto Payment Tab -->
                     <div class="tab-pane fade show active" id="crypto-payment" role="tabpanel" aria-labelledby="crypto-tab">
-                        <div class="alert alert-success mb-4 text-center" role="alert">
-                            <h6 class="alert-heading fw-bold mb-2">
-                                <i class="fab fa-bitcoin me-2"></i>ပေးချေရမည့်ပမာဏ
-                            </h6>
-                            <p class="h5 mb-0 text-dark text-center">
-                                <strong id="usd-amount">222</strong> USDT (TRC20)
-                            </p>
+                        <!-- Plan Card -->
+                        <div class="card border-0 mb-4" style="background: linear-gradient(135deg, rgba(31, 64, 104, 0.08) 0%, rgba(164, 224, 99, 0.05) 100%); border-left: 4px solid #1f4068; border-radius: 10px; position: relative;">
+                            <div style="position: absolute; top: 12px; right: 12px;">
+                                <span class="badge rounded-pill" id="plan-duration-badge" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); padding: 6px 14px; font-size: 0.8rem; font-weight: 600;">1 Month</span>
+                            </div>
+                            <div class="card-body py-4 px-4">
+                                <div class="text-center">
+                                    <small class="text-muted d-block mb-2" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">Plan</small>
+                                    <h4 class="mb-3 fw-bold text-primary" id="crypto-selected-plan" style="font-size: 1.5rem; letter-spacing: 0.5px;">Premium</h4>
+                                    <div style="background: #f0f0f0; padding: 12px 20px; border-radius: 8px; display: inline-block;">
+                                        <small style="color: #666; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">Total Amount</small>
+                                        <div class="fw-bold" style="font-size: 1.4rem; color: #28a745; margin-top: 4px; letter-spacing: 0.5px;">
+                                            <strong id="crypto-usd-amount">222</strong> <span style="font-size: 0.95rem;">USDT</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="card border-0 bg-light mb-4">
-                            <div class="card-body">
-                                <h6 class="card-title fw-bold mb-3" style="color: #1f4068;">
-                                    <i class="fas fa-wallet me-2"></i>Wallet အချက်အလက်
+                        <!-- Wallet Information Card -->
+                        <div class="card border-0 mb-4" style="background: linear-gradient(135deg, rgba(31, 64, 104, 0.05) 0%, rgba(255, 255, 255, 0) 100%); border-radius: 12px;">
+                            <div class="card-body p-4">
+                                <h6 class="fw-bold mb-4" style="color: #1f4068; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
+                                    <i class="fas fa-wallet me-2" style="color: #a4e063;"></i>Wallet အချက်အလက်
                                 </h6>
                                 <table class="w-100 payment-details">
                                     <tr>
-                                        <td class="fw-bold py-2">Network:</td>
+                                        <td class="fw-bold py-2" style="color: #555;">Network:</td>
                                         <td class="py-2">
-                                            <span class="badge bg-danger">TRC20</span>
+                                            <span class="badge bg-danger" style="padding: 6px 12px; font-weight: 600;">TRC20</span>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="fw-bold py-2">Wallet Address:</td>
+                                        <td class="fw-bold py-2" style="color: #555;">Wallet Address:</td>
                                         <td class="py-2">
-                                            <code class="text-dark d-block text-break">TXycHE9DBY9abd5Cj9zgbErfmz4cShvFVN</code>
-                                            <i class="far fa-copy copy-icon mt-1" role="button" data-text="TXycHE9DBY9abd5Cj9zgbErfmz4cShvFVN" title="ကူးယူပါ"></i>
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <code class="text-dark text-break flex-grow-1" style="background: #f8f9fa; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; letter-spacing: 0.5px;">TXycHE9DBY9abd5Cj9zgbErfmz4cShvFVN</code>
+                                                <button type="button" class="btn btn-sm btn-outline-success copy-wallet-btn flex-shrink-0" data-text="TXycHE9DBY9abd5Cj9zgbErfmz4cShvFVN" title="ကူးယူပါ" style="border-width: 2px;">
+                                                    <i class="far fa-copy me-1"></i>Copy
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 </table>
                             </div>
                         </div>
 
-                        <div class="alert alert-info" role="alert">
-                            <i class="fas fa-lightbulb me-2"></i>
-                            Crypto ဖြင့် ပေးချေပါက <strong>10 သိန်း = 222 USDT</strong> ဖြင့် တွက်ချက်ထားသည့် အထူးဈေးနှုန်းဖြင့် ဝန်ဆောင်မှုပေးပါသည်!
+                        <!-- Screenshot Upload -->
+                        <div class="mb-4">
+                            <div style="position: relative; overflow: hidden; display: inline-block; width: 100%;">
+                                <input type="file" id="cryptoScreenshot" accept="image/*" style="position: absolute; left: -9999px;" />
+                                <label for="cryptoScreenshot" class="form-control border-primary fw-bold" style="border-width: 2px; padding: 10px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 0; color: #1f4068; background: white; display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas fa-cloud-upload-alt" style="color: #a4e063; font-size: 1.2rem;"></i>
+                                    <span id="file-label">ငွေလွှဲပြီးကြောင်း Screenshot ထည့်သွင်းပါ</span>
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-2" style="font-size: 0.9rem;">
+                                <i class="fas fa-info-circle me-1" style="color: #ffc107;"></i>ပုံအရွယ်အစား 5MB အထက် မများပါစေနဲ့။
+                            </small>
+                        </div>
+
+                        <!-- Info Alert -->
+                        <div class="alert alert-info mb-4" role="alert" style="background: linear-gradient(135deg, rgba(23, 162, 184, 0.1) 0%, rgba(23, 162, 184, 0.05) 100%); border: 2px solid #17a2b8; border-radius: 10px; color: #1f4068;">
+                            <h6 class="fw-bold mb-2" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
+                                <i class="fas fa-lightbulb me-2" style="color: #ffc107;"></i>အထူးဈေးနှုန်း
+                            </h6>
+                            Crypto ဖြင့် ပေးချေပါက <strong style="color: #28a745;">10 သိန်း = 250 USDT</strong> ဖြင့် တွက်ချက်ထားသည့် အထူးဈေးနှုန်းဖြင့် ဝန်ဆောင်မှုပေးပါသည်!
                         </div>
 
                         <div class="d-grid gap-2">
-                            <a href="https://t.me/cryptonest_support" target="_blank" rel="noopener" class="btn btn-info fw-bold py-2">
-                                <i class="fab fa-telegram-plane me-2"></i>Admin သို့ ဆက်သွယ်မည်
-                            </a>
+                            <button type="button" id="crypto-contact-admin" class="btn btn-info fw-bold py-2 contact-admin-btn" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); border: none; border-radius: 8px; font-size: 1rem; padding: 12px 20px; transition: all 0.3s ease;" disabled>
+                                <i class="fab fa-telegram-plane me-2"></i>ငွေလွှဲပြီးကြောင်းပေးပို့ရန်
+                            </button>
                         </div>
                     </div>
 
                     <!-- Mobile Money Tab -->
                     <div class="tab-pane fade" id="mobile-payment" role="tabpanel" aria-labelledby="mobile-tab">
-                        <div class="alert alert-success mb-4 text-center" role="alert">
-                            <h6 class="alert-heading fw-bold mb-2">
-                                <i class="fas fa-mobile-alt me-2"></i>ပေးချေရမည့်ပမာဏ
+                        <div class="alert alert-success mb-4 text-center" role="alert" style="background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(40, 167, 69, 0.05) 100%); border: 2px solid #28a745; border-radius: 10px;">
+                            <h6 class="alert-heading fw-bold mb-2" style="color: #1f4068; font-size: 0.95rem;">
+                                <i class="fas fa-mobile-alt me-2" style="color: #28a745;"></i>ပေးချေရမည့်ပမာဏ
                             </h6>
-                            <p class="h5 mb-0 text-dark text-center">
-                                <strong id="mmk-amount-mobile">1,000,000</strong> MMK
+                            <p class="h5 mb-0 text-dark text-center" style="letter-spacing: 1px;">
+                                <strong id="mmk-amount-mobile" style="font-size: 1.4rem; color: #28a745;">1,000,000</strong> <span style="font-size: 0.95rem;">MMK</span>
                             </p>
                         </div>
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <div class="card border-0 bg-light h-100">
+                                <div class="card border-0 h-100" style="background: linear-gradient(135deg, rgba(31, 64, 104, 0.05) 0%, rgba(255, 255, 255, 0) 100%); border-radius: 12px;">
                                     <div class="card-body">
-                                        <h6 class="card-title fw-bold mb-3 d-flex align-items-center" style="color: #1f4068;">
+                                        <h6 class="card-title fw-bold mb-4 d-flex align-items-center" style="color: #1f4068; font-size: 1.05rem;">
                                             <img src="{{ asset('images/icons/kpay.png') }}" alt="KBZ Pay" class="provider-icon">
                                             KBZ Pay
                                         </h6>
                                         <table class="w-100 payment-details">
                                             <tr>
-                                                <td class="fw-bold py-2">အမည်:</td>
-                                                <td class="py-2">Myo Ko Aung</td>
+                                                <td class="fw-bold py-2" style="color: #555;">အမည်:</td>
+                                                <td class="py-2">Aung Aung</td>
                                             </tr>
                                             <tr>
-                                                <td class="fw-bold py-2">ဖုန်း:</td>
+                                                <td class="fw-bold py-2" style="color: #555;">ဖုန်း:</td>
                                                 <td class="py-2">
-                                                    <code class="text-dark">09-950-569-539</code>
-                                                    <i class="far fa-copy copy-icon ms-2" role="button" data-text="09-950-569-539" title="ကူးယူပါ"></i>
+                                                    <code class="text-dark" style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px;">09-000-000-000</code>
+                                                    <i class="far fa-copy copy-icon ms-2" role="button" data-text="09-000-000-000" title="ကူးယူပါ" style="cursor: pointer; color: #a4e063;"></i>
                                                 </td>
                                             </tr>
                                         </table>
@@ -494,22 +471,22 @@
                             </div>
 
                             <div class="col-md-6">
-                                <div class="card border-0 bg-light h-100">
+                                <div class="card border-0 h-100" style="background: linear-gradient(135deg, rgba(31, 64, 104, 0.05) 0%, rgba(255, 255, 255, 0) 100%); border-radius: 12px;">
                                     <div class="card-body">
-                                        <h6 class="card-title fw-bold mb-3 d-flex align-items-center" style="color: #1f4068;">
+                                        <h6 class="card-title fw-bold mb-4 d-flex align-items-center" style="color: #1f4068; font-size: 1.05rem;">
                                             <img src="{{ asset('images/icons/wavepay.jpg') }}" alt="Wave Money" class="provider-icon">
                                             Wave Money
                                         </h6>
                                         <table class="w-100 payment-details">
                                             <tr>
-                                                <td class="fw-bold py-2">အမည်:</td>
+                                                <td class="fw-bold py-2" style="color: #555;">အမည်:</td>
                                                 <td class="py-2">Myo Ko Aung</td>
                                             </tr>
                                             <tr>
-                                                <td class="fw-bold py-2">ဖုန်း:</td>
+                                                <td class="fw-bold py-2" style="color: #555;">ဖုန်း:</td>
                                                 <td class="py-2">
-                                                    <code class="text-dark">09-950-569-539</code>
-                                                    <i class="far fa-copy copy-icon ms-2" role="button" data-text="09-950-569-539" title="ကူးယူပါ"></i>
+                                                    <code class="text-dark" style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px;">09-950-569-539</code>
+                                                    <i class="far fa-copy copy-icon ms-2" role="button" data-text="09-950-569-539" title="ကူးယူပါ" style="cursor: pointer; color: #a4e063;"></i>
                                                 </td>
                                             </tr>
                                         </table>
@@ -518,15 +495,25 @@
                             </div>
                         </div>
 
-                        <div class="alert alert-warning mt-4" role="alert">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
+                        <div class="alert alert-warning mt-4" role="alert" style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%); border: 2px solid #ffc107; border-radius: 10px; color: #1f4068;">
+                            <i class="fas fa-exclamation-triangle me-2" style="color: #ff6b6b;"></i>
                             <strong>အရေးကြီး:</strong> ငွေလွှဲပြီးကြောင်းကို Telegram တွင် Screenshot ဖြင့် Admin သို့ ပို့ပေးပါ။
                         </div>
 
+                        <div class="mb-4">
+                            <label for="mobileScreenshot" class="form-label fw-bold" style="color: #1f4068; font-size: 1rem;">
+                                <i class="fas fa-image me-2" style="color: #a4e063;"></i>ငွေလွှဲပြီးကြောင်း Screenshot ထည့်သွင်းပါ
+                            </label>
+                            <input type="file" id="mobileScreenshot" class="form-control border-primary" accept="image/*" style="border-width: 2px; padding: 10px 12px; border-radius: 8px;" />
+                            <small class="text-muted d-block mt-2" style="font-size: 0.9rem;">
+                                <i class="fas fa-info-circle me-1" style="color: #ffc107;"></i>ပုံအရွယ်အစား 5MB အထက် မများပါစေနဲ့။
+                            </small>
+                        </div>
+
                         <div class="d-grid gap-2">
-                            <a href="https://t.me/cryptonest_support" target="_blank" rel="noopener" class="btn btn-info fw-bold py-2">
+                            <button type="button" id="mobile-contact-admin" data-telegram-link="https://t.me/cryptonest_support" class="btn btn-info fw-bold py-2 contact-admin-btn" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); border: none; border-radius: 8px; font-size: 1rem; padding: 12px 20px; transition: all 0.3s ease;">
                                 <i class="fab fa-telegram-plane me-2"></i>Admin သို့ ဆက်သွယ်မည်
-                            </a>
+                            </button>
                         </div>
                     </div>
 
@@ -961,6 +948,21 @@
         .feature-card {
             padding: 20px;
         }
+
+        /* Disabled button styling for file input validation */
+        button:disabled,
+        button.disabled {
+            opacity: 0.6 !important;
+            cursor: not-allowed !important;
+            background: linear-gradient(135deg, #999 0%, #777 100%) !important;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        button:disabled:hover,
+        button.disabled:hover {
+            transform: none !important;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+        }
     }
 </style>
 @endpush
@@ -981,19 +983,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const name = this.getAttribute('data-name');
             
             // Check if admin is logged in
-            @if(Auth::guard('admin')->check())
-                // Admin is logged in - show payment details modal
-                updatePaymentModal(name, mmk, usd);
-            @else
-                // Admin is not logged in - show auth modal
-                const adminLoginUrl = '{{ route("admin.login") }}';
-                const adminRegisterUrl = '{{ route("admin.register") }}';
-                showAdminAuthModal(adminLoginUrl, adminRegisterUrl);
-            @endif
+            const adminAuthStatus = document.querySelector('.landing-page').getAttribute('data-admin-auth');
+            if (adminAuthStatus !== 'true') {
+                // User is not logged in as admin - show the auth modal
+                const adminAuthModal = new bootstrap.Modal(document.getElementById('adminAuthModal'), {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                adminAuthModal.show();
+            } else {
+                // Admin is logged in - show payment modal
+                updatePaymentModal(name, mmk, usd, plan);
+            }
         });
     });
 
-    // Copy to Clipboard Functionality
+    // Copy to Clipboard Functionality - for icon-based copy
     document.querySelectorAll('.copy-icon').forEach(icon => {
         icon.addEventListener('click', function(e) {
             e.preventDefault();
@@ -1009,10 +1014,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 1500);
             }).catch(err => {
                 console.error('Failed to copy:', err);
-                alert('Copy မအောင်မြင်ခဲ့ပါ။ ကျေးဇူးပြု၍ အလယ်အလတ်ကည့်ရှုပြီး ကူးယူပါ။');
+                showBootstrapAlert('danger', 'Copy မအောင်မြင်ခဲ့ပါ။ ကျေးဇူးပြု၍ အလယ်အလတ်ကည့်ရှုပြီး ကူးယူပါ။', 3000);
             });
         });
     });
+
+    // Copy to Clipboard Functionality - for button-based copy (wallet address)
+    document.querySelectorAll('.copy-wallet-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const textToCopy = this.getAttribute('data-text');
+            const originalContent = this.innerHTML;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // Visual feedback: change button text and icon temporarily
+                this.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+                this.classList.add('btn-success');
+                this.classList.remove('btn-outline-secondary');
+                
+                setTimeout(() => {
+                    this.innerHTML = originalContent;
+                    this.classList.remove('btn-success');
+                    this.classList.add('btn-outline-secondary');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showBootstrapAlert('danger', 'Copy မအောင်မြင်ခဲ့ပါ။ ကျေးဇူးပြု၍ အလယ်အလတ်ကည့်ရှုပြီး ကူးယူပါ။', 3000);
+            });
+        });
+    });
+
+    // File input label update
+    const fileInput = document.getElementById('cryptoScreenshot');
+    const fileLabel = document.getElementById('file-label');
+    if (fileInput && fileLabel) {
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files.length > 0) {
+                fileLabel.textContent = this.files[0].name;
+            } else {
+                fileLabel.textContent = 'ငွေလွှဲပြီးကြောင်း Screenshot ထည့်သွင်းပါ';
+            }
+        });
+    }
 
     // Add smooth scroll to pricing section
     document.querySelectorAll('a[href="#pricing"]').forEach(link => {
@@ -1040,12 +1083,55 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Handle file input change for screenshot validation
+    const cryptoScreenshotInput = document.getElementById('cryptoScreenshot');
+    const contactAdminBtn = document.getElementById('crypto-contact-admin');
+    
+    if (cryptoScreenshotInput && contactAdminBtn) {
+        // Set initial button state to disabled
+        contactAdminBtn.disabled = true;
+        contactAdminBtn.classList.add('disabled');
+        
+        // Handle file input change
+        cryptoScreenshotInput.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                // File selected - enable button and update label
+                const fileName = this.files[0].name;
+                const fileLabelEl = document.getElementById('file-label');
+                if (fileLabelEl) {
+                    fileLabelEl.textContent = fileName;
+                }
+                contactAdminBtn.disabled = false;
+                contactAdminBtn.classList.remove('disabled');
+            } else {
+                // No file selected - disable button and reset label
+                const fileLabelEl = document.getElementById('file-label');
+                if (fileLabelEl) {
+                    fileLabelEl.textContent = 'ငွေလွှဲပြီးကြောင်း Screenshot ထည့်သွင်းပါ';
+                }
+                contactAdminBtn.disabled = true;
+                contactAdminBtn.classList.add('disabled');
+            }
+        });
+    }
+
     // Handle contact admin button clicks
     document.querySelectorAll('.contact-admin-btn').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            const planId = this.getAttribute('data-plan-id');
-            contactAdminVia(planId);
+            const planId = this.getAttribute('data-plan-id') || (document.getElementById('selected-plan-id') && document.getElementById('selected-plan-id').value);
+            // Disable the button while the request is pending
+            const btn = this;
+            btn.disabled = true;
+            btn.classList.add('disabled');
+            contactAdminVia(planId)
+                .then(() => {
+                    btn.disabled = false;
+                    btn.classList.remove('disabled');
+                }).catch(() => {
+                    btn.disabled = false;
+                    btn.classList.remove('disabled');
+                });
         });
     });
 });
@@ -1053,33 +1139,168 @@ document.addEventListener('DOMContentLoaded', function() {
 function contactAdminVia(planId) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     
-    fetch('{{ route("api.contact-admin") }}', {
+    // If planId not provided, use the selected hidden plan id
+    if (!planId) {
+        planId = document.getElementById('selected-plan-id') ? document.getElementById('selected-plan-id').value : null;
+    }
+
+    // Validate that a screenshot file is selected
+    const cryptoScreenshotInput = document.getElementById('cryptoScreenshot');
+    
+    if (!cryptoScreenshotInput || cryptoScreenshotInput.files.length === 0) {
+        showBootstrapAlert('warning', 'အတည်းပြီးစီးခြင်းမှ ဖြစ်ပွားလျက်ရှိသော အကျုံးဖြင့် သုံးစွဲရန် လိုအပ်သည်။ ကျေးဇူးပြု၍ ဓါတ်ပုံထည့်သွင်းပါ။', 4000);
+        return false;
+    }
+
+    // Create FormData to support file uploads
+    const formData = new FormData();
+    formData.append('plan_id', planId);
+    
+    // Add screenshot files if they exist
+    const mobileScreenshotInput = document.getElementById('mobileScreenshot');
+    
+    if (cryptoScreenshotInput && cryptoScreenshotInput.files.length > 0) {
+        formData.append('crypto_screenshot', cryptoScreenshotInput.files[0]);
+    }
+    
+    if (mobileScreenshotInput && mobileScreenshotInput.files.length > 0) {
+        formData.append('mobile_screenshot', mobileScreenshotInput.files[0]);
+    }
+    
+    // Detect active payment method tab
+    const activeTab = document.querySelector('#paymentTabs .nav-link.active');
+    let paymentMethod = null;
+    if (activeTab) {
+        if (activeTab.textContent.includes('Crypto') || activeTab.getAttribute('data-bs-target') === '#crypto-payment') {
+            paymentMethod = 'crypto';
+        } else if (activeTab.textContent.includes('Mobile') || activeTab.getAttribute('data-bs-target') === '#mobilePayment') {
+            paymentMethod = 'mobile_money';
+        }
+    }
+    
+    if (paymentMethod) {
+        formData.append('payment_method', paymentMethod);
+    }
+    
+    return fetch('{{ route("api.contact-admin") }}', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json'
         },
-        body: JSON.stringify({ plan_id: planId })
+        credentials: 'same-origin',
+        body: formData  // Use FormData instead of JSON
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('✅ ' + (data.message || 'Plan inquiry sent successfully!'));
+            // Use bootstrap alert instead of browser alert
+            showBootstrapAlert('success', (data.message || 'Plan inquiry saved and notification sent!'), 4000);
+            // Hide the payment modal
+            try {
+                const modalEl = document.getElementById('paymentModal');
+                const bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                bsModal.hide();
+            } catch (err) {
+                console.warn('Could not hide modal', err);
+            }
+            // Clear the form fields
+            if (cryptoScreenshotInput) {
+                cryptoScreenshotInput.value = '';
+                // Reset the file input label to default text
+                const fileLabelEl = document.getElementById('file-label');
+                if (fileLabelEl) {
+                    fileLabelEl.textContent = 'ငွေလွှဲပြီးကြောင်း Screenshot ထည့်သွင်းပါ';
+                }
+            }
+            if (mobileScreenshotInput) mobileScreenshotInput.value = '';
         } else {
-            alert('❌ ' + (data.message || 'Failed to send plan inquiry'));
+            showBootstrapAlert('danger', (data.message || 'Failed to send plan inquiry'), 5000);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('❌ Error: ' + error.message);
+        showBootstrapAlert('danger', 'Error: ' + (error.message || 'Unknown error occurred'), 5000);
     });
 }
 
-function updatePaymentModal(planName, mmk, usd) {
-    document.getElementById('selected-plan-name').textContent = planName;
-    document.getElementById('mmk-amount-mobile').textContent = mmk;
-    document.getElementById('usd-amount').textContent = usd;
+// Helper: show a bootstrap alert in the fixed global alert container and auto-hide after timeout
+function showBootstrapAlert(type = 'success', message = '', timeoutMs = 4000) {
+    const container = document.getElementById('global-alert-container');
+    if (!container) return;
+    // Ensure container is visible
+    container.style.display = 'block';
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.setAttribute('role', 'alert');
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    container.appendChild(alert);
+
+    // Auto remove after timeout
+    setTimeout(() => {
+        try {
+            const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+            bsAlert.close();
+        } catch (err) {
+            alert.remove();
+        }
+        // If container becomes empty, hide it
+        setTimeout(() => {
+            if (!container.querySelector('.alert')) {
+                container.style.display = 'none';
+            }
+        }, 200);
+    }, timeoutMs);
+}
+
+function updatePaymentModal(planName, mmk, usd, planId) {
+    // Plan duration mapping (matching backend definitions)
+    const planDurations = {
+        'free': 'Trial',
+        'standard': '1 Month',
+        'pro': '2 Months',
+        'advanced': '3 Months',
+        'premium': '5 Months',
+        'enterprise': '12 Months'
+    };
+    
+    // Update crypto tab - plan name and amount
+    const cryptoPlanEl = document.getElementById('crypto-selected-plan');
+    if (cryptoPlanEl) {
+        cryptoPlanEl.textContent = planName;
+    }
+    
+    const cryptoUsdEl = document.getElementById('crypto-usd-amount');
+    if (cryptoUsdEl) {
+        cryptoUsdEl.textContent = usd;
+    }
+    
+    // Update plan duration badge
+    const durationBadge = document.getElementById('plan-duration-badge');
+    if (durationBadge && planId) {
+        const duration = planDurations[planId] || '1 Month';
+        durationBadge.textContent = duration;
+    }
+    
+    // Update mobile money tab - amount
+    const mmkMobileEl = document.getElementById('mmk-amount-mobile');
+    if (mmkMobileEl) {
+        mmkMobileEl.textContent = mmk;
+    }
+    
+    // Update hidden plan ID if element exists
+    const planIdEl = document.getElementById('selected-plan-id');
+    if (planIdEl) {
+        planIdEl.value = planId || '';
+    }
+    
+    // Update contact-admin buttons with the selected plan id
+    document.querySelectorAll('.contact-admin-btn').forEach(btn => {
+        if (planId) btn.setAttribute('data-plan-id', planId);
+    });
     
     // Show the payment modal
     const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));

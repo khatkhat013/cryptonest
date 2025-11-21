@@ -25,6 +25,12 @@
                 <i class="bi bi-person-check me-1"></i>
                 Assign Admin
             </button>
+            @else
+            <!-- Disabled assign button for non-super admins -->
+            <button type="button" class="btn btn-outline-secondary" disabled title="Only super admin can assign users">
+                <i class="bi bi-person-check me-1"></i>
+                Assign Admin
+            </button>
             @endif
 
             <form action="{{ route('admin.users.toggle-status', $user) }}" method="POST">
@@ -273,6 +279,11 @@
                                     <i class="bi bi-person-plus me-1"></i>
                                     Assign Admin Now
                                 </button>
+                                @else
+                                <button type="button" class="btn btn-outline-secondary mt-3" disabled title="Only super admin can assign users">
+                                    <i class="bi bi-person-plus me-1"></i>
+                                    Assign Admin Now
+                                </button>
                                 @endif
                             </div>
                         @endif
@@ -284,6 +295,7 @@
 </div>
     
 <!-- Assign Admin Modal -->
+@if(Auth::guard('admin')->user()->isSuperAdmin())
 <div class="modal fade" id="assignAdminModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -323,6 +335,7 @@
         </div>
     </div>
 </div>
+@endif
 
 @endsection
 
