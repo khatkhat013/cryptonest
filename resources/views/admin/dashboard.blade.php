@@ -37,71 +37,144 @@
                 </div>
                 <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
             </div>
-        {{-- Super admin sees the management alert --}}
-        @elseif($currentAdmin->isSuperAdmin())
-            <div class="alert alert-info border-2 border-primary shadow-sm rounded-3 d-flex align-items-center gap-3 p-3 mb-4" role="alert" style="max-width: 500px;">
-                <span class="display-5 lh-1 text-primary"><i class="bi bi-check-circle-fill"></i></span>
-                <div>
-                    <h5 class="alert-heading mb-1">Site Owner - Admin Approval</h5>
-                    <div class="mb-1 small">
-                        <a href="{{ route('admin.admin_approval.index') }}" class="alert-link text-decoration-underline">
-                            <i class="bi bi-shield-check"></i> Manage Admin Approvals
-                        </a>
-                    </div>
-                </div>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
-            </div>
-        {{-- Admin role users don't see any approval-related alerts --}}
         @endif
     @endif
 
     <!-- Statistics Cards -->
     <style>
-        /* Enhanced stats card visuals */
+        /* Modern gradient stats cards */
         .stats-card {
             position: relative;
             color: #fff !important;
             overflow: hidden;
             border: 0;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(16,24,40,0.06);
-            min-height: 120px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            min-height: 140px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
         }
 
-        .stats-card .card-body { padding: 1.25rem; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .stats-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
 
-        /* Circular faint icon background in the corner */
+        .stats-card .card-body { 
+            padding: 1.75rem; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Animated background shapes */
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-30px, -30px) scale(1.1); }
+        }
+
+        /* Circular icon background in the corner */
         .stats-card .stats-icon {
             position: absolute;
-            right: 0.75rem;
-            top: 0.75rem;
-            opacity: 0.14;
-            font-size: 2.8rem;
-            transform: rotate(-12deg);
-            width: 56px;
-            height: 56px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            border-radius:50%;
-            background: rgba(255,255,255,0.06);
+            right: 1rem;
+            top: 1rem;
+            opacity: 0.2;
+            font-size: 3.5rem;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            z-index: 1;
         }
 
-        .stats-card .label { font-size: 0.95rem; opacity: 0.98; margin-bottom: 0.35rem; }
-        .stats-card .value { font-size: 1.9rem; font-weight: 700; margin-bottom: 0.35rem; }
+        .stats-card .label { 
+            font-size: 0.95rem; 
+            opacity: 0.95; 
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        .stats-card .value { 
+            font-size: 2.2rem; 
+            font-weight: 800; 
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+        }
 
-        .stats-card.bg-primary { background: linear-gradient(135deg,#2563eb,#114b9b); }
-        .stats-card.bg-success { background: linear-gradient(135deg,#16a34a,#117a3d); }
-        .stats-card.bg-warning { background: linear-gradient(135deg,#f59e0b,#d97706); }
-        .stats-card.bg-info { background: linear-gradient(135deg,#06b6d4,#0e7490); }
+        /* Modern gradient backgrounds */
+        .stats-card.bg-primary { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .stats-card.bg-success { 
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .stats-card.bg-warning { 
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .stats-card.bg-info { 
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
 
-        .stats-card .muted-note { font-size: 0.88rem; opacity: 0.95; }
+        .stats-card .muted-note { 
+            font-size: 0.85rem; 
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+
+        .stats-card .badge {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.75rem;
+            border-radius: 20px;
+        }
 
         @media (max-width: 576px) {
-            .stats-card { min-height: 100px; }
-            .stats-card .stats-icon { font-size: 1.9rem; width:44px; height:44px; right:0.5rem; top:0.5rem; }
-            .stats-card .value { font-size: 1.5rem; }
-            .stats-card .label { font-size: 0.9rem; }
+            .stats-card { 
+                min-height: 120px;
+                border-radius: 12px;
+            }
+            
+            .stats-card .stats-icon { 
+                font-size: 2.5rem; 
+                width: 60px; 
+                height: 60px; 
+                right: 0.75rem; 
+                top: 0.75rem; 
+            }
+            
+            .stats-card .value { 
+                font-size: 1.8rem;
+            }
+            
+            .stats-card .label { 
+                font-size: 0.9rem;
+            }
+
+            .stats-card:hover {
+                transform: translateY(-4px);
+            }
         }
     </style>
     <div class="row">
@@ -173,34 +246,41 @@
     <!-- Charts removed per request -->
 
     <!-- Quick User Assignment Widget -->
-    <div class="row mt-4">
-        <div class="col-12 col-md-6">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">👤 User ကို Admin ချိတ်ဆက်ခြင်း</h5>
+    <div class="row mt-5">
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 1.5rem;">
+                    <h5 class="card-title mb-0 text-white" style="font-weight: 700; font-size: 1.1rem;">
+                        <i class="bi bi-person-check me-2"></i>User ကို Admin ချိတ်ဆက်ခြင်း
+                    </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <form id="quickAssignForm">
                         @csrf
-                        <div class="form-group mb-2">
-                            <label for="quick_uid" class="form-label small">User UID (6 digits):</label>
+                        <div class="form-group mb-3">
+                            <label for="quick_uid" class="form-label" style="font-weight: 600; font-size: 0.95rem; color: #495057;">
+                                <i class="bi bi-key me-2" style="color: #667eea;"></i>User UID (6 digits)
+                            </label>
                             <input 
                                 type="text" 
-                                class="form-control form-control-sm" 
+                                class="form-control" 
                                 id="quick_uid" 
                                 name="uid" 
                                 placeholder="ဥပမာ: 342016"
                                 pattern="^\d{6}$"
                                 {{ $currentAdmin->role_id === config('roles.normal_id', 1) ? 'disabled' : '' }}
                                 required
+                                style="border-radius: 10px; border: 1.5px solid #e0e0e0; padding: 0.75rem 1rem; font-size: 0.95rem;"
                             >
-                            <small class="text-muted">User ရဲ့ registration ခြင်းမှ UID</small>
+                            <small class="text-muted d-block mt-2">User ရဲ့ registration ခြင်းမှ UID</small>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label for="quick_admin" class="form-label small">Admin Telegram Username:</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text">@</span>
+                        <div class="form-group mb-4">
+                            <label for="quick_admin" class="form-label" style="font-weight: 600; font-size: 0.95rem; color: #495057;">
+                                <i class="bi bi-telegram me-2" style="color: #667eea;"></i>Admin Telegram Username
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="border-radius: 10px 0 0 10px; border: 1.5px solid #e0e0e0; background-color: #f8f9fa; border-right: none;">@</span>
                                 <input 
                                     type="text" 
                                     class="form-control" 
@@ -209,67 +289,130 @@
                                     placeholder="admin registration မှ username"
                                     {{ $currentAdmin->role_id === config('roles.normal_id', 1) ? 'disabled' : '' }}
                                     required
+                                    style="border-radius: 0 10px 10px 0; border: 1.5px solid #e0e0e0; padding: 0.75rem 1rem; font-size: 0.95rem;"
                                 >
                             </div>
-                            <small class="text-muted">Admin account registration အချိန် သိမ်းဆည်းခဲ့တဲ့ username</small>
+                            <small class="text-muted d-block mt-2">Admin account registration အချိန် သိမ်းဆည်းခဲ့တဲ့ username</small>
                         </div>
 
-                        <button type="submit" class="btn btn-sm btn-primary w-100" {{ $currentAdmin->role_id === config('roles.normal_id', 1) ? 'disabled' : '' }} title="{{ $currentAdmin->role_id === config('roles.normal_id', 1) ? 'Normal role users cannot assign users' : '' }}">
-                            <span id="quickSubmitText">✓ Assign လုပ်ခြင်း</span>
+                        <button type="submit" class="btn w-100" {{ $currentAdmin->role_id === config('roles.normal_id', 1) ? 'disabled' : '' }} 
+                                title="{{ $currentAdmin->role_id === config('roles.normal_id', 1) ? 'Normal role users cannot assign users' : '' }}"
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 10px; padding: 0.85rem 1.5rem; color: white; font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;">
+                            <span id="quickSubmitText">
+                                <i class="bi bi-check-circle me-2"></i>Assign လုပ်ခြင်း
+                            </span>
                             <span id="quickSpinner" class="spinner-border spinner-border-sm ms-2" style="display:none;"></span>
                         </button>
 
-                        <div id="quickResultAlert" style="display:none;" class="alert alert-sm mt-2 mb-0" role="alert"></div>
+                        <div id="quickResultAlert" style="display:none; border-radius: 10px; margin-top: 1rem;" class="alert alert-sm mb-0" role="alert"></div>
                     </form>
                 </div>
             </div>
         </div>
 
         <!-- Assignment Info Card -->
-        <div class="col-12 col-md-6">
-            <div class="card bg-light">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">ℹ️ အသုံးပြုမည့် အချက်များ</h5>
+        <div class="col-12 col-lg-6 mt-4 mt-lg-0">
+            <div class="card border-0 shadow-sm" style="border-radius: 16px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); overflow: hidden;">
+                <div class="card-header border-0" style="background: transparent; padding: 1.5rem;">
+                    <h5 class="card-title mb-0" style="font-weight: 700; font-size: 1.1rem; color: #333;">
+                        <i class="bi bi-info-circle me-2" style="color: #667eea;"></i>အသုံးပြုမည့် အချက်များ
+                    </h5>
                 </div>
-                <div class="card-body small">
-                    <p class="mb-2"><strong>📋 လုပ်ဆောင်မည့် အဆင့်များ:</strong></p>
-                    <ol class="mb-3">
-                        <li>User သည် website သည့်ယ်တွင် register လုပ်ခြင်း</li>
-                        <li>User ရဲ့ UID ကို မှတ်သားခြင်း (success page သည့်ယ်တွင်)</li>
-                        <li>Admin ရဲ့ telegram username ဖြည့်သွင်းခြင်း</li>
-                        <li>"✓ Assign လုပ်ခြင်း" ကို နှိပ်ခြင်း</li>
-                    </ol>
+                <div class="card-body p-4 pt-0" style="color: #495057; font-size: 0.95rem;">
+                    <div class="mb-3">
+                        <p style="font-weight: 600; margin-bottom: 1rem; color: #333;">
+                            <i class="bi bi-list-check me-2" style="color: #667eea;"></i>လုပ်ဆောင်မည့် အဆင့်များ:
+                        </p>
+                        <ol style="padding-left: 1.5rem; color: #555;">
+                            <li class="mb-2">User သည် website သည့်ယ်တွင် register လုပ်ခြင်း</li>
+                            <li class="mb-2">User ရဲ့ UID ကို မှတ်သားခြင်း (success page သည့်ယ်တွင်)</li>
+                            <li class="mb-2">Admin ရဲ့ telegram username ဖြည့်သွင်းခြင်း</li>
+                            <li>ခုခံ "Assign လုပ်ခြင်း" ကို နှိပ်ခြင်း</li>
+                        </ol>
+                    </div>
                     
-                    <p class="mb-2"><strong>✅ ရလဒ်:</strong></p>
-                    <ul class="mb-0">
-                        <li>User သည် အဲ့ဒီ admin ကိုချိတ်ဆက်သည်</li>
-                        <li>Database အပ်ဒေတ်သည်</li>
-                        <li>Success message ပြသည်</li>
-                    </ul>
+                    <div class="mt-4 pt-3" style="border-top: 1px solid rgba(0,0,0,0.1);">
+                        <p style="font-weight: 600; margin-bottom: 1rem; color: #333;">
+                            <i class="bi bi-check-circle me-2" style="color: #43e97b;"></i>ရလဒ်:
+                        </p>
+                        <ul style="padding-left: 1.5rem; color: #555;">
+                            <li class="mb-2">User သည် အဲ့ဒီ admin ကိုချိတ်ဆက်သည်</li>
+                            <li class="mb-2">Database အပ်ဒေတ်သည်</li>
+                            <li>Success message ပြသည်</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Recent Activities -->
-    <div class="row mt-4">
+    <div class="row mt-5">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Recent Activities</h5>
+            <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+                <div class="card-header border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.75rem;">
+                    <h5 class="card-title mb-0 text-white" style="font-weight: 700; font-size: 1.15rem;">
+                        <i class="bi bi-clock-history me-2"></i>Recent Activities
+                    </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <style>
-                        /* Limit the height of the recent activities table and make only the body scrollable */
-                        /* Increase desktop height slightly for more visible rows */
-                        .recent-activities-body { max-height: 560px; overflow-y: auto; }
-                        .recent-activities-body table thead th { position: sticky; top: 0; z-index: 3; background-color: #fff; }
+                        /* Modern activities table styling */
+                        .recent-activities-body { 
+                            max-height: 560px; 
+                            overflow-y: auto;
+                        }
+                        
+                        .recent-activities-body table { 
+                            margin-bottom: 0; 
+                        }
+                        
+                        .recent-activities-body table thead th { 
+                            position: sticky; 
+                            top: 0; 
+                            z-index: 3; 
+                            background-color: #f8f9fa;
+                            border-bottom: 2px solid #e9ecef;
+                            font-weight: 700;
+                            color: #495057;
+                            padding: 1rem 0.75rem;
+                            font-size: 0.9rem;
+                        }
 
-                        /* Mobile: convert table rows into stacked blocks for better readability */
+                        .recent-activities-body table tbody tr {
+                            border-bottom: 1px solid #f0f0f0;
+                            transition: background-color 0.2s ease;
+                        }
+
+                        .recent-activities-body table tbody tr:hover {
+                            background-color: #fafbfc;
+                        }
+
+                        .recent-activities-body table tbody td {
+                            padding: 1rem 0.75rem;
+                            font-size: 0.9rem;
+                            color: #495057;
+                            vertical-align: middle;
+                        }
+
+                        /* Badge styling */
+                        .recent-activities-body .badge {
+                            padding: 0.5rem 0.85rem;
+                            border-radius: 20px;
+                            font-weight: 600;
+                            font-size: 0.8rem;
+                        }
+
+                        /* Mobile responsive */
                         @media (max-width: 576px) {
-                            .recent-activities-body { max-height: calc(100vh - 160px); }
+                            .recent-activities-body { 
+                                max-height: calc(100vh - 160px); 
+                            }
 
-                            .recent-activities-body table thead { display: none; }
+                            .recent-activities-body table thead { 
+                                display: none; 
+                            }
+                            
                             .recent-activities-body table, 
                             .recent-activities-body tbody, 
                             .recent-activities-body tr, 
@@ -278,56 +421,69 @@
                                 width: 100%;
                             }
 
-                            .recent-activities-body tr { margin-bottom: 0.6rem; border: 1px solid #eee; border-radius: 6px; padding: 0.4rem; }
+                            .recent-activities-body tr { 
+                                margin-bottom: 0.75rem; 
+                                border: 1px solid #e9ecef; 
+                                border-radius: 10px; 
+                                padding: 0.5rem; 
+                                background-color: #fafbfc;
+                            }
 
                             .recent-activities-body td {
-                                padding: 0.5rem 0.75rem;
+                                padding: 0.6rem 0.75rem;
                                 border: none;
                                 display: flex;
                                 justify-content: space-between;
                                 align-items: center;
                                 background: transparent;
                                 gap: 0.5rem;
+                                font-size: 0.85rem;
                             }
 
                             .recent-activities-body td[data-label]::before {
                                 content: attr(data-label) ": ";
-                                font-weight: 600;
-                                color: #495057;
+                                font-weight: 700;
+                                color: #333;
                                 margin-right: 0.5rem;
+                                min-width: 80px;
+                                color: #667eea;
                             }
                         }
                     </style>
 
                     <div class="table-responsive recent-activities-body">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Transaction ID</th>
-                                    <th>User</th>
-                                    <th>Type</th>
-                                    <th>Amount</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
+                                    <th style="width: 15%;">Transaction ID</th>
+                                    <th style="width: 18%;">User</th>
+                                    <th style="width: 12%;">Type</th>
+                                    <th style="width: 20%;">Amount</th>
+                                    <th style="width: 15%;">Status</th>
+                                    <th style="width: 20%;">Date</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($recentActivities ?? [] as $act)
                                 <tr>
-                                    <td data-label="Transaction ID">{{ $act->tx_id ?? ($act->type[0] . str_pad($act->id,5,'0',STR_PAD_LEFT)) }}</td>
-                                    <td data-label="User">{{ $act->user?->name ?? $act->user?->email ?? '—' }}</td>
+                                    <td data-label="Transaction ID">
+                                        <code style="background-color: #f0f0f0; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">{{ $act->tx_id ?? ($act->type[0] . str_pad($act->id,5,'0',STR_PAD_LEFT)) }}</code>
+                                    </td>
+                                    <td data-label="User">
+                                        <div style="font-weight: 500; color: #333;">{{ $act->user?->name ?? $act->user?->email ?? '—' }}</div>
+                                    </td>
                                     <td data-label="Type">
                                         @if($act->type === 'deposit')
-                                            Deposit
+                                            <span style="color: #43e97b; font-weight: 600;">📥 Deposit</span>
                                         @elseif($act->type === 'withdrawal')
-                                            Withdrawal
+                                            <span style="color: #f5576c; font-weight: 600;">📤 Withdrawal</span>
                                         @else
-                                            Trade
+                                            <span style="color: #4facfe; font-weight: 600;">📊 Trade</span>
                                         @endif
                                     </td>
                                     <td data-label="Amount">
                                         @if($act->amount !== null)
-                                            {{ rtrim(rtrim(number_format($act->amount, 8, '.', ''), '0'), '.') }} {{ strtoupper($act->coin ?? '') }}
+                                            <span style="font-weight: 600; color: #1f4068;">{{ rtrim(rtrim(number_format($act->amount, 8, '.', ''), '0'), '.') }} <span style="color: #667eea;">{{ strtoupper($act->coin ?? '') }}</span></span>
                                         @else
                                             —
                                         @endif
@@ -337,20 +493,25 @@
                                             $status = strtolower((string)($act->status ?? ''));
                                         @endphp
                                         @if(str_contains($status, 'comp') || $status === 'completed')
-                                            <span class="badge bg-success">{{ $act->status }}</span>
+                                            <span class="badge bg-success" style="box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);">✓ {{ $act->status }}</span>
                                         @elseif(str_contains($status, 'pend') || $status === 'pending' || $status === 'open')
-                                            <span class="badge bg-warning">{{ $act->status }}</span>
+                                            <span class="badge bg-warning text-dark" style="box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);">⏱ {{ $act->status }}</span>
                                         @elseif(str_contains($status, 'fail') || $status === 'failed')
-                                            <span class="badge bg-danger">{{ $act->status }}</span>
+                                            <span class="badge bg-danger" style="box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);">✗ {{ $act->status }}</span>
                                         @else
                                             <span class="badge bg-secondary">{{ $act->status }}</span>
                                         @endif
                                     </td>
-                                    <td data-label="Date">{{ optional($act->created_at)->format('Y-m-d H:i') }}</td>
+                                    <td data-label="Date">
+                                        <small class="text-muted">{{ optional($act->created_at)->format('Y-m-d H:i') }}</small>
+                                    </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted">No recent activities found.</td>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
+                                        <div class="mt-2">No recent activities found.</div>
+                                    </td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -359,16 +520,16 @@
 
                     {{-- Pagination centered below table --}}
                     @php $raPage = (int) request('page', 1); @endphp
-                    <div class="d-flex flex-column align-items-center mt-4">
+                    <div class="d-flex flex-column align-items-center mt-4 pb-4">
                         <nav aria-label="Recent activities pagination">
-                            <ul class="pagination mb-2">
+                            <ul class="pagination mb-2" style="gap: 0.35rem;">
                                 <li class="page-item {{ $raPage <= 1 ? 'disabled' : '' }}">
-                                    <a class="page-link" href="{{ request()->fullUrlWithQuery(['page' => max(1, $raPage - 1)]) }}">« Previous</a>
+                                    <a class="page-link" href="{{ request()->fullUrlWithQuery(['page' => max(1, $raPage - 1)]) }}" style="border-radius: 8px;">« Previous</a>
                                 </li>
-                                <li class="page-item {{ $raPage == 1 ? 'active' : '' }}"><a class="page-link" href="{{ request()->fullUrlWithQuery(['page' => 1]) }}">1</a></li>
-                                <li class="page-item {{ $raPage == 2 ? 'active' : '' }}"><a class="page-link" href="{{ request()->fullUrlWithQuery(['page' => 2]) }}">2</a></li>
+                                <li class="page-item {{ $raPage == 1 ? 'active' : '' }}"><a class="page-link" href="{{ request()->fullUrlWithQuery(['page' => 1]) }}" style="border-radius: 8px;">1</a></li>
+                                <li class="page-item {{ $raPage == 2 ? 'active' : '' }}"><a class="page-link" href="{{ request()->fullUrlWithQuery(['page' => 2]) }}" style="border-radius: 8px;">2</a></li>
                                 <li class="page-item">
-                                    <a class="page-link" href="{{ request()->fullUrlWithQuery(['page' => min(2, $raPage + 1)]) }}">Next »</a>
+                                    <a class="page-link" href="{{ request()->fullUrlWithQuery(['page' => min(2, $raPage + 1)]) }}" style="border-radius: 8px;">Next »</a>
                                 </li>
                             </ul>
                         </nav>
@@ -379,53 +540,177 @@
     </div>
 
     <!-- Recent Plan Inquiries -->
-    <div class="row mt-4">
+    <div class="row mt-5">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Recent Plan Inquiries</h5>
+            <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+                <div class="card-header border-0" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); padding: 1.75rem;">
+                    <h5 class="card-title mb-0 text-white" style="font-weight: 700; font-size: 1.15rem;">
+                        <i class="bi bi-bag-check-fill me-2"></i>Recent Plan Inquiries
+                    </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     @if(isset($recentPlanInquiries) && $recentPlanInquiries->count())
                         <div class="table-responsive">
-                            <table class="table table-hover table-sm align-middle">
+                            <style>
+                                .plan-inquiries-table {
+                                    margin-bottom: 0;
+                                }
+                                
+                                .plan-inquiries-table thead th {
+                                    background-color: #f8f9fa;
+                                    border-bottom: 2px solid #e9ecef;
+                                    font-weight: 700;
+                                    color: #495057;
+                                    padding: 1rem 0.75rem;
+                                    font-size: 0.9rem;
+                                }
+                                
+                                .plan-inquiries-table tbody tr {
+                                    border-bottom: 1px solid #f0f0f0;
+                                    transition: background-color 0.2s ease;
+                                }
+                                
+                                .plan-inquiries-table tbody tr:hover {
+                                    background-color: #fafbfc;
+                                }
+                                
+                                .plan-inquiries-table tbody td {
+                                    padding: 1rem 0.75rem;
+                                    font-size: 0.9rem;
+                                    color: #495057;
+                                    vertical-align: middle;
+                                }
+                                
+                                .plan-inquiries-table .screenshot-container {
+                                    display: flex;
+                                    gap: 0.5rem;
+                                    flex-wrap: wrap;
+                                }
+                                
+                                .plan-inquiries-table .screenshot-thumb {
+                                    border-radius: 8px;
+                                    overflow: hidden;
+                                    border: 1px solid #e9ecef;
+                                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                                }
+                                
+                                .plan-inquiries-table .screenshot-thumb:hover {
+                                    transform: scale(1.05);
+                                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                                }
+                                
+                                .plan-inquiries-table .screenshot-thumb img {
+                                    max-height: 45px;
+                                    max-width: 80px;
+                                    object-fit: cover;
+                                    display: block;
+                                }
+                            </style>
+                            
+                            <table class="table table-hover plan-inquiries-table">
                                 <thead>
                                     <tr>
-                                        <th>Created</th>
-                                        <th>Admin</th>
-                                        <th>Plan</th>
-                                        <th>Price</th>
-                                        <th>Method</th>
-                                        <th>Screenshots</th>
+                                        <th style="width: 15%;">Created</th>
+                                        <th style="width: 15%;">Admin</th>
+                                        <th style="width: 15%;">Plan</th>
+                                        <th style="width: 18%;">Price</th>
+                                        <th style="width: 15%;">Method</th>
+                                        <th style="width: 22%;">Screenshots</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($recentPlanInquiries as $p)
                                         <tr>
-                                            <td data-label="Created">{{ $p->created_at->format('Y-m-d H:i') }}</td>
-                                            <td data-label="Admin">{{ $p->admin?->name ?? 'N/A' }}</td>
-                                            <td data-label="Plan">{{ $p->plan_name }}</td>
-                                            <td data-label="Price">{{ $p->plan_price }}</td>
-                                            <td data-label="Method">{{ $p->payment_method ?? '-' }}</td>
+                                            <td data-label="Created">
+                                                <small class="text-muted">{{ $p->created_at->format('Y-m-d H:i') }}</small>
+                                            </td>
+                                            <td data-label="Admin">
+                                                <span style="font-weight: 600; color: #333;">{{ $p->admin?->name ?? 'N/A' }}</span>
+                                            </td>
+                                            <td data-label="Plan">
+                                                <span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.5rem 0.85rem;">{{ $p->plan_name }}</span>
+                                            </td>
+                                            <td data-label="Price">
+                                                <span style="font-weight: 700; color: #43e97b;">{{ $p->plan_price }}</span>
+                                            </td>
+                                            <td data-label="Method">
+                                                @if($p->payment_method)
+                                                    @if($p->payment_method === 'crypto')
+                                                        <span class="badge bg-info" style="box-shadow: 0 2px 8px rgba(79, 172, 254, 0.2); padding: 0.5rem 0.85rem;">🪙 Crypto</span>
+                                                    @elseif($p->payment_method === 'mobile_money')
+                                                        <span class="badge bg-warning text-dark" style="box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2); padding: 0.5rem 0.85rem;">📱 Mobile</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">{{ ucfirst($p->payment_method) }}</span>
+                                                    @endif
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
                                             <td data-label="Screenshots">
-                                                @if($p->crypto_screenshot)
-                                                    <a href="{{ asset('storage/' . $p->crypto_screenshot) }}" target="_blank">
-                                                        <img src="{{ asset('storage/' . $p->crypto_screenshot) }}" style="max-height:40px; max-width:80px; object-fit:cover; border-radius:4px;" />
-                                                    </a>
-                                                @endif
-                                                @if($p->mobile_screenshot)
-                                                    <a href="{{ asset('storage/' . $p->mobile_screenshot) }}" target="_blank" class="ms-2">
-                                                        <img src="{{ asset('storage/' . $p->mobile_screenshot) }}" style="max-height:40px; max-width:80px; object-fit:cover; border-radius:4px;" />
-                                                    </a>
-                                                @endif
+                                                <div class="screenshot-container">
+                                                    @if($p->crypto_screenshot)
+                                                        <a href="{{ asset('storage/' . $p->crypto_screenshot) }}" target="_blank" class="screenshot-thumb">
+                                                            <img src="{{ asset('storage/' . $p->crypto_screenshot) }}" title="Crypto Payment" />
+                                                        </a>
+                                                    @endif
+                                                    @if($p->mobile_screenshot)
+                                                        <a href="{{ asset('storage/' . $p->mobile_screenshot) }}" target="_blank" class="screenshot-thumb">
+                                                            <img src="{{ asset('storage/' . $p->mobile_screenshot) }}" title="Mobile Payment" />
+                                                        </a>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
+                        <!-- Pagination -->
+                        <div class="mt-4 d-flex justify-content-center">
+                            <nav aria-label="Recent plan inquiries pagination">
+                                <ul class="pagination mb-0" style="gap: 0.35rem;">
+                                    {{-- Previous Button --}}
+                                    @if ($recentPlanInquiries->onFirstPage())
+                                        <li class="page-item disabled">
+                                            <span class="page-link" style="border-radius: 8px;">« Previous</span>
+                                        </li>
+                                    @else
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $recentPlanInquiries->previousPageUrl() }}" style="border-radius: 8px;">« Previous</a>
+                                        </li>
+                                    @endif
+
+                                    {{-- Page Numbers --}}
+                                    @foreach ($recentPlanInquiries->getUrlRange(1, $recentPlanInquiries->lastPage()) as $page => $url)
+                                        @if ($page == $recentPlanInquiries->currentPage())
+                                            <li class="page-item active">
+                                                <span class="page-link" style="border-radius: 8px;">{{ $page }}</span>
+                                            </li>
+                                        @else
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $url }}" style="border-radius: 8px;">{{ $page }}</a>
+                                            </li>
+                                        @endif
+                                    @endforeach
+
+                                    {{-- Next Button --}}
+                                    @if ($recentPlanInquiries->hasMorePages())
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $recentPlanInquiries->nextPageUrl() }}" style="border-radius: 8px;">Next »</a>
+                                        </li>
+                                    @else
+                                        <li class="page-item disabled">
+                                            <span class="page-link" style="border-radius: 8px;">Next »</span>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </nav>
+                        </div>
                     @else
-                        <div class="text-muted">No recent plan inquiries.</div>
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.4; color: #999;"></i>
+                            <div class="mt-3 text-muted" style="font-size: 0.95rem;">No recent plan inquiries.</div>
+                        </div>
                     @endif
                 </div>
             </div>

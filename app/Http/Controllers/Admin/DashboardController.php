@@ -97,12 +97,12 @@ class DashboardController extends Controller
         $aiArbCount = (clone $aiArbBase)->count();
         $aiArbNew = (clone $aiArbBase)->where('p.created_at', '>=', now()->subDay())->count();
 
-        // Plan inquiries (recent)
+        // Plan inquiries (recent) - with pagination
         $planPricesQuery = PlanPrice::with('admin')->latest();
         if ($admin && method_exists($admin, 'isSuperAdmin') && !$admin->isSuperAdmin()) {
             $planPricesQuery->where('admin_id', $admin->id);
         }
-        $recentPlanInquiries = $planPricesQuery->limit(10)->get();
+        $recentPlanInquiries = $planPricesQuery->paginate(10);
 
         return view('admin.dashboard', [
                         'recentPlanInquiries' => $recentPlanInquiries,

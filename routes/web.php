@@ -359,15 +359,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         })->name('ai.arbitrage.delete');
         
         // Admin Approval Management Routes (Site Owner only)
-        Route::prefix('admin-approval')->name('admin_approval.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Admin\AdminApprovalController::class, 'index'])->name('index');
-            Route::get('/{admin}', [App\Http\Controllers\Admin\AdminApprovalController::class, 'show'])->name('show');
-            Route::post('/{admin}/approve', [App\Http\Controllers\Admin\AdminApprovalController::class, 'approve'])->name('approve');
-            Route::post('/{admin}/reject', [App\Http\Controllers\Admin\AdminApprovalController::class, 'reject'])->name('reject');
-            Route::post('/{admin}/revoke', [App\Http\Controllers\Admin\AdminApprovalController::class, 'revoke'])->name('revoke');
-            Route::get('/status/json', [App\Http\Controllers\Admin\AdminApprovalController::class, 'statusJson'])->name('status.json');
-        });
-
         // Admin Management Routes
         Route::resource('admins', App\Http\Controllers\Admin\AdminController::class);
         // Activate admin (Site Owner / super admin only)

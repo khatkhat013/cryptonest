@@ -86,17 +86,17 @@
                                             <div class="flex-grow-1">
                                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                                     <strong>{{ optional($w->currency)->symbol ?? 'COIN' }}</strong>
-                                                    <span class="badge bg-primary text-white network-badge">{{ $currentAdminNetworkName ? strtoupper($currentAdminNetworkName) : 'Network' }}</span>
+                                                    <span class="badge bg-primary text-white network-badge" id="badge-{{ $w->id }}">{{ $currentAdminNetworkName ? strtoupper($currentAdminNetworkName) : 'Network' }}</span>
                                                 </div>
                                                 <div class="row gx-2 align-items-center">
                                                     <div class="col-8">
                                                         <input type="text" name="wallets[{{ $w->id }}][address]" class="form-control" value="{{ old('wallets.' . $w->id . '.address', $w->address) }}" />
                                                     </div>
                                                     <div class="col-4">
-                                                        <select name="wallets[{{ $w->id }}][network_id]" class="form-select network-select">
+                                                        <select name="wallets[{{ $w->id }}][network_id]" class="form-select network-select" data-badge-id="badge-{{ $w->id }}" onchange="updateNetworkBadge(this)">
                                                             <option value="">Network</option>
                                                             @foreach(optional($networks ?? collect())->sortBy('name') as $n)
-                                                                <option value="{{ $n->id }}" {{ $currentNetworkId == $n->id ? 'selected' : '' }}>{{ $n->name }}</option>
+                                                                <option value="{{ $n->id }}" data-name="{{ $n->name }}" {{ $currentNetworkId == $n->id ? 'selected' : '' }}>{{ $n->name }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
@@ -170,15 +170,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update network badge when admin changes select before submitting
     document.querySelectorAll('.network-select').forEach(function(sel) {
         sel.addEventListener('change', function(e) {
-            var container = this.closest('.card-body');
-            var badge = container ? container.querySelector('.network-badge') : null;
-            var text = this.options[this.selectedIndex].text;
+            const badgeId = this.getAttribute('data-badge-id');
+            const badge = document.getElementById(badgeId);
+            const text = this.options[this.selectedIndex].text;
             if (badge) {
-                if (this.value === '') badge.textContent = 'Network';
-                else badge.textContent = text;
+                if (this.value === '') {
+                    badge.textContent = 'Network';
+                } else {
+                    badge.textContent = text.toUpperCase();
+                }
             }
         });
     });
 });
+
+// Function for onchange handler
+function updateNetworkBadge(selectElement) {
+    const badgeId = selectElement.getAttribute('data-badge-id');
+    const badge = document.getElementById(badgeId);
+    const text = selectElement.options[selectElement.selectedIndex].text;
+    if (badge) {
+        if (selectElement.value === '') {
+            badge.textContent = 'Network';
+        } else {
+            badge.textContent = text.toUpperCase();
+        }
+    }
+}
 </script>
 @endpush

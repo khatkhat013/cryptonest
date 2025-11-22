@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ config('app.name') }} - Admin Dashboard</title>
     
+    <!-- Favicon / Site icon -->
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/cryptonest.jpg') }}?v=2">
+    <link rel="shortcut icon" href="{{ asset('images/cryptonest.jpg') }}?v=2">
+    <link rel="apple-touch-icon" href="{{ asset('images/cryptonest.jpg') }}?v=2">
+    <meta name="theme-color" content="#f59e0b">
+    
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -293,8 +299,8 @@
     <div class="admin-sidebar">
         <div class="brand-section">
             <a href="{{ route('admin.dashboard') }}" class="brand-logo">
-                <i class="bi bi-currency-bitcoin"></i>
-                <span>CryptoNest</span>
+                <img src="{{ asset('images/cryptonest.jpg') }}" alt="Crypto Nest" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                <span>Crypto Nest</span>
             </a>
         </div>
 
@@ -365,12 +371,12 @@
 
     <!-- Mobile Topbar -->
     <header class="admin-topbar">
-        <div class="topbar-inner">
-            <a href="{{ route('admin.dashboard') }}" class="logo-icon">
-                <i class="bi bi-currency-bitcoin"></i>
+        <div class="topbar-inner" style="justify-content: center;">
+            <a href="{{ route('admin.dashboard') }}" class="logo-icon" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
+                <img src="{{ asset('images/cryptonest.jpg') }}" alt="Crypto Nest" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;">
+                <span class="topbar-title" style="margin: 0;">Crypto Nest</span>
             </a>
-            <span class="topbar-title">CryptoNest</span>
-            <button class="navbar-toggler" type="button" aria-label="Toggle navigation" aria-controls="admin-sidebar">
+            <button class="navbar-toggler" type="button" aria-label="Toggle navigation" aria-controls="admin-sidebar" style="position: absolute; right: 10px;">
                 <i class="bi bi-list"></i>
             </button>
         </div>
