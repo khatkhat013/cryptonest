@@ -9,7 +9,9 @@ class StoreWithdrawalRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        $isAuthorized = $this->user() !== null;
+        \Log::info('StoreWithdrawalRequest authorize', ['authorized' => $isAuthorized, 'user_id' => $this->user()->id ?? null]);
+        return $isAuthorized;
     }
 
     public function rules(): array
@@ -21,8 +23,8 @@ class StoreWithdrawalRequest extends FormRequest
             'destination_address' => [
                 'required',
                 'string',
+                'min:3',
                 'max:255',
-                'regex:/^[a-zA-Z0-9\-_.~:@\/]{10,255}$/', // Allow crypto address formats
             ],
             'amount' => 'required|numeric|min:0.00000001|max:999999999.99999999',
             'coin' => [
@@ -50,10 +52,18 @@ class StoreWithdrawalRequest extends FormRequest
 
     protected function prepareForValidation()
     {
+        \Log::info('StoreWithdrawalRequest prepareForValidation', [
+            'raw_input' => $this->all()
+        ]);
+        
         // Trim and sanitize inputs
         $this->merge([
             'destination_address' => trim($this->destination_address),
             'coin' => strtolower(trim($this->coin)),
+        ]);
+        
+        \Log::info('After merge/prepare', [
+            'prepared_input' => $this->all()
         ]);
     }
 }

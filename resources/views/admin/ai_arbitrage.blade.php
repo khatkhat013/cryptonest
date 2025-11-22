@@ -93,11 +93,11 @@
                         @endphp
                         <td>{{ $startedFormatted }}</td>
                         <td class="d-flex gap-2">
-                            <a href="{{ url('/admin/ai-arbitrage/' . $p->id . '/edit') }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a href="{{ url('/admin/ai-arbitrage/' . $p->id . '/edit') }}" class="btn btn-sm btn-primary">Edit</a>
                             <form method="POST" action="{{ url('/admin/ai-arbitrage/' . $p->id) }}" onsubmit="return confirm('Delete this plan?');">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                <button class="btn btn-sm btn-danger" type="submit">Delete</button>
                             </form>
                         </td>
                     </tr>
@@ -148,5 +148,28 @@
         {{-- Result count intentionally removed --}}
     </div>
 </div>
+<style>
+    /* Pagination styling tuned for dark admin theme while keeping Bootstrap conventions */
+    .pagination { margin: 0; display:flex; gap:6px; }
+    .pagination .page-link {
+        color: #4ea1ff;
+        border: 1px solid rgba(255,255,255,0.06);
+        background: rgba(0,0,0,0.35);
+        padding: 0.35rem 0.6rem;
+        border-radius: 6px;
+        min-width: 38px;
+        text-align: center;
+    }
+    .pagination .page-link:hover { background: rgba(255,255,255,0.04); color: #a8dbff; }
+    .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; color: #fff; }
+    .pagination .page-item.disabled .page-link { color: #6c757d; background: rgba(0,0,0,0.25); border-color: rgba(255,255,255,0.03); pointer-events: none; }
+    .pagination .page-item.disabled .page-link span { opacity: 0.8; }
+    
+    /* Make sure the pager doesn't create oversized clickable areas */
+    .pagination .page-link { line-height: 1.2; }
+
+    .text-muted.small { color: #b9c2c9; }
+</style>
 {{-- View modal and scripts removed per request --}}
 @endsection
+

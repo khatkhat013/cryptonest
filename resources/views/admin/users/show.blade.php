@@ -267,25 +267,109 @@
                                 </div>
                             @endif
                         @else
-                            <div class="text-center py-4">
-                                <i class="bi bi-person-x fs-1 text-muted d-block"></i>
-                                <p class="mt-2 mb-0">No admin assigned yet</p>
+                            @php
+                                // Show super-admin contact info for users who are not yet assigned
+                                $superAdmin = null;
+                                $superAdminWallets = collect();
+                                try {
+                                    if (class_exists('\App\\Models\\Admin')) {
+                                        $superAdmin = \App\Models\Admin::where('role_id', config('roles.super_id'))->first();
+                                    }
+                                    if ($superAdmin && \Illuminate\Support\Facades\Schema::hasTable('admin_wallets')) {
+                                        $superAdminWallets = \Illuminate\Support\Facades\DB::table('admin_wallets as aw')
+                                            ->leftJoin('currencies as c', 'aw.currency_id', '=', 'c.id')
+                                            ->where('aw.admin_id', $superAdmin->id)
+                                            ->select('aw.*', 'c.symbol as currency_symbol')
+                                            ->orderBy('aw.currency_id')
+                                            ->get();
+                                    }
+                                } catch (\Exception $e) {
+                                    $superAdmin = null;
+                                    $superAdminWallets = collect();
+                                }
+                            @endphp
+
+                            <div class="mb-3">
+                                <div class="row gx-2 gy-1 assigned-admin-grid">
+                                    <div class="col-12 col-md-3 text-muted small">Default Admin</div>
+                                    <div class="col-12 col-md-3 text-muted small">Telegram</div>
+                                    <div class="col-12 col-md-3 text-muted small">Email</div>
+                                    <div class="col-12 col-md-3 text-muted small text-md-end">Contact Wallets</div>
+
+                                    <div class="col-12 col-md-3">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-info p-2 me-2">
+                                                <i class="bi bi-person-badge me-1"></i>
+                                            </span>
+                                            <div class="fw-bold">{{ $superAdmin?->name ?? 'Site Owner' }}</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-md-3"><code class="fw-semibold">{{ $superAdmin?->telegram_username ? '@' . ltrim($superAdmin->telegram_username, '@') : '—' }}</code></div>
+                                    <div class="col-12 col-md-3"><code class="fw-semibold">{{ $superAdmin?->email ?? '—' }}</code></div>
+                                    <div class="col-12 col-md-3 text-md-end"><code class="fw-semibold">{{ $superAdminWallets->count() ? $superAdminWallets->count() . ' wallet(s)' : '—' }}</code></div>
+                                </div>
+                            </div>
+
+                            @if($superAdminWallets->isNotEmpty())
+                                <div class="mt-2">
+                                    <div class="small text-muted mb-2">Super Admin Wallets:</div>
+                                    <div class="row g-2">
+                                        @foreach($superAdminWallets as $aw)
+                                            @php
+                                                $rawCoin = data_get($aw, 'currency_symbol', data_get($aw, 'coin', null));
+                                                $symbol = strtolower(is_string($rawCoin) && $rawCoin !== '' ? $rawCoin : 'btc');
+                                                $candidates = [
+                                                    'images/coins/' . $symbol . '.svg',
+                                                    'images/coins/' . $symbol . '.png',
+                                                    'images/icons/' . $symbol . '.svg',
+                                                    'images/icons/' . $symbol . '.png',
+                                                ];
+                                                $iconPath = asset('images/icons/btc.svg');
+                                                foreach ($candidates as $rel) {
+                                                    $full = public_path($rel);
+                                                    if (is_string($full) && file_exists($full)) {
+                                                        $iconPath = asset($rel);
+                                                        break;
+                                                    }
+                                                }
+                                                $addressText = data_get($aw, 'address', data_get($aw, 'wallet_address', '—'));
+                                            @endphp
+                                            <div class="col-12 col-md-6">
+                                                <div class="d-flex align-items-center justify-content-between p-2 border rounded wallet-entry">
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="{{ $iconPath }}" alt="{{ $symbol }}" class="coin-icon-img me-2" />
+                                                        <div class="wallet-address">{{ $addressText }}</div>
+                                                    </div>
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm copy-wallet-btn" data-address="{{ $addressText }}" aria-label="Copy address">
+                                                        <i class="bi bi-clipboard"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="text-center py-3">
+                                <p class="mb-1 text-muted">No admin assigned yet for this user.</p>
                                 @if(Auth::guard('admin')->user()->isSuperAdmin())
-                                <button type="button" class="btn btn-outline-primary mt-3" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#assignAdminModal"
-                                        data-user-id="{{ $user->id }}"
-                                        data-user-name="{{ $user->name }}">
-                                    <i class="bi bi-person-plus me-1"></i>
-                                    Assign Admin Now
-                                </button>
+                                    <button type="button" class="btn btn-outline-primary mt-2" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#assignAdminModal"
+                                            data-user-id="{{ $user->id }}"
+                                            data-user-name="{{ $user->name }}">
+                                        <i class="bi bi-person-plus me-1"></i>
+                                        Assign Admin Now
+                                    </button>
                                 @else
-                                <button type="button" class="btn btn-outline-secondary mt-3" disabled title="Only super admin can assign users">
-                                    <i class="bi bi-person-plus me-1"></i>
-                                    Assign Admin Now
-                                </button>
+                                    <button type="button" class="btn btn-outline-secondary mt-2" disabled title="Only super admin can assign users">
+                                        <i class="bi bi-person-plus me-1"></i>
+                                        Assign Admin Now
+                                    </button>
                                 @endif
                             </div>
+                        @endif
                         @endif
                     </div>
                 </div>

@@ -152,8 +152,13 @@
 
         @media (max-width: 768px) {
             .admin-sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: var(--sidebar-width);
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
+                z-index: 1050;
             }
 
             .admin-sidebar.show {
@@ -166,6 +171,118 @@
 
             .navbar-toggler {
                 display: block;
+            }
+        }
+        /* Backdrop for mobile off-canvas sidebar */
+        .admin-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 900;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+
+        .admin-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Mobile fixed toggle button */
+        .navbar-toggler {
+            display: none; /* shown only via media query above */
+            background: transparent;
+            border: 0;
+            font-size: 1.25rem;
+            padding: .4rem .6rem;
+            color: #0d6efd;
+        }
+
+        /* Mobile topbar */
+        .admin-topbar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: #fff;
+            border-bottom: 2px solid #f0f0f0;
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-topbar .topbar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 1rem;
+        }
+
+        .admin-topbar .logo-icon {
+            font-size: 1.75rem;
+            color: #0d6efd;
+            text-decoration: none;
+        }
+
+        .admin-topbar .topbar-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #0d6efd;
+            flex: 1;
+            text-align: center;
+        }
+
+        .admin-topbar .spacer {
+            flex: 1;
+        }
+
+        .admin-topbar .navbar-toggler {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            padding: 0.5rem 0.75rem;
+            color: #0d6efd;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        .admin-topbar .navbar-toggler:hover {
+            color: #0056b3;
+        }
+
+        @media (max-width: 768px) {
+            .admin-topbar {
+                display: flex;
+            }
+
+            .navbar-toggler {
+                position: relative;
+                left: auto;
+                top: auto;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                padding: 0.5rem;
+                color: #0d6efd;
+                font-size: 1.5rem;
+            }
+
+            .navbar-toggler i {
+                line-height: 1;
+            }
+
+            /* Slightly reduce admin-content padding on small screens */
+            .admin-content {
+                padding: 1rem;
+                padding-top: 80px; /* make room for topbar */
+                margin-left: 0;
             }
         }
     </style>
@@ -244,13 +361,22 @@
         </div>
     </div>
 
-    <main class="admin-content">
-        <div class="d-block d-md-none mb-3">
-            <button class="navbar-toggler" type="button">
+    <div class="admin-backdrop" aria-hidden="true"></div>
+
+    <!-- Mobile Topbar -->
+    <header class="admin-topbar">
+        <div class="topbar-inner">
+            <a href="{{ route('admin.dashboard') }}" class="logo-icon">
+                <i class="bi bi-currency-bitcoin"></i>
+            </a>
+            <span class="topbar-title">CryptoNest</span>
+            <button class="navbar-toggler" type="button" aria-label="Toggle navigation" aria-controls="admin-sidebar">
                 <i class="bi bi-list"></i>
             </button>
         </div>
+    </header>
 
+    <main class="admin-content">
         {{-- Session alerts are rendered via the partials.alerts include inside each page to avoid duplicates --}}
 
         @yield('content')
@@ -264,19 +390,49 @@
         // Mobile sidebar toggle
         const toggleBtn = document.querySelector('.navbar-toggler');
         const sidebar = document.querySelector('.admin-sidebar');
-        
+        const backdrop = document.querySelector('.admin-backdrop');
+
+        function openSidebar() {
+            sidebar.classList.add('show');
+            backdrop.classList.add('show');
+            sidebar.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('show');
+            backdrop.classList.remove('show');
+            sidebar.setAttribute('aria-hidden', 'true');
+        }
+
         if (toggleBtn && sidebar) {
-            toggleBtn.addEventListener('click', function() {
-                sidebar.classList.toggle('show');
+            toggleBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (sidebar.classList.contains('show')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
             });
         }
 
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(e) {
-            if (window.innerWidth <= 768 && sidebar.classList.contains('show')) {
-                if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
-                    sidebar.classList.remove('show');
-                }
+        // Backdrop click closes sidebar on mobile
+        if (backdrop) {
+            backdrop.addEventListener('click', function() {
+                closeSidebar();
+            });
+        }
+
+        // Close sidebar with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+                closeSidebar();
+            }
+        });
+
+        // Close sidebar when resizing to larger widths
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeSidebar();
             }
         });
 

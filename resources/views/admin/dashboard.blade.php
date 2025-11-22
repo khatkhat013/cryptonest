@@ -56,67 +56,115 @@
     @endif
 
     <!-- Statistics Cards -->
+    <style>
+        /* Enhanced stats card visuals */
+        .stats-card {
+            position: relative;
+            color: #fff !important;
+            overflow: hidden;
+            border: 0;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(16,24,40,0.06);
+            min-height: 120px;
+        }
+
+        .stats-card .card-body { padding: 1.25rem; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+        /* Circular faint icon background in the corner */
+        .stats-card .stats-icon {
+            position: absolute;
+            right: 0.75rem;
+            top: 0.75rem;
+            opacity: 0.14;
+            font-size: 2.8rem;
+            transform: rotate(-12deg);
+            width: 56px;
+            height: 56px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border-radius:50%;
+            background: rgba(255,255,255,0.06);
+        }
+
+        .stats-card .label { font-size: 0.95rem; opacity: 0.98; margin-bottom: 0.35rem; }
+        .stats-card .value { font-size: 1.9rem; font-weight: 700; margin-bottom: 0.35rem; }
+
+        .stats-card.bg-primary { background: linear-gradient(135deg,#2563eb,#114b9b); }
+        .stats-card.bg-success { background: linear-gradient(135deg,#16a34a,#117a3d); }
+        .stats-card.bg-warning { background: linear-gradient(135deg,#f59e0b,#d97706); }
+        .stats-card.bg-info { background: linear-gradient(135deg,#06b6d4,#0e7490); }
+
+        .stats-card .muted-note { font-size: 0.88rem; opacity: 0.95; }
+
+        @media (max-width: 576px) {
+            .stats-card { min-height: 100px; }
+            .stats-card .stats-icon { font-size: 1.9rem; width:44px; height:44px; right:0.5rem; top:0.5rem; }
+            .stats-card .value { font-size: 1.5rem; }
+            .stats-card .label { font-size: 0.9rem; }
+        }
+    </style>
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <a href="/admin/deposits" class="text-white" style="text-decoration:none;">
             <div class="card stats-card bg-primary text-white">
                 <div class="card-body text-center">
-                    <h5 class="card-title mb-0">Deposits</h5>
-                    <h2 class="mt-2 mb-0">{{ number_format($depositsCount ?? 0) }}</h2>
+                    <div class="stats-icon"><i class="bi bi-arrow-down-circle-fill"></i></div>
+                    <div class="label">Deposits</div>
+                    <div class="value">{{ number_format($depositsCount ?? 0) }}</div>
                     @if(isset($depositsNew) && $depositsNew > 0)
-                        <div class="mt-1"><span class="badge rounded-pill bg-light text-dark">New {{ $depositsNew }}</span></div>
+                        <div class="mt-1"><span class="badge rounded-pill bg-white text-dark">New {{ $depositsNew }}</span></div>
+                    @else
+                        <div class="muted-note mt-1">No new deposits</div>
                     @endif
-                    <div class="mt-2">
-                        <i class="fas fa-download fa-2x"></i>
-                    </div>
                 </div>
             </div>
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <a href="/admin/withdraws" class="text-white" style="text-decoration:none;">
             <div class="card stats-card bg-success text-white">
                 <div class="card-body text-center">
-                    <h5 class="card-title mb-0">Withdraw</h5>
-                    <h2 class="mt-2 mb-0">{{ number_format($withdrawalsCount ?? 0) }}</h2>
+                    <div class="stats-icon"><i class="bi bi-wallet2"></i></div>
+                    <div class="label">Withdrawals</div>
+                    <div class="value">{{ number_format($withdrawalsCount ?? 0) }}</div>
                     @if(isset($withdrawalsNew) && $withdrawalsNew > 0)
-                        <div class="mt-1"><span class="badge rounded-pill bg-light text-dark">New {{ $withdrawalsNew }}</span></div>
+                        <div class="mt-1"><span class="badge rounded-pill bg-white text-dark">New {{ $withdrawalsNew }}</span></div>
+                    @else
+                        <div class="muted-note mt-1">No new withdrawals</div>
                     @endif
-                    <div class="mt-2">
-                        <i class="fas fa-arrow-circle-down fa-2x"></i>
-                    </div>
                 </div>
             </div>
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3 mt-1">
             <a href="/admin/trading" class="text-white" style="text-decoration:none;">
             <div class="card stats-card bg-warning text-white">
                 <div class="card-body text-center">
-                    <h5 class="card-title mb-0">Trading</h5>
-                    <h2 class="mt-2 mb-0">{{ number_format($tradesCount ?? 0) }}</h2>
+                    <div class="stats-icon"><i class="bi bi-graph-up"></i></div>
+                    <div class="label">Trading</div>
+                    <div class="value">{{ number_format($tradesCount ?? 0) }}</div>
                     @if(isset($tradesNew) && $tradesNew > 0)
-                        <div class="mt-1"><span class="badge rounded-pill bg-light text-dark">New {{ $tradesNew }}</span></div>
+                        <div class="mt-1"><span class="badge rounded-pill bg-white text-dark">New {{ $tradesNew }}</span></div>
+                    @else
+                        <div class="muted-note mt-1">No new trades</div>
                     @endif
-                    <div class="mt-2">
-                        <i class="fas fa-chart-line fa-2x"></i>
-                    </div>
                 </div>
             </div>
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3 mt-1">
             <a href="/admin/ai-arbitrage" class="text-white" style="text-decoration:none;">
             <div class="card stats-card bg-info text-white">
                 <div class="card-body text-center">
-                    <h5 class="card-title mb-0">AI Arbitrage</h5>
-                    <h2 class="mt-2 mb-0">{{ number_format($aiArbCount ?? 0) }}</h2>
+                    <div class="stats-icon"><i class="bi bi-robot"></i></div>
+                    <div class="label">AI Arbitrage</div>
+                    <div class="value">{{ number_format($aiArbCount ?? 0) }}</div>
                     @if(isset($aiArbNew) && $aiArbNew > 0)
-                        <div class="mt-1"><span class="badge rounded-pill bg-light text-dark">New {{ $aiArbNew }}</span></div>
+                        <div class="mt-1"><span class="badge rounded-pill bg-white text-dark">New {{ $aiArbNew }}</span></div>
+                    @else
+                        <div class="muted-note mt-1">No new plans</div>
                     @endif
-                    <div class="mt-2">
-                        <i class="fas fa-robot fa-2x"></i>
-                    </div>
                 </div>
             </div>
             </a>
@@ -126,7 +174,7 @@
 
     <!-- Quick User Assignment Widget -->
     <div class="row mt-4">
-        <div class="col-md-6">
+        <div class="col-12 col-md-6">
             <div class="card">
                 <div class="card-header bg-light">
                     <h5 class="card-title mb-0">👤 User ကို Admin ချိတ်ဆက်ခြင်း</h5>
@@ -178,7 +226,7 @@
         </div>
 
         <!-- Assignment Info Card -->
-        <div class="col-md-6">
+        <div class="col-12 col-md-6">
             <div class="card bg-light">
                 <div class="card-header">
                     <h5 class="card-title mb-0">ℹ️ အသုံးပြုမည့် အချက်များ</h5>
@@ -216,9 +264,38 @@
                         /* Increase desktop height slightly for more visible rows */
                         .recent-activities-body { max-height: 560px; overflow-y: auto; }
                         .recent-activities-body table thead th { position: sticky; top: 0; z-index: 3; background-color: #fff; }
-                        /* On small devices, allow the list to expand to fill remaining viewport height */
+
+                        /* Mobile: convert table rows into stacked blocks for better readability */
                         @media (max-width: 576px) {
                             .recent-activities-body { max-height: calc(100vh - 160px); }
+
+                            .recent-activities-body table thead { display: none; }
+                            .recent-activities-body table, 
+                            .recent-activities-body tbody, 
+                            .recent-activities-body tr, 
+                            .recent-activities-body td {
+                                display: block;
+                                width: 100%;
+                            }
+
+                            .recent-activities-body tr { margin-bottom: 0.6rem; border: 1px solid #eee; border-radius: 6px; padding: 0.4rem; }
+
+                            .recent-activities-body td {
+                                padding: 0.5rem 0.75rem;
+                                border: none;
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                background: transparent;
+                                gap: 0.5rem;
+                            }
+
+                            .recent-activities-body td[data-label]::before {
+                                content: attr(data-label) ": ";
+                                font-weight: 600;
+                                color: #495057;
+                                margin-right: 0.5rem;
+                            }
                         }
                     </style>
 
@@ -237,9 +314,9 @@
                             <tbody>
                                 @forelse($recentActivities ?? [] as $act)
                                 <tr>
-                                    <td>{{ $act->tx_id ?? ($act->type[0] . str_pad($act->id,5,'0',STR_PAD_LEFT)) }}</td>
-                                    <td>{{ $act->user?->name ?? $act->user?->email ?? '—' }}</td>
-                                    <td>
+                                    <td data-label="Transaction ID">{{ $act->tx_id ?? ($act->type[0] . str_pad($act->id,5,'0',STR_PAD_LEFT)) }}</td>
+                                    <td data-label="User">{{ $act->user?->name ?? $act->user?->email ?? '—' }}</td>
+                                    <td data-label="Type">
                                         @if($act->type === 'deposit')
                                             Deposit
                                         @elseif($act->type === 'withdrawal')
@@ -248,14 +325,14 @@
                                             Trade
                                         @endif
                                     </td>
-                                    <td>
+                                    <td data-label="Amount">
                                         @if($act->amount !== null)
                                             {{ rtrim(rtrim(number_format($act->amount, 8, '.', ''), '0'), '.') }} {{ strtoupper($act->coin ?? '') }}
                                         @else
                                             —
                                         @endif
                                     </td>
-                                    <td>
+                                    <td data-label="Status">
                                         @php
                                             $status = strtolower((string)($act->status ?? ''));
                                         @endphp
@@ -269,7 +346,7 @@
                                             <span class="badge bg-secondary">{{ $act->status }}</span>
                                         @endif
                                     </td>
-                                    <td>{{ optional($act->created_at)->format('Y-m-d H:i') }}</td>
+                                    <td data-label="Date">{{ optional($act->created_at)->format('Y-m-d H:i') }}</td>
                                 </tr>
                                 @empty
                                 <tr>
@@ -325,12 +402,12 @@
                                 <tbody>
                                     @foreach($recentPlanInquiries as $p)
                                         <tr>
-                                            <td>{{ $p->created_at->format('Y-m-d H:i') }}</td>
-                                            <td>{{ $p->admin?->name ?? 'N/A' }}</td>
-                                            <td>{{ $p->plan_name }}</td>
-                                            <td>{{ $p->plan_price }}</td>
-                                            <td>{{ $p->payment_method ?? '-' }}</td>
-                                            <td>
+                                            <td data-label="Created">{{ $p->created_at->format('Y-m-d H:i') }}</td>
+                                            <td data-label="Admin">{{ $p->admin?->name ?? 'N/A' }}</td>
+                                            <td data-label="Plan">{{ $p->plan_name }}</td>
+                                            <td data-label="Price">{{ $p->plan_price }}</td>
+                                            <td data-label="Method">{{ $p->payment_method ?? '-' }}</td>
+                                            <td data-label="Screenshots">
                                                 @if($p->crypto_screenshot)
                                                     <a href="{{ asset('storage/' . $p->crypto_screenshot) }}" target="_blank">
                                                         <img src="{{ asset('storage/' . $p->crypto_screenshot) }}" style="max-height:40px; max-width:80px; object-fit:cover; border-radius:4px;" />

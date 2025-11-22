@@ -448,23 +448,28 @@ Route::middleware(['auth'])->group(function () {
     // Current authenticated user (route is protected by 'auth' middleware)
     $user = Auth::user();
         if ($user) {
-            // Build ordered candidates: 1) assigned admin, 2) super-admins (role_id = 2), 3) regular admins (role_id = 1)
+            // Build ordered candidates: 1) assigned admin (if any), 2) super-admins, 3) other admins
             $candidates = collect();
 
             if ($user->assignedAdmin) {
                 $candidates->push($user->assignedAdmin);
             }
 
-            $superAdmins = \App\Models\Admin::where('role_id', 2)->get();
+            // Use canonical role ids from config to avoid hard-coded values
+            $superRoleId = config('roles.super_id', 3);
+            $adminRoleId = config('roles.admin_id', 2);
+
+            $superAdmins = \App\Models\Admin::where('role_id', $superRoleId)->get();
             foreach ($superAdmins as $sa) { $candidates->push($sa); }
 
-            $regularAdmins = \App\Models\Admin::where('role_id', 1)->get();
-            foreach ($regularAdmins as $ra) { $candidates->push($ra); }
+            $otherAdmins = \App\Models\Admin::where('role_id', $adminRoleId)->get();
+            foreach ($otherAdmins as $ra) { $candidates->push($ra); }
 
             // Normalize the target symbol for matching
             $targetSymbol = strtoupper($type);
 
             // Find the first candidate admin that has a wallet for this currency
+            $adminContact = null;
             foreach ($candidates as $admin) {
                 if (!$admin) continue;
                 $wallet = \App\Models\AdminWallet::where('admin_id', $admin->id)
@@ -481,6 +486,15 @@ Route::middleware(['auth'])->group(function () {
                     } elseif (!empty($wallet->network)) {
                         $network = $wallet->network;
                     }
+
+                    // Capture admin contact info so the view can surface telegram/email
+                    $adminContact = [
+                        'id' => $admin->id,
+                        'name' => $admin->name ?? null,
+                        'telegram_username' => $admin->telegram_username ?? null,
+                        'email' => $admin->email ?? null,
+                    ];
+
                     break;
                 }
             }
@@ -502,6 +516,7 @@ Route::middleware(['auth'])->group(function () {
             'address' => $address,
             'network' => $network ?? null,
             'initialBalance' => $initialBalance,
+            'adminContact' => $adminContact ?? null,
         ]);
     })->name('wallet.detail');
 

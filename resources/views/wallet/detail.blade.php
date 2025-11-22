@@ -420,23 +420,34 @@ body {
                                 </button>
 
                                 <!-- Inline error placeholder for withdrawal validation (hidden by default) -->
-                                <div id="withdrawError" class="alert alert-danger mt-3 {{ session('error') ? '' : 'd-none' }}" role="alert" style="{{ session('error') ? 'display:block;' : 'display:none;' }}">
-                                    {!! session('error') ? session('error') : '&nbsp;' !!}
+                                <div id="withdrawError" class="alert alert-danger mt-3 {{ session('error') || $errors->any() ? '' : 'd-none' }}" role="alert" style="{{ session('error') || $errors->any() ? 'display:block;' : 'display:none;' }}">
+                                    @if(session('error'))
+                                        {!! session('error') !!}
+                                    @elseif($errors->any())
+                                        <ul class="mb-0">
+                                            @foreach($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        &nbsp;
+                                    @endif
                                 </div>
 
-                            <!-- Warning Message -->
-                            <div class="alert alert-danger border-0 d-flex align-items-center" 
-                                 style="background-color: rgba(239, 68, 68, 0.1);">
-                                <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
-                                <strong class="text-danger">Do not transfer funds to strangers</strong>
-                            </div>
+                                <!-- Warning Message -->
+                                <div class="alert alert-danger border-0 d-flex align-items-center" 
+                                     style="background-color: rgba(239, 68, 68, 0.1);">
+                                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                                    <strong class="text-danger">Do not transfer funds to strangers</strong>
+                                </div>
 
-                            <!-- Address Check Reminder -->
-                            <div class="alert alert-light border mt-3 mb-0">
-                                <small class="text-muted d-block">
-                                    Please check that your shipping address is correct before sending to avoid loss of assets.
-                                </small>
-                            </div>
+                                <!-- Address Check Reminder -->
+                                <div class="alert alert-light border mt-3 mb-0">
+                                    <small class="text-muted d-block">
+                                        Please check that your shipping address is correct before sending to avoid loss of assets.
+                                    </small>
+                                </div>
+                            </form>
                         </div>
                     </div>
 
@@ -1064,42 +1075,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     e.preventDefault();
                 }
             });
-            // client-side check on submit to prevent sending when amount > available balance
-            const withdrawForm = document.getElementById('withdrawForm');
-            const headerBalanceEl = document.getElementById('headerAvailableBalance');
-            if (withdrawForm && headerBalanceEl) {
-                withdrawForm.addEventListener('submit', function(e) {
-                    const requested = parseFloat(amountInput.value || '0');
-                    const available = parseFloat(headerBalanceEl.textContent.replace(/,/g, '') || '0');
-                    const feeRate = 0.01; // 1% fee
-                    const requiredTotal = requested + (requested * feeRate);
-                    const withdrawErrorEl = document.getElementById('withdrawError');
-                    const coinName = '{{ strtoupper($type) }}';
-                    function showWithdrawError(msg) {
-                        if (!withdrawErrorEl) return;
-                        withdrawErrorEl.classList.remove('d-none');
-                        withdrawErrorEl.classList.remove('alert-success');
-                        withdrawErrorEl.classList.add('alert-danger');
-                        withdrawErrorEl.innerHTML = msg;
-                        withdrawErrorEl.style.display = 'block';
-                        try { withdrawErrorEl.scrollIntoView({behavior: 'smooth', block: 'center'}); } catch(e) {}
-                    }
+        }
 
-                    if (isNaN(requested) || requested <= 0) {
-                        e.preventDefault();
-                        showWithdrawError('Please enter a valid withdrawal amount.');
-                        return;
-                    }
-
-                    // Block submit if requested amount + fee exceeds available balance.
-                    if (requiredTotal > available) {
-                        e.preventDefault();
-                        // Show only concise message as requested
-                        showWithdrawError('Insufficient balance for ' + coinName + '.');
-                        return;
-                    }
-                });
-            }
+        // Log form submission data
+        if (withdrawForm) {
+            withdrawForm.addEventListener('submit', function(e) {
+                const formData = new FormData(withdrawForm);
+                console.log('=== FORM BEING SUBMITTED ===');
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}: ${value}`);
+                }
+                console.log('walletBalance:', walletBalance);
+                console.log('============================');
+            });
         }
     });
 });
