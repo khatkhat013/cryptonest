@@ -176,7 +176,7 @@ class PlanContactController extends Controller
                 Log::info('Saved plan and sent to Telegram', ['record_id' => $record->id, 'admin_id' => $admin->id]);
                 return response()->json([
                     'success' => true,
-                    'message' => 'Plan inquiry saved and notification sent!',
+                    'message' => 'ဝယ်ယူမှု အသေးစိတ်အား ပေးပို့ပြီးပါပြီ။ ဝယ်ယူအားပေးမှုအတွက် အထူးပင် ကျေးဇူးတင်ရှိပါသည်။',
                     'record_id' => $record->id,
                 ]);
             }

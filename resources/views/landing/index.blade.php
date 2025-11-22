@@ -1195,7 +1195,7 @@ function contactAdminVia(planId) {
     .then(data => {
         if (data.success) {
             // Use bootstrap alert instead of browser alert
-            showBootstrapAlert('success', (data.message || 'Plan inquiry saved and notification sent!'), 4000);
+            showBootstrapAlert('success', (data.message || 'ဝယ်ယူမှု အသေးစိတ်အား ပေးပို့ပြီးပါပြီ။ ဝယ်ယူအားပေးမှုအတွက် အထူးပင်ကျေးဇူးတင်ပါရှိပါသည်။'), 5000);
             // Hide the payment modal
             try {
                 const modalEl = document.getElementById('paymentModal');
