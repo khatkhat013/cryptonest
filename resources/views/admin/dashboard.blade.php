@@ -248,14 +248,14 @@
     <!-- Quick User Assignment Widget -->
     <div class="row mt-5">
         <div class="col-12 col-lg-6">
-            <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden;">
+            <div class="card border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; height: 100%;">
                 <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 1.5rem;">
                     <h5 class="card-title mb-0 text-white" style="font-weight: 700; font-size: 1.1rem;">
                         <i class="bi bi-person-check me-2"></i>User ကို Admin ချိတ်ဆက်ခြင်း
                     </h5>
                 </div>
-                <div class="card-body p-4">
-                    <form id="quickAssignForm">
+                <div class="card-body p-4" style="flex-grow: 1; display: flex; flex-direction: column;">
+                    <form id="quickAssignForm" style="display: flex; flex-direction: column; flex-grow: 1;">
                         @csrf
                         <div class="form-group mb-3">
                             <label for="quick_uid" class="form-label" style="font-weight: 600; font-size: 0.95rem; color: #495057;">
@@ -295,7 +295,7 @@
                             <small class="text-muted d-block mt-2">Admin account registration အချိန် သိမ်းဆည်းခဲ့တဲ့ username</small>
                         </div>
 
-                        <button type="submit" class="btn w-100" {{ $currentAdmin->role_id === config('roles.normal_id', 1) ? 'disabled' : '' }} 
+                        <button type="submit" class="btn w-100 mt-auto" {{ $currentAdmin->role_id === config('roles.normal_id', 1) ? 'disabled' : '' }} 
                                 title="{{ $currentAdmin->role_id === config('roles.normal_id', 1) ? 'Normal role users cannot assign users' : '' }}"
                                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 10px; padding: 0.85rem 1.5rem; color: white; font-weight: 600; font-size: 0.95rem; transition: all 0.3s ease;">
                             <span id="quickSubmitText">
@@ -312,35 +312,30 @@
 
         <!-- Assignment Info Card -->
         <div class="col-12 col-lg-6 mt-4 mt-lg-0">
-            <div class="card border-0 shadow-sm" style="border-radius: 16px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); overflow: hidden;">
-                <div class="card-header border-0" style="background: transparent; padding: 1.5rem;">
-                    <h5 class="card-title mb-0" style="font-weight: 700; font-size: 1.1rem; color: #333;">
-                        <i class="bi bi-info-circle me-2" style="color: #667eea;"></i>အသုံးပြုမည့် အချက်များ
+            <div class="card border-0 shadow-sm" style="border-radius: 16px; background: #ffffff; overflow: hidden; display: flex; flex-direction: column; height: 100%;">
+                <div class="card-header border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem;">
+                    <h5 class="card-title mb-0 text-white" style="font-weight: 700; font-size: 1.1rem;">
+                        <i class="bi bi-info-circle me-2"></i>Admin အနေနဲ့ အသုံးပြုရန် အမြန်လမ်းညွှန်ချက်များ
                     </h5>
                 </div>
-                <div class="card-body p-4 pt-0" style="color: #495057; font-size: 0.95rem;">
-                    <div class="mb-3">
-                        <p style="font-weight: 600; margin-bottom: 1rem; color: #333;">
-                            <i class="bi bi-list-check me-2" style="color: #667eea;"></i>လုပ်ဆောင်မည့် အဆင့်များ:
-                        </p>
-                        <ol style="padding-left: 1.5rem; color: #555;">
-                            <li class="mb-2">User သည် website သည့်ယ်တွင် register လုပ်ခြင်း</li>
-                            <li class="mb-2">User ရဲ့ UID ကို မှတ်သားခြင်း (success page သည့်ယ်တွင်)</li>
-                            <li class="mb-2">Admin ရဲ့ telegram username ဖြည့်သွင်းခြင်း</li>
-                            <li>ခုခံ "Assign လုပ်ခြင်း" ကို နှိပ်ခြင်း</li>
-                        </ol>
-                    </div>
-                    
-                    <div class="mt-4 pt-3" style="border-top: 1px solid rgba(0,0,0,0.1);">
-                        <p style="font-weight: 600; margin-bottom: 1rem; color: #333;">
-                            <i class="bi bi-check-circle me-2" style="color: #43e97b;"></i>ရလဒ်:
-                        </p>
-                        <ul style="padding-left: 1.5rem; color: #555;">
-                            <li class="mb-2">User သည် အဲ့ဒီ admin ကိုချိတ်ဆက်သည်</li>
-                            <li class="mb-2">Database အပ်ဒေတ်သည်</li>
-                            <li>Success message ပြသည်</li>
-                        </ul>
-                    </div>
+                <div class="card-body p-4 pt-0" style="color: #333; font-size: 0.85rem; flex-grow: 1;">
+                    <ol style="padding-left: 1.5rem; color: #444; line-height: 1.8; margin-bottom: 0;">
+                        <li class="mb-3">
+                            <strong style="color: #222;">Admin အကောင့်တစ်ခုကို Register လုပ်ထားရန်လိုအပ်သည်။</strong><br> Admin အကောင့် Register လုပ်သည့်အချိန်မှာ Telegram username and Wallet address မရှိရင် ထည့်သွင်းစရာမလိုအပ်ပါဘူး။
+                        </li>
+                        <li class="mb-3">
+                            <strong style="color: #222;">Admin အကောင့်ကို အပြည့်အဝ အသုံးပြုနိုင်ရန် Plan တစ်ခုကို ဝယ်ယူရန်လိုအပ်သည်။</strong><br> Telegram Username က သင့်ရဲ့ ဖောက်သည်တွေအား Customer Support အနေနဲ့ အသုံးပြုနိုင်ရန်ဖြစ်သည်။
+                        </li>
+                        <li class="mb-3">
+                            <strong style="color: #222;">Plan ဝယ်ယူပြီးပါက သင့်ရဲ့ Customer များကို User Portal မှာ Register လုပ်ခိုင်းပြီး ငွေလက်ခံရန် နဲ့ အခြား Platform လုပ်ဆောင်ချက်များကို စတင်အသုံးပြုနိုင်ပါပြီ။</strong>
+                        </li>
+                        <li class="mb-3">
+                            <strong style="color: #222;">သင့်ရဲ့ Customer နဲ့ သင့်ရဲ့ Admin အကောင့်ကို ချိတ်ဆက်မှု ရရှိစေရန်</strong><br> User ကို Admin ချိတ်ဆက်ခြင်း နေရာတွင် သင့်ဖောက်သည်၏ UID ဂဏန်း(၆)လုံး နဲ့ သင့် အကောင့်ဖွင့်စဥ် ထည့်သွင်းခဲ့သည့် Telegram username ကို ဖြည့်သွင်းရန် လိုအပ်ပြီး Assign လုပ်ခြင်း Button ကို နှိပ်ခြင်းဖြင့် သင့်ဖောက်သည်နဲ့ ချိတ်ဆက်မှုရရှိပြီး သင့်ဖောက်သည်လုပ်ဆောင်ချက်များကို ထိန်းချုပ်နိုင်မည်ဖြစ်သည်။
+                        </li>
+                        <li class="mb-0">
+                            <strong style="color: #222;">Deposits, Withdrawals, Trading, AI Arbitrage နေရာများတွင်</strong><br> သင့်ဖောက်သည် လုပ်ဆောင်သည့် အချက်အလက်များကို ကြည့်ရှုပြီး ပြန်လည်ပြင်ဆင်နိုင်ရန် အသုံးပြုနိုင်ပါသည်။
+                        </li>
+                    </ol>
                 </div>
             </div>
         </div>

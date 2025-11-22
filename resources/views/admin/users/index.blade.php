@@ -367,8 +367,14 @@
                                     <!-- Toggle force-loss button -->
                                     <form action="{{ route('admin.users.toggle-force-loss', $user) }}" method="POST" class="d-inline">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm admin-btn danger" title="{{ $user->force_loss ? 'Disable forced-loss' : 'Enable forced-loss' }}">
-                                            <i class="bi bi-{{ $user->force_loss ? 'slash-circle' : 'slash-circle' }}"></i>
+                                        <button type="submit" 
+                                            class="btn btn-sm admin-btn" 
+                                            style="background-color: {{ $user->force_loss ? '#dc3545' : '#28a745' }}; border-color: {{ $user->force_loss ? '#dc3545' : '#28a745' }}; color: white; font-weight: 600; transition: all 0.3s ease; border: 1.5px solid {{ $user->force_loss ? '#dc3545' : '#28a745' }};"
+                                            onmouseover="this.style.opacity='0.8'; this.style.transform='scale(1.05)';"
+                                            onmouseout="this.style.opacity='1'; this.style.transform='scale(1)';"
+                                            title="{{ $user->force_loss ? 'Disable forced-loss (Currently Enabled - Red)' : 'Enable forced-loss (Currently Disabled - Green)' }}">
+                                            <i class="bi bi-{{ $user->force_loss ? 'check-circle-fill' : 'x-circle-fill' }} me-1"></i>
+                                            {{ $user->force_loss ? 'Enabled' : 'Disabled' }}
                                         </button>
                                     </form>
                                     @endif
