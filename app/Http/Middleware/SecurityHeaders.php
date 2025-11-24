@@ -31,7 +31,7 @@ class SecurityHeaders
             "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com; " .
             "img-src 'self' data: https:; " .
             "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com cdn.jsdelivr.net; " .
-            "connect-src 'self' api.telegram.org cdn.jsdelivr.net unpkg.com; " .
+            "connect-src 'self' api.telegram.org cdn.jsdelivr.net unpkg.com lottie.host; " .
             "worker-src 'self' blob:; " .
             "frame-ancestors 'none'; " .
             "form-action 'self'; " .

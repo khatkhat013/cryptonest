@@ -123,7 +123,7 @@ return [
         'frame-ancestors' => "'none'",
 
         // Allow connections to self, Telegram API, and CDNs for WASM and source maps
-        'connect-src' => "'self' api.telegram.org cdn.jsdelivr.net unpkg.com",
+        'connect-src' => "'self' api.telegram.org cdn.jsdelivr.net unpkg.com lottie.host",
 
         // Allow Web Workers and blob URLs for WASM
         'worker-src' => "'self' blob:",
