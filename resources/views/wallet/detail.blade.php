@@ -698,10 +698,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const toSymbol = targetSymbol;
 
         // fetch prices in USD for both symbols
-        const [fromPrice, toPrice] = await Promise.all([
-            fetchLivePrice(fromSymbol),
-            fetchLivePrice(toSymbol)
-        ]);
+
+        // Show loading state while fetching
+        if (rateText) rateText.textContent = 'Fetching price...';
+        toAmount.value = '';
+        try {
+            const btn = document.getElementById('convertBtn');
+            if (btn) btn.disabled = true;
+        } catch (e) {}
+
+        let fromPrice = null, toPrice = null, attempts = 0, maxAttempts = 3;
+        while ((!fromPrice || !toPrice) && attempts < maxAttempts) {
+            [fromPrice, toPrice] = await Promise.all([
+                fetchLivePrice(fromSymbol),
+                fetchLivePrice(toSymbol)
+            ]);
+            attempts++;
+            if ((!fromPrice || !toPrice) && attempts < maxAttempts) {
+                if (rateText) rateText.textContent = 'Retrying price fetch...';
+                await new Promise(res => setTimeout(res, 700));
+            }
+        }
 
         // If either price is missing, avoid using a huge arbitrary fallback.
         // Special-case stablecoin <-> stablecoin conversions as 1:1, otherwise show unavailable.
@@ -717,13 +734,13 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 // Unknown prices — clear target amount and indicate unavailable rate.
                 toAmount.value = '';
-                if (rateText) rateText.textContent = `Price unavailable`;
+                if (rateText) rateText.textContent = `Price unavailable. Click Convert again to retry.`;
             }
 
-            // Ensure Convert button is disabled when prices are unavailable or toAmount is empty
+            // Ensure Convert button is enabled so user can retry
             try {
                 const btn = document.getElementById('convertBtn');
-                if (btn) btn.disabled = !toAmount.value || parseFloat(toAmount.value) <= 0;
+                btn && (btn.disabled = false);
             } catch (e) {}
 
             return;

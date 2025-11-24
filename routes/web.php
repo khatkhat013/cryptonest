@@ -161,12 +161,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
         })->name('ai.arbitrage.json');
 
         // Admin edit form for a plan
-        Route::middleware('admin-approval')->get('/ai-arbitrage/{id}/edit', function ($id) {
+        Route::middleware(['admin-approval'])->get('/ai-arbitrage/{id}/edit', function ($id) {
             if (!\Illuminate\Support\Facades\Schema::hasTable('ai_arbitrage_plans')) {
                 return redirect()->route('admin.deposits.index');
             }
 
             $admin = Auth::guard('admin')->user();
+            
+            // Ensure admin is authenticated
+            if (!$admin) {
+                abort(401, 'Unauthorized');
+            }
             
             $plan = \Illuminate\Support\Facades\DB::table('ai_arbitrage_plans as p')
                 ->leftJoin('users as u', 'p.user_id', '=', 'u.id')
@@ -176,7 +181,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             if (!$plan) return redirect()->route('admin.ai.arbitrage.index')->with('error', 'Plan not found');
 
-            // Authorization: super admin can edit any plan, others can only edit plans for their assigned users
+            // Authorization: super admin can edit any plan, regular admins can only edit plans for their assigned users
             if (!$admin->isSuperAdmin() && $plan->assigned_admin_id !== $admin->id) {
                 abort(403, 'You are not authorized to edit this plan.');
             }

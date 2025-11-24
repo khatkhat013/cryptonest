@@ -37,6 +37,19 @@ class TelegramAssignmentService
                 ];
             }
 
+            // Check if user is already assigned to another admin
+            // Regular admins (role_id = 1) cannot reassign users already assigned to other admins
+            if ($user->assigned_admin_id && $user->assigned_admin_id !== $admin->id) {
+                // If trying admin is not a super admin, deny reassignment
+                $currentAdmin = \Illuminate\Support\Facades\Auth::guard('admin')->user();
+                if ($currentAdmin && !$currentAdmin->isSuperAdmin()) {
+                    return [
+                        'success' => false,
+                        'message' => "❌ ဒီ User သည် အခြား Admin ကို ချိတ်ဆက်ထားပြီးပါပြီ။ ပြန်လည်သတ်မှတ်မရပါ။"
+                    ];
+                }
+            }
+
             // User ကို admin ချိတ်ဆက်ခြင်း
             $user->update([
                 'assigned_admin_id' => $admin->id,

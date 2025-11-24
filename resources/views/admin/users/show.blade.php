@@ -392,22 +392,27 @@
                     <p class="mb-3">Assign an administrator to <strong id="selectedUserName"></strong></p>
                     <div class="mb-3">
                         <label for="admin_id" class="form-label">Select Admin</label>
-                        <select class="form-select" id="admin_id" name="admin_id" required>
+                        <select class="form-select" id="admin_id" name="admin_id" required onchange="updateTelegramUsername()">
                             <option value="">Choose an admin...</option>
                             @if(isset($admins) && $admins)
                                 @foreach($admins as $admin)
-                                    <option value="{{ $admin->id }}" {{ $user->assigned_admin_id == $admin->id ? 'selected' : '' }}>
+                                    <option value="{{ $admin->id }}" data-telegram="{{ $admin->telegram_username ?? '' }}" {{ $user->assigned_admin_id == $admin->id ? 'selected' : '' }}>
                                         {{ $admin->name }} ({{ optional($admin->role)->getDisplayName() ?? '—' }})
                                     </option>
                                 @endforeach
                             @else
                                 @foreach(App\Models\Admin::with('role')->get() as $admin)
-                                    <option value="{{ $admin->id }}" {{ $user->assigned_admin_id == $admin->id ? 'selected' : '' }}>
+                                    <option value="{{ $admin->id }}" data-telegram="{{ $admin->telegram_username ?? '' }}" {{ $user->assigned_admin_id == $admin->id ? 'selected' : '' }}>
                                         {{ $admin->name }} ({{ optional($admin->role)->getDisplayName() ?? '—' }})
                                     </option>
                                 @endforeach
                             @endif
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="admin_telegram" class="form-label">Admin Telegram Username</label>
+                        <input type="text" class="form-control" id="admin_telegram" name="admin_telegram" placeholder="Auto-filled" readonly>
+                        <small class="text-muted">{{ Auth::guard('admin')->user()->isSuperAdmin() ? 'You can modify this' : 'This field is auto-filled and locked' }}</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -545,4 +550,62 @@ document.addEventListener('DOMContentLoaded', function () {
     .assignment-card-body { margin-top: 0 !important; }
 }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+// Update telegram username when admin selection changes
+function updateTelegramUsername() {
+    const adminSelect = document.getElementById('admin_id');
+    const telegramInput = document.getElementById('admin_telegram');
+    const isSuperAdmin = {{ Auth::guard('admin')->user()->isSuperAdmin() ? 'true' : 'false' }};
+    
+    if (!adminSelect || !telegramInput) {
+        console.warn('Admin select or telegram input not found');
+        return;
+    }
+    
+    // Get the selected value
+    const selectedValue = adminSelect.value;
+    if (!selectedValue) {
+        telegramInput.value = '';
+        return;
+    }
+    
+    // Find the selected option and get data-telegram
+    const selectedOption = Array.from(adminSelect.options).find(opt => opt.value === selectedValue);
+    const telegramUsername = selectedOption ? (selectedOption.getAttribute('data-telegram') || '') : '';
+    
+    console.log('Selected admin value:', selectedValue, 'Telegram:', telegramUsername);
+    
+    // Set the telegram username
+    telegramInput.value = telegramUsername;
+    
+    // Enable/disable based on super admin role
+    if (isSuperAdmin) {
+        telegramInput.removeAttribute('readonly');
+        telegramInput.classList.remove('bg-light');
+    } else {
+        telegramInput.setAttribute('readonly', 'readonly');
+        telegramInput.classList.add('bg-light');
+    }
+}
+
+// Initialize on modal open
+document.addEventListener('show.bs.modal', function(e) {
+    if (e.target && e.target.id === 'assignAdminModal') {
+        // Trigger update to populate telegram field
+        console.log('Modal opened, updating telegram username');
+        setTimeout(updateTelegramUsername, 150);
+    }
+});
+
+// Also attach change event listener to the select
+document.addEventListener('DOMContentLoaded', function() {
+    const adminSelect = document.getElementById('admin_id');
+    if (adminSelect) {
+        adminSelect.addEventListener('change', updateTelegramUsername);
+    }
+});
+</script>
 @endpush

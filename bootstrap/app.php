@@ -11,6 +11,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Security middleware - OWASP Top 10 protection
+        // Run SecurityHeaders first (prepend ensures it runs before other middleware)
+        $middleware->prepend(\App\Http\Middleware\SecurityHeaders::class);
+
+        // Global middleware for all requests
+        $middleware->append(\App\Http\Middleware\RateLimitEndpoints::class);
+        $middleware->append(\App\Http\Middleware\SetCacheHeaders::class);
+        $middleware->append(\App\Http\Middleware\SanitizeInput::class);
+
+        // Middleware aliases
         $middleware->alias([
             'admin-approval' => \App\Http\Middleware\AdminApprovalRequired::class,
         ]);

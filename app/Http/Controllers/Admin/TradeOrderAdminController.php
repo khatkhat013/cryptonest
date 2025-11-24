@@ -57,6 +57,12 @@ class TradeOrderAdminController extends Controller
             abort(403, 'You are not authorized to update this trade.');
         }
         
+        // Validate 'result' field to prevent invalid values
+        $validated = $request->validate([
+            'result' => 'nullable|in:win,lose,pending',
+            // Add other fields as needed for stricter validation
+        ]);
+
         $trade->fill($request->only(['symbol','direction','purchase_quantity','purchase_price','initial_price','final_price','price_range_percent','delivery_seconds','profit_amount','payout','result']));
         $trade->save();
         
