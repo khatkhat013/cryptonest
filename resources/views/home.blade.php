@@ -3,7 +3,7 @@
 @section('header-animation')
     <!-- Lottie Animation: Only on Home page -->
     <div style="margin-top:64px;">
-        <dotlottie-wc src="https://lottie.host/b8c3e07f-6857-4919-95d6-0dee9e6127ce/MJoyjsN8w3.lottie" style="width: 100%;height: auto" autoplay loop></dotlottie-wc>
+        <dotlottie-wc src="{{ asset('MJoyjsN8w3.lottie') }}" style="width: 100%;height: auto" autoplay loop></dotlottie-wc>
     </div>
     
     <!-- Markets Title -->
@@ -160,7 +160,7 @@
                             <div class="card market-card feature-card position-relative overflow-hidden" style="box-shadow: 0 10px 30px rgba(16,185,129,0.06); border: 1px solid rgba(34,197,94,0.08);">
                                 <span class="feature-badge">AI Arbitrage</span>
                         <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events:none; z-index:1;">
-                            <dotlottie-wc src="https://lottie.host/4c89fb6d-25b1-4505-8149-a669c9c57e3d/EaLJaJluzA.lottie" style="width:80%; height:80%; max-width:420px; max-height:420px; opacity:0.98;" autoplay loop></dotlottie-wc>
+                            <dotlottie-wc src="{{ asset('EaLJaJluzA.lottie') }}" style="width:80%; height:80%; max-width:420px; max-height:420px; opacity:0.98;" autoplay loop></dotlottie-wc>
                         </div>
                         <div class="card-body position-relative z-2 p-0" style="min-height:180px;"></div>
                     </div>
@@ -171,7 +171,7 @@
                             <span class="feature-badge mining">Mining</span>
                         <!-- Large centered animation; pointer-events disabled so the link remains clickable -->
                         <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events:none; z-index:1;">
-                            <dotlottie-wc src="https://lottie.host/3b3a89d1-eaa6-4fb6-9118-1d5804faaf5a/RNsMUkyjxt.lottie" style="width: 80%; height: 80%; max-width: 420px; max-height: 420px; opacity:0.98;" autoplay loop></dotlottie-wc>
+                            <dotlottie-wc src="{{ asset('RNsMUkyjxt.lottie') }}" style="width: 80%; height: 80%; max-width: 420px; max-height: 420px; opacity:0.98;" autoplay loop></dotlottie-wc>
                         </div>
                         <!-- Keep an empty card-body so layout/spacing remains consistent -->
                         <div class="card-body position-relative z-2 p-0" style="min-height:180px;"></div>
@@ -191,7 +191,7 @@
                 <div class="card market-card feature-card position-relative overflow-hidden" onclick="shareInvite()" style="box-shadow: 0 10px 30px rgba(16,185,129,0.06); border: 1px solid rgba(34,197,94,0.08);">
                     <span class="feature-badge">Invite Friend</span>
                     <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="pointer-events:none; z-index:1;">
-                        <dotlottie-wc src="https://lottie.host/bb1ba882-5cec-4676-add1-d008f39ae2ee/I9uAcddYg9.lottie" style="width:80%; height:80%; max-width:420px; max-height:420px; opacity:0.98;" autoplay loop></dotlottie-wc>
+                        <dotlottie-wc src="{{ asset('I9uAcddYg9.lottie') }}" style="width:80%; height:80%; max-width:420px; max-height:420px; opacity:0.98;" autoplay loop></dotlottie-wc>
                     </div>
                     <div class="card-body position-relative z-2 p-0" style="min-height:180px;"></div>
                 </div>
