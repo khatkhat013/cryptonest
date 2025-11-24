@@ -30,19 +30,23 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:admins,email,' . $admin->id],
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],
-            'telegram_username' => ['nullable', 'string', 'max:255'],
+            'telegram_username' => ['nullable', 'string', 'max:255', 'unique:admins,telegram_username,' . $admin->id],
             'wallets' => ['sometimes', 'array'],
             'wallets.*.address' => ['nullable', 'string', 'max:255'],
             'wallets.*.network_id' => ['nullable', 'exists:networks,id']
+        ], [
+            'telegram_username.unique' => 'This Telegram username is already being used by another admin.',
         ]);
+
 
         $admin->name = $data['name'];
         $admin->email = $data['email'];
-
+        if (array_key_exists('telegram_username', $data)) {
+            $admin->telegram_username = $data['telegram_username'];
+        }
         if (!empty($data['password'])) {
             $admin->password = Hash::make($data['password']);
         }
-
         $admin->save();
 
         // Update admin wallet addresses if any

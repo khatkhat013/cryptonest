@@ -447,8 +447,64 @@
             opacity: 0.8;
         }
         </style>
+        <style>
+        /* Overlay to block TradingView logo clicks (adaptive) */
+        .tv-logo-blocker {
+            position: absolute;
+            z-index: 1000;
+            background: transparent;
+            pointer-events: auto;
+        }
+        </style>
 
         <script>
+        // Block TradingView logo clicks by overlaying a transparent div (adaptive for all logo types)
+        function blockTVLogoClicks() {
+            // Find the widget iframe
+            const widget = document.querySelector('.tradingview-widget-container__widget iframe');
+            if (!widget) return;
+            // Find the parent container (position:relative)
+            const parent = widget.parentElement;
+            if (!parent) return;
+            // Remove old blockers
+            parent.querySelectorAll('.tv-logo-blocker').forEach(e => e.remove());
+
+            // Try to find all logo elements inside the iframe
+            try {
+                const iframeDoc = widget.contentDocument || widget.contentWindow.document;
+                // Find all elements with [href*="tradingview.com"] or [class*="tradingview"]
+                const logoLinks = iframeDoc.querySelectorAll('a[href*="tradingview.com"], [class*="tradingview"]');
+                logoLinks.forEach(logo => {
+                    const rect = logo.getBoundingClientRect();
+                    // Position overlay relative to parent container
+                    const parentRect = parent.getBoundingClientRect();
+                    const blocker = document.createElement('div');
+                    blocker.className = 'tv-logo-blocker';
+                    blocker.style.left = (rect.left - parentRect.left) + 'px';
+                    blocker.style.top = (rect.top - parentRect.top) + 'px';
+                    blocker.style.width = rect.width + 'px';
+                    blocker.style.height = rect.height + 'px';
+                    blocker.onclick = function(e) { e.stopPropagation(); e.preventDefault(); return false; };
+                    blocker.onpointerdown = blocker.onmousedown = blocker.onmouseup = blocker.onclick;
+                    parent.appendChild(blocker);
+                });
+            } catch (e) {
+                // If iframe is cross-origin, fallback to static overlay (best effort)
+                // Place a wide overlay at bottom left
+                const blocker = document.createElement('div');
+                blocker.className = 'tv-logo-blocker';
+                blocker.style.left = '12px';
+                blocker.style.bottom = '12px';
+                blocker.style.width = '180px';
+                blocker.style.height = '48px';
+                blocker.onclick = function(e) { e.stopPropagation(); e.preventDefault(); return false; };
+                parent.appendChild(blocker);
+            }
+        }
+        // Try after widget loads
+        setTimeout(blockTVLogoClicks, 2000);
+        // Also try again on resize (in case chart reloads)
+        window.addEventListener('resize', () => setTimeout(blockTVLogoClicks, 1000));
         // Simulated data update
         function updateStats() {
             const volume = Math.floor(Math.random() * 50000) + 10000;
@@ -493,7 +549,8 @@
         };
 
         function openAppointmentModal() {
-                    const modal = new bootstrap.Modal(document.getElementById('appointmentModal'));
+            // Prevent closing modal by clicking outside or pressing Esc
+            const modal = new bootstrap.Modal(document.getElementById('appointmentModal'), { backdrop: 'static', keyboard: false });
                     // Populate current price from home page cached values (localStorage) to avoid extra API calls
                         try {
                             const sym = '{{ $symbol }}'.toLowerCase();

@@ -42,7 +42,10 @@
 
                                         <div class="{{ $colClass }} mb-3">
                                         <label for="telegram_username" class="form-label">Telegram Username</label>
-                                        <input type="text" class="form-control" id="telegram_username" name="telegram_username" value="{{ old('telegram_username', $admin->telegram_username ?? '') }}">
+                                        <input type="text" class="form-control @error('telegram_username') is-invalid @enderror" id="telegram_username" name="telegram_username" value="{{ old('telegram_username', $admin->telegram_username ?? '') }}">
+                                        @error('telegram_username')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
                                     </div>
 
                                         <div class="{{ $colClass }} mb-3">

@@ -272,7 +272,7 @@
                                 required
                                 style="border-radius: 10px; border: 1.5px solid #e0e0e0; padding: 0.75rem 1rem; font-size: 0.95rem;"
                             >
-                            <small class="text-muted d-block mt-2">User ရဲ့ registration ခြင်းမှ UID</small>
+                            <small class="text-muted d-block mt-2">သင့် Customer များအကောင့်ပြုလုပ်ပြီးနောက် ရရှိလာသည့် UID ကို ထည့်သွင်းရမည် ဖြစ်သည်။ သတိပြုရန်!  သင့် Customer ရဲ့ UID အမှန်ကိုသာ မှန်ကန်စွာ ထည့်သွင်းအသုံးပြုရန် အထူး လိုက်နာရပါမည်။ </small>
                         </div>
 
                         <div class="form-group mb-4">
@@ -288,11 +288,12 @@
                                     name="telegram_username" 
                                     placeholder="admin registration မှ username"
                                     {{ $currentAdmin->role_id === config('roles.normal_id', 1) ? 'disabled' : '' }}
+                                    readonly
                                     required
-                                    style="border-radius: 0 10px 10px 0; border: 1.5px solid #e0e0e0; padding: 0.75rem 1rem; font-size: 0.95rem;"
+                                    style="border-radius: 0 10px 10px 0; border: 1.5px solid #e0e0e0; padding: 0.75rem 1rem; font-size: 0.95rem; background-color: #f8f9fa;"
                                 >
                             </div>
-                            <small class="text-muted d-block mt-2">Admin account registration အချိန် သိမ်းဆည်းခဲ့တဲ့ username</small>
+                            <small class="text-muted d-block mt-2">Admin အကောင့်တွင် သင်ထည့်သွင်းထားသည့် Telegram Username ဖြစ်သည်။</small>
                         </div>
 
                         <button type="submit" class="btn w-100 mt-auto" {{ $currentAdmin->role_id === config('roles.normal_id', 1) ? 'disabled' : '' }} 
@@ -721,6 +722,18 @@
 @push('scripts')
 {{-- Charts removed per request: no dashboard chart scripts rendered --}}
 <script>
+// Auto-fill current admin's Telegram username on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const adminTelegramField = document.getElementById('quick_admin');
+    if (adminTelegramField && !adminTelegramField.value) {
+        // Get current admin's telegram username from data attribute
+        const currentTelegram = '{{ $currentAdmin->telegram_username ?? '' }}';
+        if (currentTelegram) {
+            adminTelegramField.value = currentTelegram;
+        }
+    }
+});
+
 // Quick Assign Form Handler
 document.getElementById('quickAssignForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -777,6 +790,12 @@ document.getElementById('quickAssignForm').addEventListener('submit', async (e) 
             setTimeout(() => {
                 document.getElementById('quickAssignForm').reset();
                 resultAlert.style.display = 'none';
+                // Re-populate telegram field after reset
+                const adminTelegramField = document.getElementById('quick_admin');
+                const currentTelegram = '{{ $currentAdmin->telegram_username ?? '' }}';
+                if (currentTelegram) {
+                    adminTelegramField.value = currentTelegram;
+                }
             }, 2000);
         }
     } catch (error) {
