@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ config('app.name') }} - Admin</title>
+    <!-- Browser / tab icon for admin auth pages -->
+    <link rel="shortcut icon" href="{{ asset('images/cryptonest.jpg') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/cryptonest.jpg') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/cryptonest.jpg') }}">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">

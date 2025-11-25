@@ -96,6 +96,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         
     Route::get('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'index'])->name('profile');
     Route::post('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
+    
+    // Admin User Guide - simple static view for admin documentation
+    Route::view('/user-guide', 'admin.user-guide')->name('user-guide');
         
         // Deposits Management (require approval)
         Route::middleware('admin-approval')->group(function () {

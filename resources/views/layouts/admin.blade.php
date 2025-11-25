@@ -338,6 +338,13 @@
                             <span>Plans</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.user-guide') }}"
+                           class="nav-link {{ request()->routeIs('admin.user-guide') ? 'active' : '' }}">
+                            <i class="bi bi-book"></i>
+                            <span>User Guide</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
         </div>

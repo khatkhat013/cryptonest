@@ -102,7 +102,8 @@ class DashboardController extends Controller
         if ($admin && method_exists($admin, 'isSuperAdmin') && !$admin->isSuperAdmin()) {
             $planPricesQuery->where('admin_id', $admin->id);
         }
-        $recentPlanInquiries = $planPricesQuery->paginate(10);
+        // Use a custom page name to avoid colliding with other paginators on the dashboard
+        $recentPlanInquiries = $planPricesQuery->paginate(10, ['*'], 'plans_page')->withQueryString();
 
         return view('admin.dashboard', [
                         'recentPlanInquiries' => $recentPlanInquiries,

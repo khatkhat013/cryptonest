@@ -119,9 +119,9 @@
                             <ul class="features-list">
                                 <li><i class="fas fa-check text-success me-2"></i> API ချိတ်ဆက်မှု</li>
                                 <li><i class="fas fa-check text-success me-2"></i> အဆင့်မြင့် ကုန်သည်မှု</li>
-                                <li><i class="fas fa-check text-success me-2"></i> အကန့်အသတ်မဲ့ ကုန်သည်မှု</li>
-                                <li><i class="fas fa-check text-success me-2"></i> အသုံးပြုသူ အကူအညီ</li>
                                 <li><i class="fas fa-check text-success me-2"></i> အုပ်ချုပ်ရန် Dashboard ခွင့်ပြုချက်</li>
+                                <li><i class="fas fa-check text-success me-2"></i> ကိုယ့်ရဲ့ Wallet Address ပြောင်းလဲနိုင်ခြင်း</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Customer Support အနေနဲ့ Telegram Username ကို ပြောင်းလဲနိုင်ခြင်း </li>
                             </ul>
                         </div>
                         <div class="pricing-footer bg-light p-3">
@@ -145,9 +145,9 @@
                             <ul class="features-list">
                                 <li><i class="fas fa-check text-success me-2"></i> API ချိတ်ဆက်မှု</li>
                                 <li><i class="fas fa-check text-success me-2"></i> အဆင့်မြင့် ကုန်သည်မှု</li>
-                                <li><i class="fas fa-check text-success me-2"></i> အကန့်အသတ်မဲ့ ကုန်သည်မှု</li>
-                                <li><i class="fas fa-check text-success me-2"></i> အသုံးပြုသူ အကူအညီ</li>
                                 <li><i class="fas fa-check text-success me-2"></i> အုပ်ချုပ်ရန် Dashboard ခွင့်ပြုချက်</li>
+                                <li><i class="fas fa-check text-success me-2"></i> ကိုယ့်ရဲ့ Wallet Address ပြောင်းလဲနိုင်ခြင်း</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Customer Support အနေနဲ့ Telegram Username ကို ပြောင်းလဲနိုင်ခြင်း </li>
                             </ul>
                         </div>
                         <div class="pricing-footer p-3" style="background: #e6e9f0;">
@@ -170,9 +170,9 @@
                             <ul class="features-list">
                                 <li><i class="fas fa-check text-success me-2"></i> API ချိတ်ဆက်မှု</li>
                                 <li><i class="fas fa-check text-success me-2"></i> အဆင့်မြင့် ကုန်သည်မှု</li>
-                                <li><i class="fas fa-check text-success me-2"></i> အကန့်အသတ်မဲ့ ကုန်သည်မှု</li>
-                                <li><i class="fas fa-check text-success me-2"></i> အသုံးပြုသူ အကူအညီ</li>
                                 <li><i class="fas fa-check text-success me-2"></i> အုပ်ချုပ်ရန် Dashboard ခွင့်ပြုချက်</li>
+                                <li><i class="fas fa-check text-success me-2"></i> ကိုယ့်ရဲ့ Wallet Address ပြောင်းလဲနိုင်ခြင်း</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Customer Support အနေနဲ့ Telegram Username ကို ပြောင်းလဲနိုင်ခြင်း </li>
                                 <li class="bonus-feature"><i class="fas fa-gift me-2"></i> + ၇ ရက် အပို အခမဲ့</li>
                             </ul>
                         </div>
@@ -196,9 +196,9 @@
                             <ul class="features-list">
                                 <li><i class="fas fa-check text-success me-2"></i> API ချိတ်ဆက်မှု</li>
                                 <li><i class="fas fa-check text-success me-2"></i> အဆင့်မြင့် ကုန်သည်မှု</li>
-                                <li><i class="fas fa-check text-success me-2"></i> အကန့်အသတ်မဲ့ ကုန်သည်မှု</li>
-                                <li><i class="fas fa-check text-success me-2"></i> အသုံးပြုသူ အကူအညီ</li>
                                 <li><i class="fas fa-check text-success me-2"></i> အုပ်ချုပ်ရန် Dashboard ခွင့်ပြုချက်</li>
+                                <li><i class="fas fa-check text-success me-2"></i> ကိုယ့်ရဲ့ Wallet Address ပြောင်းလဲနိုင်ခြင်း</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Customer Support အနေနဲ့ Telegram Username ကို ပြောင်းလဲနိုင်ခြင်း </li>
                                 <li class="bonus-feature"><i class="fas fa-gift me-2"></i> + ၁၅ ရက် အပို အခမဲ့</li>
                             </ul>
                         </div>
@@ -222,9 +222,9 @@
                             <ul class="features-list">
                                 <li><i class="fas fa-check text-success me-2"></i> API ချိတ်ဆက်မှု</li>
                                 <li><i class="fas fa-check text-success me-2"></i> အဆင့်မြင့် ကုန်သည်မှု</li>
-                                <li><i class="fas fa-check text-success me-2"></i> အကန့်အသတ်မဲ့ ကုန်သည်မှု</li>
                                 <li><i class="fas fa-check text-success me-2"></i> အုပ်ချုပ်ရန် Dashboard ခွင့်ပြုချက်</li>
-                                <li><i class="fas fa-check text-success me-2"></i> အသုံးပြုသူ အကူအညီ</li>
+                                <li><i class="fas fa-check text-success me-2"></i> ကိုယ့်ရဲ့ Wallet Address ပြောင်းလဲနိုင်ခြင်း</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Customer Support အနေနဲ့ Telegram Username ကို ပြောင်းလဲနိုင်ခြင်း </li>                               
                                 <li class="bonus-feature"><i class="fas fa-gift me-2"></i> + ၃၀ ရက် အပို အခမဲ့</li>
                             </ul>
                         </div>
@@ -249,9 +249,9 @@
                             <ul class="features-list">
                                 <li><i class="fas fa-check text-success me-2"></i> API ချိတ်ဆက်မှု</li>
                                 <li><i class="fas fa-check text-success me-2"></i> အဆင့်မြင့် ကုန်သည်မှု</li>
-                                <li><i class="fas fa-check text-success me-2"></i> အကန့်အသတ်မဲ့ ကုန်သည်မှု</li>
                                 <li><i class="fas fa-check text-success me-2"></i> အုပ်ချုပ်ရန် Dashboard ခွင့်ပြုချက်</li>
-                                <li><i class="fas fa-check text-success me-2"></i> အသုံးပြုသူ အကူအညီ</li>
+                                <li><i class="fas fa-check text-success me-2"></i> ကိုယ့်ရဲ့ Wallet Address ပြောင်းလဲနိုင်ခြင်း</li>
+                                <li><i class="fas fa-check text-success me-2"></i> Customer Support အနေနဲ့ Telegram Username ကို ပြောင်းလဲနိုင်ခြင်း </li>
                                 <li class="bonus-feature text-dark fw-bold"><i class="fas fa-gift me-2"></i> + ၉၀ ရက် အပို အခမဲ့</li>
                             </ul>
                         </div>
