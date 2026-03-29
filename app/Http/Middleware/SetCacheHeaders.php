@@ -23,16 +23,29 @@ class SetCacheHeaders
             $response->headers->set('Cache-Control', 'public, max-age=31536000, immutable');
             $response->headers->set('Expires', gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
         }
+        // Admin/auth pages and any response that mutates cookies: never cache
+        // This prevents stale CSRF/session pages that can trigger 419 errors.
+        elseif (
+            $request->is('admin/*') ||
+            $request->is('login') ||
+            $request->is('register') ||
+            $response->headers->has('Set-Cookie')
+        ) {
+            $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, private');
+            $response->headers->set('Pragma', 'no-cache');
+            $response->headers->set('Expires', '0');
+        }
         // API responses: No caching
         elseif ($request->is('api/*')) {
             $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, private');
             $response->headers->set('Pragma', 'no-cache');
             $response->headers->set('Expires', '0');
         }
-        // HTML pages: Cache for short period with revalidation (24 hours)
+        // HTML pages: no-store to avoid stale CSRF tokens in proxied environments
         elseif ($response->headers->get('Content-Type') && str_contains($response->headers->get('Content-Type'), 'text/html')) {
-            $response->headers->set('Cache-Control', 'public, max-age=86400, must-revalidate');
-            $response->headers->set('Expires', gmdate('D, d M Y H:i:s', time() + 86400) . ' GMT');
+            $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, private');
+            $response->headers->set('Pragma', 'no-cache');
+            $response->headers->set('Expires', '0');
         }
         // Default: Cache for 1 hour (3600 seconds)
         else {
