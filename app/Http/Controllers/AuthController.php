@@ -11,11 +11,21 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('admin.dashboard')
+                ->with('warning', 'You are currently logged in as admin. Please logout from admin first before logging in as a user.');
+        }
+
         return view('auth.login');
     }
 
     public function login(Request $request)
     {
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('admin.dashboard')
+                ->with('warning', 'You are currently logged in as admin. Please logout from admin first before logging in as a user.');
+        }
+
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
@@ -34,11 +44,21 @@ class AuthController extends Controller
 
     public function showRegisterForm()
     {
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('admin.dashboard')
+                ->with('warning', 'You are currently logged in as admin. Please logout from admin first before creating a user account.');
+        }
+
         return view('auth.register');
     }
 
     public function register(Request $request)
     {
+        if (Auth::guard('admin')->check()) {
+            return redirect()->route('admin.dashboard')
+                ->with('warning', 'You are currently logged in as admin. Please logout from admin first before creating a user account.');
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],

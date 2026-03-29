@@ -261,15 +261,7 @@
             <p class="login-subtitle">Sign in to your account</p>
         </div>
 
-        @if($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+        @include('partials.alerts')
 
         <form method="POST" action="{{ route('login.post') }}">
             @csrf

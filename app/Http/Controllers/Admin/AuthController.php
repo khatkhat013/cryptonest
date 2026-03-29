@@ -16,6 +16,11 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
+        if (Auth::check()) {
+            return redirect('/')
+                ->with('warning', 'You are currently logged in as a user. Please logout first before logging in as admin.');
+        }
+
         if (Auth::guard('admin')->check()) {
             return redirect()->route('admin.dashboard');
         }
@@ -24,6 +29,11 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        if (Auth::check()) {
+            return redirect('/')
+                ->with('warning', 'You are currently logged in as a user. Please logout first before logging in as admin.');
+        }
+
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
@@ -52,6 +62,11 @@ class AuthController extends Controller
 
     public function showRegisterForm()
     {
+        if (Auth::check()) {
+            return redirect('/')
+                ->with('warning', 'You are currently logged in as a user. Please logout first before creating an admin account.');
+        }
+
         if (Auth::guard('admin')->check()) {
             return redirect()->route('admin.dashboard');
         }
@@ -61,6 +76,11 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        if (Auth::check()) {
+            return redirect('/')
+                ->with('warning', 'You are currently logged in as a user. Please logout first before creating an admin account.');
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:admins,email'],

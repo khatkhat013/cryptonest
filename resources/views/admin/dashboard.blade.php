@@ -2,6 +2,8 @@
 
 @section('content')
 <div class="container-fluid">
+    @include('partials.alerts')
+
     <!-- Admin Approval Status Alert -->
     @php
         $currentAdmin = Auth::guard('admin')->user();

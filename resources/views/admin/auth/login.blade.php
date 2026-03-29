@@ -282,6 +282,8 @@
             <p class="auth-subtitle">Welcome back to your admin dashboard</p>
         </div>
 
+        @include('partials.alerts')
+
         <form method="POST" action="{{ route('admin.login') }}">
             @csrf
 
