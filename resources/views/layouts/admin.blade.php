@@ -316,7 +316,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ route('admin.users.index') }}" 
+                        <a href="{{ route('admin.users.index', ['_r' => now()->timestamp]) }}"
                            class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                             <i class="bi bi-people"></i>
                             <span>Users Management</span>
