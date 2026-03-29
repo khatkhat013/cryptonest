@@ -11,6 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Allow logout even when CSRF token is stale to avoid user-facing 419 on sign out.
+        $middleware->validateCsrfTokens(except: [
+            'admin/logout',
+        ]);
+
         // Security middleware - OWASP Top 10 protection
         // Run SecurityHeaders first (prepend ensures it runs before other middleware)
         $middleware->prepend(\App\Http\Middleware\SecurityHeaders::class);
