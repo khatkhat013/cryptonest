@@ -104,8 +104,8 @@ return [
         // Default: only allow resources from same origin
         'default-src' => "'self'",
 
-        // Allow scripts from self and CDNs
-        'script-src' => "'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com unpkg.com",
+        // Allow scripts from self, CDNs, and Cloudflare Insights beacon
+        'script-src' => "'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com unpkg.com static.cloudflareinsights.com",
 
         // Allow styles from self and CDNs
         'style-src' => "'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com",
@@ -122,8 +122,8 @@ return [
         // Restrict frame embedding
         'frame-ancestors' => "'none'",
 
-        // Allow connections to self, Telegram API, and CDNs for WASM and source maps
-        'connect-src' => "'self' api.telegram.org cdn.jsdelivr.net unpkg.com lottie.host",
+        // Allow connections to self, Telegram API, CDNs, and Cloudflare Insights beacon endpoints
+        'connect-src' => "'self' api.telegram.org cdn.jsdelivr.net unpkg.com lottie.host cloudflareinsights.com static.cloudflareinsights.com",
 
         // Allow Web Workers and blob URLs for WASM
         'worker-src' => "'self' blob:",

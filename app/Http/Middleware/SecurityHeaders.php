@@ -27,11 +27,11 @@ class SecurityHeaders
         // Content Security Policy - Prevents XSS and injection attacks
         $response->headers->set('Content-Security-Policy', 
             "default-src 'self'; " .
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com unpkg.com; " .
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com unpkg.com static.cloudflareinsights.com; " .
             "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com fonts.googleapis.com; " .
             "img-src 'self' data: https:; " .
             "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com cdn.jsdelivr.net; " .
-            "connect-src 'self' api.telegram.org cdn.jsdelivr.net unpkg.com lottie.host; " .
+            "connect-src 'self' api.telegram.org cdn.jsdelivr.net unpkg.com lottie.host cloudflareinsights.com static.cloudflareinsights.com; " .
             "worker-src 'self' blob:; " .
             "frame-ancestors 'none'; " .
             "form-action 'self'; " .
