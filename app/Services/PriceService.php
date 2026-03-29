@@ -7,8 +7,15 @@ use Illuminate\Support\Facades\Cache;
 
 class PriceService
 {
-    // Single source of truth for the API URL — change here to switch provider for whole project
-    protected const API_URL = 'https://api.bitcryptoforest.com/api/kline/getAllProduct';
+    // Primary provider URL. Some environments intermittently fail TLS handshake for this host.
+    protected const API_URL_HTTPS = 'https://api.bitcryptoforest.com/api/kline/getAllProduct';
+    // Fallback provider URL used when HTTPS is unavailable (e.g. provider-side TLS 526).
+    protected const API_URL_HTTP = 'http://api.bitcryptoforest.com/api/kline/getAllProduct';
+    // Short TTL for fresh pulls and longer TTL for last known good data.
+    protected const LIVE_CACHE_SECONDS = 3;
+    protected const STALE_CACHE_SECONDS = 300;
+    protected const CACHE_KEY_LIVE = 'bcf:all_products_v2';
+    protected const CACHE_KEY_LAST_GOOD = 'bcf:all_products_last_good_v1';
 
     /**
      * Get price data for any symbol (crypto, forex, metal etc).
@@ -36,11 +43,42 @@ class PriceService
      */
     public static function getAllProducts(): array
     {
-        return Cache::remember('bcf:all_products_v2', 3, function () {
+        return Cache::remember(self::CACHE_KEY_LIVE, self::LIVE_CACHE_SECONDS, function () {
             try {
-                $resp = Http::timeout(6)->get(self::API_URL);
-                if (!$resp->ok()) return [];
-                $j = $resp->json();
+                $client = Http::timeout(8)
+                    ->retry(1, 200)
+                    ->acceptJson()
+                    ->withHeaders([
+                        'User-Agent' => 'CryptoNest/1.0 (+Laravel PriceService)',
+                    ]);
+
+                $resp = $client->get(self::API_URL_HTTPS);
+                if (!$resp->ok()) {
+                    try {
+                        \Log::warning('PriceService HTTPS provider failed, trying HTTP fallback', [
+                            'status' => $resp->status(),
+                        ]);
+                    } catch (\Throwable $_) {
+                    }
+                    $resp = $client->get(self::API_URL_HTTP);
+                }
+
+                if (!$resp->ok()) {
+                    try {
+                        \Log::error('PriceService provider unavailable on both HTTPS and HTTP', [
+                            'status' => $resp->status(),
+                        ]);
+                    } catch (\Throwable $_) {
+                    }
+                    return Cache::get(self::CACHE_KEY_LAST_GOOD, []);
+                }
+
+                // Handle responses that may include UTF-8 BOM before JSON payload.
+                $rawBody = ltrim((string) $resp->body(), "\xEF\xBB\xBF");
+                $j = json_decode($rawBody, true);
+                if (!is_array($j)) {
+                    return Cache::get(self::CACHE_KEY_LAST_GOOD, []);
+                }
 
                 // Expecting structure: { code:1, list: [ { currency: 'BTC', price: '...', change: 12.3, rate: '0.12', ... }, ... ] }
                 $list = [];
@@ -188,11 +226,16 @@ class PriceService
                     }
                 }
 
-                return $map;
+                if (!empty($map)) {
+                    Cache::put(self::CACHE_KEY_LAST_GOOD, $map, self::STALE_CACHE_SECONDS);
+                    return $map;
+                }
+
+                return Cache::get(self::CACHE_KEY_LAST_GOOD, []);
             } catch (\Throwable $e) {
                 // don't throw — return empty map and log for debugging
                 try { \Log::error('PriceService::getAllProducts error: ' . $e->getMessage()); } catch (\Throwable $_) {}
-                return [];
+                return Cache::get(self::CACHE_KEY_LAST_GOOD, []);
             }
         });
     }
