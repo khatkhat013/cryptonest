@@ -171,8 +171,8 @@
     {{-- Pass the page type so the header can choose appropriate fallbacks for forex/metal --}}
     <x-coin-header :symbol="$symbol" :showPrice="false" :type="$type ?? 'crypto'" />
         <div class="main-content" style="padding-top: 65px">
-            <div class="container">
-                <div class="card">
+            <div class="container-fluid px-2 px-md-3">
+                <div class="card chart-card">
                     <div class="card-body p-0 overflow-hidden">
                         <div class="chart-container">
                             @php
@@ -185,9 +185,6 @@
                                 <div class="chart-shell">
                                     <div class="chart-shell-header">
                                         <div class="chart-shell-title">{{ strtoupper($symbol) }}/USDT Live Chart</div>
-                                        <a href="{{ $bvoxfUrl }}" target="_blank" rel="noopener noreferrer" class="chart-shell-link">
-                                            Open Full Chart
-                                        </a>
                                     </div>
 
                                     <div id="chartLoading" class="chart-loading">
@@ -417,10 +414,17 @@
         <style>
         /* Chart Responsive Height */
         .chart-container {
-            height: 74vh;
-            max-height: 700px;
-            min-height: 360px;
+            height: calc(100vh - 170px);
+            max-height: 860px;
+            min-height: 520px;
             position: relative;
+        }
+
+        .chart-card {
+            margin-top: 0.35rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.6rem;
+            overflow: hidden;
         }
 
         .chart-shell {
@@ -432,32 +436,19 @@
 
         .chart-shell-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
             gap: 0.75rem;
-            padding: 0.65rem 0.9rem;
+            padding: 0.55rem 0.75rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             background: rgba(255, 255, 255, 0.02);
         }
 
         .chart-shell-title {
             color: #e6edf7;
-            font-size: 0.92rem;
+            font-size: 0.9rem;
             font-weight: 600;
             letter-spacing: 0.2px;
-        }
-
-        .chart-shell-link {
-            color: #5ba4ff;
-            font-size: 0.82rem;
-            font-weight: 600;
-            text-decoration: none;
-            white-space: nowrap;
-        }
-
-        .chart-shell-link:hover {
-            color: #87beff;
-            text-decoration: underline;
         }
 
         .chart-loading {
@@ -482,20 +473,22 @@
 
         @media (max-width: 768px) {
             .chart-container {
-                height: 66vh;
-                min-height: 420px;
+                height: calc(100vh - 165px);
+                min-height: 620px;
+                max-height: none;
             }
 
             .chart-shell-header {
-                padding: 0.6rem 0.7rem;
+                padding: 0.45rem 0.6rem;
             }
 
             .chart-shell-title {
-                font-size: 0.84rem;
+                font-size: 0.83rem;
             }
 
-            .chart-shell-link {
-                font-size: 0.76rem;
+            .container-fluid.px-2 {
+                padding-left: 0.4rem !important;
+                padding-right: 0.4rem !important;
             }
         }
 
