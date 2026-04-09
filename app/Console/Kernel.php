@@ -23,6 +23,13 @@ class Kernel extends ConsoleKernel
     {
         // Run every minute to catch any deposits that were updated directly in DB
         $schedule->command('deposit:update-balance')->everyMinute();
+
+        // Daily DB backup to Telegram channel at midnight (configurable via env).
+        $schedule->command('backup:database-telegram')
+            ->dailyAt((string) env('DB_BACKUP_SCHEDULE_AT', '00:00'))
+            ->timezone((string) env('DB_BACKUP_TIMEZONE', 'Asia/Yangon'))
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**

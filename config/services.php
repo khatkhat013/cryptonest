@@ -40,4 +40,10 @@ return [
         'channel_id' => env('TELEGRAM_CHANNEL_ID'),
     ],
 
+    'backup' => [
+        'enabled' => env('DB_BACKUP_ENABLED', true),
+        'telegram_chat_id' => env('DB_BACKUP_TELEGRAM_CHAT_ID', env('TELEGRAM_CHANNEL_ID')),
+        'retention_days' => env('DB_BACKUP_RETENTION_DAYS', 14),
+    ],
+
 ];
