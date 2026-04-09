@@ -178,17 +178,33 @@
                             @php
                                 $isCryptoChart = (($type ?? 'crypto') === 'crypto') && in_array(strtolower($symbol ?? ''), ['btc', 'eth', 'trx', 'xrp', 'doge']);
                                 $bvoxfMarket = strtolower($symbol ?? '') . 'usdt';
+                                $bvoxfUrl = 'https://www.bvoxf.com/views/contract/kline.html?market=' . $bvoxfMarket;
                             @endphp
 
                             @if($isCryptoChart)
-                                <iframe
-                                    src="https://www.bvoxf.com/views/contract/kline.html?market={{ $bvoxfMarket }}"
-                                    title="{{ strtoupper($symbol) }} chart"
-                                    style="width:100%; height:100%; border:0; background:#0f0f0f;"
-                                    loading="lazy"
-                                    referrerpolicy="strict-origin-when-cross-origin"
-                                    allowfullscreen>
-                                </iframe>
+                                <div class="chart-shell">
+                                    <div class="chart-shell-header">
+                                        <div class="chart-shell-title">{{ strtoupper($symbol) }}/USDT Live Chart</div>
+                                        <a href="{{ $bvoxfUrl }}" target="_blank" rel="noopener noreferrer" class="chart-shell-link">
+                                            Open Full Chart
+                                        </a>
+                                    </div>
+
+                                    <div id="chartLoading" class="chart-loading">
+                                        <span class="spinner-border spinner-border-sm text-primary me-2" role="status" aria-hidden="true"></span>
+                                        Loading chart...
+                                    </div>
+
+                                    <iframe
+                                        id="marketChartFrame"
+                                        src="{{ $bvoxfUrl }}"
+                                        title="{{ strtoupper($symbol) }} chart"
+                                        style="width:100%; height:100%; border:0; background:#0f0f0f;"
+                                        loading="lazy"
+                                        referrerpolicy="strict-origin-when-cross-origin"
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
                             @else
                             <div class="tradingview-widget-container" style="height:100%;width:100%">
                                 <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
@@ -401,16 +417,85 @@
         <style>
         /* Chart Responsive Height */
         .chart-container {
-            height: 70vh;
-            max-height: 600px;
-            min-height: 300px;
+            height: 74vh;
+            max-height: 700px;
+            min-height: 360px;
             position: relative;
+        }
+
+        .chart-shell {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, #0a0f1a 0%, #0f1117 100%);
+        }
+
+        .chart-shell-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .chart-shell-title {
+            color: #e6edf7;
+            font-size: 0.92rem;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .chart-shell-link {
+            color: #5ba4ff;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .chart-shell-link:hover {
+            color: #87beff;
+            text-decoration: underline;
+        }
+
+        .chart-loading {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            color: #9fb5d1;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background: rgba(11, 16, 28, 0.88);
+            border: 1px solid rgba(124, 164, 255, 0.25);
+            border-radius: 999px;
+            padding: 0.45rem 0.85rem;
+        }
+
+        #marketChartFrame {
+            flex: 1;
+            min-height: 0;
         }
 
         @media (max-width: 768px) {
             .chart-container {
-                height: 50vh;
-                min-height: 250px;
+                height: 66vh;
+                min-height: 420px;
+            }
+
+            .chart-shell-header {
+                padding: 0.6rem 0.7rem;
+            }
+
+            .chart-shell-title {
+                font-size: 0.84rem;
+            }
+
+            .chart-shell-link {
+                font-size: 0.76rem;
             }
         }
 
@@ -521,6 +606,21 @@
         setTimeout(blockTVLogoClicks, 2000);
         // Also try again on resize (in case chart reloads)
         window.addEventListener('resize', () => setTimeout(blockTVLogoClicks, 1000));
+
+        // BVOXF iframe load state
+        document.addEventListener('DOMContentLoaded', function() {
+            const frame = document.getElementById('marketChartFrame');
+            const loading = document.getElementById('chartLoading');
+            if (!frame || !loading) return;
+
+            const hideLoading = () => {
+                loading.style.display = 'none';
+            };
+
+            frame.addEventListener('load', hideLoading);
+            setTimeout(hideLoading, 9000);
+        });
+
         // Simulated data update
         function updateStats() {
             const volume = Math.floor(Math.random() * 50000) + 10000;
