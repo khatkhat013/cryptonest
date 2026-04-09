@@ -128,6 +128,9 @@ return [
         // Allow Web Workers and blob URLs for WASM
         'worker-src' => "'self' blob:",
 
+        // Allow embedded market chart iframe source
+        'frame-src' => "'self' https://www.bvoxf.com https://bvoxf.com",
+
         // Disallow plugin execution
         'object-src' => "'none'",
 

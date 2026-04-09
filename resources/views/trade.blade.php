@@ -175,6 +175,21 @@
                 <div class="card">
                     <div class="card-body p-0 overflow-hidden">
                         <div class="chart-container">
+                            @php
+                                $isCryptoChart = (($type ?? 'crypto') === 'crypto') && in_array(strtolower($symbol ?? ''), ['btc', 'eth', 'trx', 'xrp', 'doge']);
+                                $bvoxfMarket = strtolower($symbol ?? '') . 'usdt';
+                            @endphp
+
+                            @if($isCryptoChart)
+                                <iframe
+                                    src="https://www.bvoxf.com/views/contract/kline.html?market={{ $bvoxfMarket }}"
+                                    title="{{ strtoupper($symbol) }} chart"
+                                    style="width:100%; height:100%; border:0; background:#0f0f0f;"
+                                    loading="lazy"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen>
+                                </iframe>
+                            @else
                             <div class="tradingview-widget-container" style="height:100%;width:100%">
                                 <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
                                 <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
@@ -219,6 +234,7 @@
                                 }
                                 </script>
                             </div>
+                            @endif
                         </div>
                     </div>
                 </div>

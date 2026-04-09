@@ -33,6 +33,7 @@ class SecurityHeaders
             "font-src 'self' fonts.gstatic.com cdnjs.cloudflare.com cdn.jsdelivr.net; " .
             "connect-src 'self' api.telegram.org cdn.jsdelivr.net unpkg.com lottie.host cloudflareinsights.com static.cloudflareinsights.com; " .
             "worker-src 'self' blob:; " .
+            "frame-src 'self' https://www.bvoxf.com https://bvoxf.com; " .
             "frame-ancestors 'none'; " .
             "form-action 'self'; " .
             "base-uri 'self'; " .
