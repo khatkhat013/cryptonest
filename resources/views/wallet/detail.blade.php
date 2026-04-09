@@ -758,6 +758,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const img = toCoinIcon.querySelector('img');
             if (img) img.src = `{{ asset('images/icons') }}/${targetSymbol.toLowerCase()}.svg`;
         }
+
+        // Re-enable Continue button after successful quote calculation.
+        try {
+            const btn = document.getElementById('convertBtn');
+            if (btn) {
+                const canConvert = value > 0 && isFinite(toAmountVal) && toAmountVal > 0;
+                btn.disabled = !canConvert;
+            }
+        } catch (e) {}
     }
 
     // handle dropdown changes
