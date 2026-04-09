@@ -740,8 +740,8 @@ document.addEventListener('DOMContentLoaded', function() {
 document.getElementById('quickAssignForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const uid = document.getElementById('quick_uid').value;
-    const telegramUsername = document.getElementById('quick_admin').value;
+    const uid = document.getElementById('quick_uid').value.trim();
+    const telegramUsername = document.getElementById('quick_admin').value.trim();
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const resultAlert = document.getElementById('quickResultAlert');
     const submitText = document.getElementById('quickSubmitText');

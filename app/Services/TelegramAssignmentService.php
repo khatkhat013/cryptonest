@@ -9,13 +9,41 @@ use Illuminate\Support\Facades\Log;
 class TelegramAssignmentService
 {
     /**
+     * Normalize Telegram username to comparable format.
+     */
+    private function normalizeTelegramUsername(?string $value): string
+    {
+        $username = trim((string) $value);
+
+        if ($username === '') {
+            return '';
+        }
+
+        // Accept full Telegram links like https://t.me/username
+        if (preg_match('~(?:https?://)?(?:www\.)?t\.me/([^/?#]+)~i', $username, $matches)) {
+            $username = $matches[1];
+        }
+
+        // Remove leading @ and normalize casing for comparison
+        $username = ltrim($username, '@');
+
+        return strtolower(trim($username));
+    }
+
+    /**
      * User ကို Admin ချိတ်ဆက်ခြင်း
      */
     public function assignUserToAdminByTelegram(string $uid, string $telegramUsername): array
     {
         try {
-            // Clean up telegram username - remove @ if present
-            $telegramUsername = ltrim($telegramUsername, '@');
+            $normalizedTelegramUsername = $this->normalizeTelegramUsername($telegramUsername);
+
+            if ($normalizedTelegramUsername === '') {
+                return [
+                    'success' => false,
+                    'message' => '❌ Admin username မသတ်မှတ်ရှိခြင်း'
+                ];
+            }
 
             // User ကို UID မှ ရှာခြင်း
             $user = User::where('user_id', $uid)->first();
@@ -27,13 +55,27 @@ class TelegramAssignmentService
                 ];
             }
 
-            // Admin ကို telegram_username မှ ရှာခြင်း
-            $admin = Admin::where('telegram_username', $telegramUsername)->first();
+            // Admin ကို telegram_username မှ ရှာခြင်း (case-insensitive, supports @username and username)
+            $admin = Admin::query()
+                ->whereRaw('LOWER(TRIM(telegram_username)) = ?', [$normalizedTelegramUsername])
+                ->orWhereRaw('LOWER(TRIM(telegram_username)) = ?', ['@' . $normalizedTelegramUsername])
+                ->first();
+
+            // Fallback for legacy values like full t.me links stored in DB
+            if (!$admin) {
+                $admin = Admin::query()
+                    ->whereNotNull('telegram_username')
+                    ->where('telegram_username', '!=', '')
+                    ->get()
+                    ->first(function (Admin $candidate) use ($normalizedTelegramUsername) {
+                        return $this->normalizeTelegramUsername($candidate->telegram_username) === $normalizedTelegramUsername;
+                    });
+            }
             
             if (!$admin) {
                 return [
                     'success' => false,
-                    'message' => "❌ Admin username မသတ်မှတ်ရှိခြင်း: @$telegramUsername"
+                    'message' => "❌ Admin username မသတ်မှတ်ရှိခြင်း: @{$normalizedTelegramUsername}"
                 ];
             }
 
