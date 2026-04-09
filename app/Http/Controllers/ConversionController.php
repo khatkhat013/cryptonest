@@ -10,6 +10,30 @@ use Illuminate\Support\Facades\Log;
 
 class ConversionController extends Controller
 {
+    /**
+     * Decimal subtraction with graceful fallback when bcmath is unavailable.
+     */
+    private function decimalSub(string $left, string $right, int $scale = 16): string
+    {
+        if (function_exists('bcsub')) {
+            return bcsub($left, $right, $scale);
+        }
+
+        return number_format(((float) $left - (float) $right), $scale, '.', '');
+    }
+
+    /**
+     * Decimal addition with graceful fallback when bcmath is unavailable.
+     */
+    private function decimalAdd(string $left, string $right, int $scale = 16): string
+    {
+        if (function_exists('bcadd')) {
+            return bcadd($left, $right, $scale);
+        }
+
+        return number_format(((float) $left + (float) $right), $scale, '.', '');
+    }
+
     public function store(Request $request)
     {
         $user = $request->user();
@@ -26,13 +50,12 @@ class ConversionController extends Controller
         $fromCurrencyId = $request->input('from_currency_id');
         $toCurrencyId = $request->input('to_currency_id');
         $fromAmount = $request->input('from_amount');
-            $toAmount = $request->input('to_amount');
+        $toAmount = $request->input('to_amount');
 
-            // Defensive server-side validation: ensure toAmount is positive and numeric
-            if (!is_numeric($toAmount) || floatval($toAmount) <= 0) {
-                DB::rollBack();
-                return response()->json(['success' => false, 'message' => 'Invalid conversion target amount'], 422);
-            }
+        // Defensive server-side validation: ensure toAmount is positive and numeric
+        if (!is_numeric($toAmount) || floatval($toAmount) <= 0) {
+            return response()->json(['success' => false, 'message' => 'Invalid conversion target amount'], 422);
+        }
 
         // ensure user_wallets table exists
         if (!\Illuminate\Support\Facades\Schema::hasTable('user_wallets')) {
@@ -115,8 +138,8 @@ class ConversionController extends Controller
             }
 
             // update balances
-            $fromWallet->balance = bcsub((string)$fromWallet->balance, (string)$fromAmount, 16);
-            $toWallet->balance = bcadd((string)$toWallet->balance, (string)$toAmount, 16);
+            $fromWallet->balance = $this->decimalSub((string) $fromWallet->balance, (string) $fromAmount, 16);
+            $toWallet->balance = $this->decimalAdd((string) $toWallet->balance, (string) $toAmount, 16);
             $fromWallet->save();
             $toWallet->save();
 
@@ -134,9 +157,15 @@ class ConversionController extends Controller
 
             DB::commit();
             return response()->json(['success' => true, 'conversion' => $conv], 201);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Conversion error: '.$e->getMessage());
+            Log::error('Conversion error: '.$e->getMessage(), [
+                'user_id' => $user->id,
+                'from_currency_id' => $fromCurrencyId,
+                'to_currency_id' => $toCurrencyId,
+                'from_amount' => $fromAmount,
+                'to_amount' => $toAmount,
+            ]);
             return response()->json(['success' => false, 'message' => 'Conversion failed'], 500);
         }
     }
