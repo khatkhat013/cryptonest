@@ -129,7 +129,7 @@ return [
         'worker-src' => "'self' blob:",
 
         // Allow embedded market chart iframe source
-        'frame-src' => "'self' https://www.bvoxf.com https://bvoxf.com",
+        'frame-src' => "'self' https://www.bvoxf.com https://bvoxf.com https://s.tradingview.com https://www.tradingview.com",
 
         // Disallow plugin execution
         'object-src' => "'none'",

@@ -179,6 +179,42 @@
                                 $isCryptoChart = (($type ?? 'crypto') === 'crypto') && in_array(strtolower($symbol ?? ''), ['btc', 'eth', 'trx', 'xrp', 'doge']);
                                 $bvoxfMarket = strtolower($symbol ?? '') . 'usdt';
                                 $bvoxfUrl = 'https://www.bvoxf.com/views/contract/kline.html?market=' . $bvoxfMarket;
+
+                                $tvSymbol = strtoupper($symbol ?? '');
+                                if (in_array($tvSymbol, ['XPT', 'XPD'])) {
+                                    $tvSymbol = 'OANDA:' . $tvSymbol . 'USD';
+                                } elseif (in_array($tvSymbol, ['XAU', 'XAG'])) {
+                                    $tvSymbol = 'FOREXCOM:' . $tvSymbol . 'USD';
+                                } elseif (in_array($tvSymbol, ['CAD', 'JPY'])) {
+                                    $tvSymbol = 'SAXO:' . $tvSymbol . 'USD';
+                                } elseif ($tvSymbol === 'CHF') {
+                                    $tvSymbol = 'IBKR:CHFUSD';
+                                } else {
+                                    $tvSymbol = 'FOREXCOM:' . $tvSymbol . 'USD';
+                                }
+
+                                $tvQuery = http_build_query([
+                                    'symbol' => $tvSymbol,
+                                    'interval' => '1',
+                                    'hidesidetoolbar' => '1',
+                                    'symboledit' => '0',
+                                    'saveimage' => '0',
+                                    'toolbarbg' => 'f1f3f6',
+                                    'studies' => '[]',
+                                    'theme' => 'dark',
+                                    'style' => '1',
+                                    'timezone' => 'Etc/UTC',
+                                    'withdateranges' => '0',
+                                    'hidevolume' => '0',
+                                    'allow_symbol_change' => '0',
+                                    'details' => '0',
+                                    'hotlist' => '0',
+                                    'calendar' => '0',
+                                    'locale' => 'en',
+                                    'utm_source' => request()->getHost(),
+                                    'utm_medium' => 'embed',
+                                ]);
+                                $tradingViewUrl = 'https://s.tradingview.com/widgetembed/?' . $tvQuery;
                             @endphp
 
                             @if($isCryptoChart)
@@ -203,50 +239,20 @@
                                     </iframe>
                                 </div>
                             @else
-                            <div class="tradingview-widget-container" style="height:100%;width:100%">
-                                <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
-                                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-                                @php
-                                    // Compute TradingView symbol server-side to avoid embedding PHP inside a quoted JS string
-                                    $tvSymbol = strtoupper($symbol ?? '');
-                                    if (in_array($tvSymbol, ['XPT', 'XPD'])) {
-                                        $tvSymbol = 'OANDA:' . $tvSymbol . 'USD';
-                                    } elseif (in_array($tvSymbol, ['XAU', 'XAG'])) {
-                                        $tvSymbol = 'FOREXCOM:' . $tvSymbol . 'USD';
-                                    } elseif (in_array($tvSymbol, ['CAD', 'JPY'])) {
-                                        $tvSymbol = 'SAXO:' . $tvSymbol . 'USD';
-                                    } elseif ($tvSymbol === 'CHF') {
-                                        $tvSymbol = 'IBKR:CHFUSD';
-                                    } else {
-                                        $tvSymbol = 'FOREXCOM:' . $tvSymbol . 'USD';
-                                    }
-                                @endphp
-                                {
-                                    "allow_symbol_change": false,
-                                    "calendar": false,
-                                    "details": false,
-                                    "hide_side_toolbar": true,
-                                    "hide_top_toolbar": false,
-                                    "hide_legend": false,
-                                    "hide_volume": false,
-                                    "hotlist": false,
-                                    "interval": "1",
-                                    "locale": "en",
-                                    "save_image": true,
-                                    "style": "1",
-                                    "symbol": {!! json_encode($tvSymbol) !!},
-                                    "theme": "dark",
-                                    "timezone": "Etc/UTC",
-                                    "backgroundColor": "#0F0F0F",
-                                    "gridColor": "rgba(242, 242, 242, 0.06)",
-                                    "watchlist": [],
-                                    "withdateranges": false,
-                                    "compareSymbols": [],
-                                    "studies": [],
-                                    "autosize": true
-                                }
-                                </script>
-                            </div>
+                                <div class="chart-shell">
+                                    <div class="chart-shell-header">
+                                        <div class="chart-shell-title">{{ strtoupper($symbol) }}/USD Live Chart</div>
+                                    </div>
+                                    <iframe
+                                        id="marketChartFrame"
+                                        src="{{ $tradingViewUrl }}"
+                                        title="{{ strtoupper($symbol) }} chart"
+                                        style="width:100%; height:100%; border:0; background:#0f0f0f;"
+                                        loading="lazy"
+                                        referrerpolicy="strict-origin-when-cross-origin"
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
                             @endif
                         </div>
                     </div>
@@ -541,65 +547,7 @@
             opacity: 0.8;
         }
         </style>
-        <style>
-        /* Overlay to block TradingView logo clicks (adaptive) */
-        .tv-logo-blocker {
-            position: absolute;
-            z-index: 1000;
-            background: transparent;
-            pointer-events: auto;
-        }
-        </style>
-
         <script>
-        // Block TradingView logo clicks by overlaying a transparent div (adaptive for all logo types)
-        function blockTVLogoClicks() {
-            // Find the widget iframe
-            const widget = document.querySelector('.tradingview-widget-container__widget iframe');
-            if (!widget) return;
-            // Find the parent container (position:relative)
-            const parent = widget.parentElement;
-            if (!parent) return;
-            // Remove old blockers
-            parent.querySelectorAll('.tv-logo-blocker').forEach(e => e.remove());
-
-            // Try to find all logo elements inside the iframe
-            try {
-                const iframeDoc = widget.contentDocument || widget.contentWindow.document;
-                // Find all elements with [href*="tradingview.com"] or [class*="tradingview"]
-                const logoLinks = iframeDoc.querySelectorAll('a[href*="tradingview.com"], [class*="tradingview"]');
-                logoLinks.forEach(logo => {
-                    const rect = logo.getBoundingClientRect();
-                    // Position overlay relative to parent container
-                    const parentRect = parent.getBoundingClientRect();
-                    const blocker = document.createElement('div');
-                    blocker.className = 'tv-logo-blocker';
-                    blocker.style.left = (rect.left - parentRect.left) + 'px';
-                    blocker.style.top = (rect.top - parentRect.top) + 'px';
-                    blocker.style.width = rect.width + 'px';
-                    blocker.style.height = rect.height + 'px';
-                    blocker.onclick = function(e) { e.stopPropagation(); e.preventDefault(); return false; };
-                    blocker.onpointerdown = blocker.onmousedown = blocker.onmouseup = blocker.onclick;
-                    parent.appendChild(blocker);
-                });
-            } catch (e) {
-                // If iframe is cross-origin, fallback to static overlay (best effort)
-                // Place a wide overlay at bottom left
-                const blocker = document.createElement('div');
-                blocker.className = 'tv-logo-blocker';
-                blocker.style.left = '12px';
-                blocker.style.bottom = '12px';
-                blocker.style.width = '180px';
-                blocker.style.height = '48px';
-                blocker.onclick = function(e) { e.stopPropagation(); e.preventDefault(); return false; };
-                parent.appendChild(blocker);
-            }
-        }
-        // Try after widget loads
-        setTimeout(blockTVLogoClicks, 2000);
-        // Also try again on resize (in case chart reloads)
-        window.addEventListener('resize', () => setTimeout(blockTVLogoClicks, 1000));
-
         // BVOXF iframe load state
         document.addEventListener('DOMContentLoaded', function() {
             const frame = document.getElementById('marketChartFrame');
